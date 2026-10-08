@@ -92,7 +92,7 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
       map.addSource('qline-vehicle', { type: 'geojson', data: qlineVehicleData(0) });
       for (const [id, color] of [['mover-vehicle', tokenColor('--primary')], ['qline-vehicle', tokenColor('--warm')]] as const) {
         map.addLayer({ id: `${id}-glow`, type: 'circle', source: id, paint: { 'circle-radius': 19, 'circle-color': color, 'circle-opacity': 0.24, 'circle-blur': 0.65 } });
-        map.addLayer({ id, type: 'symbol', source: id, layout: { 'icon-image': 'train-rectangle', 'icon-size': 1.25, 'icon-rotate': ['coalesce', ['get', 'rotation'], 0], 'icon-rotation-alignment': 'map', 'icon-pitch-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true }, paint: { 'icon-color': color, 'icon-halo-color': tokenColor('--background'), 'icon-halo-width': 1 } });
+        map.addLayer({ id, type: 'symbol', source: id, layout: { 'icon-image': 'train-rectangle', 'icon-size': 1.625, 'icon-rotate': ['coalesce', ['get', 'rotation'], 0], 'icon-rotation-alignment': 'map', 'icon-pitch-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true }, paint: { 'icon-color': color, 'icon-halo-color': tokenColor('--background'), 'icon-halo-width': 1 } });
       }
       map.addSource('restaurant-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'restaurant-pin-glow', type: 'circle', source: 'restaurant-pin', paint: { 'circle-radius': 22, 'circle-color': '#ff4fd8', 'circle-opacity': 0.25, 'circle-blur': 0.6 } });
