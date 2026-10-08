@@ -20,7 +20,10 @@ describe('two-train simulation', () => {
     expect(simulatedMoverTrain(0).bearing).toBe(simulatedMoverTrain(MOVER_DWELL_MS - 1).bearing);
     for (let time = MOVER_DWELL_MS + 1000; time < MOVER_LOOP_MS; time += 1000) {
       const train = simulatedMoverTrain(time);
-      const next = simulatedMoverPosition(time + 1);
+      const nextTrain = simulatedMoverTrain(time + 1);
+      // A sample crossing a shape corner spans two bearings rather than one segment.
+      if (nextTrain.bearing !== train.bearing) continue;
+      const next = nextTrain.coordinate;
       const dx = (next[0] - train.coordinate[0]) * Math.cos(train.coordinate[1] * Math.PI / 180);
       const dy = next[1] - train.coordinate[1];
       if (Math.hypot(dx, dy) < 1e-12) continue;
