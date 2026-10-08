@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type * as GeoJSON from 'geojson';
 import { peopleMoverServiceRunning } from '@/data/schedule';
-import { simulatedMoverPositions } from '@/data/trainSimulation';
+import { simulatedMoverTrains } from '@/data/trainSimulation';
 import { peopleMoverShape, peopleMoverStations, qlineStops, restaurants, type Coordinate } from '@/data/transit';
 
 type Props = { peopleMover: boolean; qline: boolean; selectedId: string | null; onSelect: (id: string) => void; onReady?: (ready: boolean) => void; restaurantId?: string | null };
@@ -14,6 +14,16 @@ const qPath = qlineStops.map(s => s.coordinate);
 const routeData = (coordinates: Coordinate[]): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: [route(coordinates)] });
 const dotData = (coordinate: Coordinate): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: [point(coordinate)] });
 const downtownCenter: Coordinate = [-83.0458, 42.3314];
+const qlineVehicleData = (elapsed: number): GeoJSON.FeatureCollection => {
+  const segments = (qPath.length - 1) * 2;
+  const step = Math.floor(elapsed / 23000) % segments;
+  const from = step < qPath.length - 1 ? step : segments - step;
+  const to = step < qPath.length - 1 ? from + 1 : from - 1;
+  const a = qPath[from] ?? downtownCenter;
+  const b = qPath[to] ?? a;
+  const bearing = Math.atan2((b[0] - a[0]) * Math.cos(a[1] * Math.PI / 180), b[1] - a[1]) * 180 / Math.PI;
+  return { type: 'FeatureCollection', features: [{ ...point(simulatedPosition(qPath, elapsed, false)), properties: { rotation: bearing - 90 } }] };
+};
 
 // This is a visual simulation, not a feed of real vehicle positions. Each stop holds for 12 seconds.
 function simulatedPosition(path: Coordinate[], elapsed: number, loop: boolean): Coordinate {
@@ -62,7 +72,7 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
       map.addLayer({ id: 'station-labels', type: 'symbol', source: 'stations', layout: { 'text-field': ['get', 'name'], 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'], 'text-size': 11, 'text-offset': [0, 1.45], 'text-anchor': 'top', 'text-optional': true }, paint: { 'text-color': '#eafaff', 'text-halo-color': '#07131b', 'text-halo-width': 1.5 } });
       map.addSource('qline-stops', { type: 'geojson', data: { type: 'FeatureCollection', features: qlineStops.map(s => point(s.coordinate)) } });
       map.addLayer({ id: 'qline-stops', type: 'circle', source: 'qline-stops', paint: { 'circle-radius': 4, 'circle-color': '#ffbb70', 'circle-stroke-color': '#07131b', 'circle-stroke-width': 1.5 } });
-      const moverData = (elapsed: number): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: simulatedMoverPositions(elapsed).map(point) });
+      const moverData = (elapsed: number): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: simulatedMoverTrains(elapsed).map(train => ({ ...point(train.coordinate), properties: { rotation: train.bearing - 90 } })) });
       map.addSource('mover-vehicle', { type: 'geojson', data: moverData(0) });
       const pixels = new Uint8Array(20 * 10 * 4);
       for (let y = 1; y < 9; y += 1) for (let x = 1; x < 19; x += 1) {
@@ -79,10 +89,10 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
         const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
         return `rgb(${r}, ${g}, ${b})`;
       };
-      map.addSource('qline-vehicle', { type: 'geojson', data: dotData(qPath[0] ?? [-83.0445, 42.3295]) });
+      map.addSource('qline-vehicle', { type: 'geojson', data: qlineVehicleData(0) });
       for (const [id, color] of [['mover-vehicle', tokenColor('--primary')], ['qline-vehicle', tokenColor('--warm')]] as const) {
         map.addLayer({ id: `${id}-glow`, type: 'circle', source: id, paint: { 'circle-radius': 19, 'circle-color': color, 'circle-opacity': 0.24, 'circle-blur': 0.65 } });
-        map.addLayer({ id, type: 'symbol', source: id, layout: { 'icon-image': 'train-rectangle', 'icon-size': 1, 'icon-allow-overlap': true, 'icon-ignore-placement': true }, paint: { 'icon-color': color, 'icon-halo-color': tokenColor('--background'), 'icon-halo-width': 1 } });
+        map.addLayer({ id, type: 'symbol', source: id, layout: { 'icon-image': 'train-rectangle', 'icon-size': 1.25, 'icon-rotate': ['coalesce', ['get', 'rotation'], 0], 'icon-rotation-alignment': 'map', 'icon-pitch-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true }, paint: { 'icon-color': color, 'icon-halo-color': tokenColor('--background'), 'icon-halo-width': 1 } });
       }
       map.addSource('restaurant-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'restaurant-pin-glow', type: 'circle', source: 'restaurant-pin', paint: { 'circle-radius': 22, 'circle-color': '#ff4fd8', 'circle-opacity': 0.25, 'circle-blur': 0.6 } });
@@ -118,7 +128,7 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
         qlineElapsed += delta;
         if (time - lastUpdate > 50) {
           if (running) (map.getSource('mover-vehicle') as mapboxgl.GeoJSONSource)?.setData(moverData(moverElapsed));
-          (map.getSource('qline-vehicle') as mapboxgl.GeoJSONSource)?.setData(dotData(simulatedPosition(qPath, qlineElapsed, false)));
+          (map.getSource('qline-vehicle') as mapboxgl.GeoJSONSource)?.setData(qlineVehicleData(qlineElapsed));
           lastUpdate = time;
         }
         frame = requestAnimationFrame(animate);

@@ -17,10 +17,19 @@ const legs = stops.map((start, index) => {
 const totalLength = legs.reduce((sum, leg) => sum + leg.length, 0);
 const travelBudget = MOVER_LOOP_MS - stops.length * MOVER_DWELL_MS;
 
-export function simulatedMoverPosition(elapsed: number): Coordinate {
+export type SimulatedTrain = { coordinate: Coordinate; bearing: number };
+const trainOnSegment = (a: Coordinate, b: Coordinate, progress: number): SimulatedTrain => ({
+  coordinate: [a[0] + (b[0] - a[0]) * progress, a[1] + (b[1] - a[1]) * progress],
+  bearing: Math.atan2((b[0] - a[0]) * Math.cos(a[1] * Math.PI / 180), b[1] - a[1]) * 180 / Math.PI,
+});
+
+export function simulatedMoverTrain(elapsed: number): SimulatedTrain {
   let phase = ((elapsed % MOVER_LOOP_MS) + MOVER_LOOP_MS) % MOVER_LOOP_MS;
   for (const leg of legs) {
-    if (phase < MOVER_DWELL_MS) return leg.points[0] ?? [-83.0458, 42.3314];
+    if (phase < MOVER_DWELL_MS) {
+      const a = leg.points[0] ?? [-83.0458, 42.3314];
+      return trainOnSegment(a, leg.points[1] ?? a, 0);
+    }
     phase -= MOVER_DWELL_MS;
     const travel = travelBudget * leg.length / totalLength;
     if (phase < travel) {
@@ -32,14 +41,17 @@ export function simulatedMoverPosition(elapsed: number): Coordinate {
           const progress = length ? (target - covered) / length : 0;
           const a = leg.points[i] ?? [-83.0458, 42.3314];
           const b = leg.points[i + 1] ?? a;
-          return [a[0] + (b[0] - a[0]) * progress, a[1] + (b[1] - a[1]) * progress];
+          return trainOnSegment(a, b, progress);
         }
         covered += length;
       }
     }
     phase -= travel;
   }
-  return legs[0]?.points[0] ?? [-83.0458, 42.3314];
+  const a = legs[0]?.points[0] ?? [-83.0458, 42.3314];
+  return trainOnSegment(a, legs[0]?.points[1] ?? a, 0);
 }
 
+export const simulatedMoverPosition = (elapsed: number): Coordinate => simulatedMoverTrain(elapsed).coordinate;
+export const simulatedMoverTrains = (elapsed: number): SimulatedTrain[] => [simulatedMoverTrain(elapsed), simulatedMoverTrain(elapsed + MOVER_HEADWAY_MS)];
 export const simulatedMoverPositions = (elapsed: number): Coordinate[] => [simulatedMoverPosition(elapsed), simulatedMoverPosition(elapsed + MOVER_HEADWAY_MS)];
