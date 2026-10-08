@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type * as GeoJSON from 'geojson';
 import { peopleMoverServiceRunning } from '@/data/schedule';
-import { simulatedMoverPositions } from '@/data/trainSimulation';
+import { simulatedMoverTrains } from '@/data/trainSimulation';
 import { peopleMoverShape, peopleMoverStations, qlineStops, restaurants, type Coordinate } from '@/data/transit';
 
 type Props = { peopleMover: boolean; qline: boolean; selectedId: string | null; onSelect: (id: string) => void; onReady?: (ready: boolean) => void; restaurantId?: string | null };
@@ -62,7 +62,7 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
       map.addLayer({ id: 'station-labels', type: 'symbol', source: 'stations', layout: { 'text-field': ['get', 'name'], 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'], 'text-size': 11, 'text-offset': [0, 1.45], 'text-anchor': 'top', 'text-optional': true }, paint: { 'text-color': '#eafaff', 'text-halo-color': '#07131b', 'text-halo-width': 1.5 } });
       map.addSource('qline-stops', { type: 'geojson', data: { type: 'FeatureCollection', features: qlineStops.map(s => point(s.coordinate)) } });
       map.addLayer({ id: 'qline-stops', type: 'circle', source: 'qline-stops', paint: { 'circle-radius': 4, 'circle-color': '#ffbb70', 'circle-stroke-color': '#07131b', 'circle-stroke-width': 1.5 } });
-      const moverData = (elapsed: number): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: simulatedMoverPositions(elapsed).map(point) });
+      const moverData = (elapsed: number): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: simulatedMoverTrains(elapsed).map(train => ({ ...point(train.coordinate), properties: { rotation: train.bearing - 90 } })) });
       map.addSource('mover-vehicle', { type: 'geojson', data: moverData(0) });
       const pixels = new Uint8Array(20 * 10 * 4);
       for (let y = 1; y < 9; y += 1) for (let x = 1; x < 19; x += 1) {
@@ -82,7 +82,7 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
       map.addSource('qline-vehicle', { type: 'geojson', data: dotData(qPath[0] ?? [-83.0445, 42.3295]) });
       for (const [id, color] of [['mover-vehicle', tokenColor('--primary')], ['qline-vehicle', tokenColor('--warm')]] as const) {
         map.addLayer({ id: `${id}-glow`, type: 'circle', source: id, paint: { 'circle-radius': 19, 'circle-color': color, 'circle-opacity': 0.24, 'circle-blur': 0.65 } });
-        map.addLayer({ id, type: 'symbol', source: id, layout: { 'icon-image': 'train-rectangle', 'icon-size': 1, 'icon-allow-overlap': true, 'icon-ignore-placement': true }, paint: { 'icon-color': color, 'icon-halo-color': tokenColor('--background'), 'icon-halo-width': 1 } });
+        map.addLayer({ id, type: 'symbol', source: id, layout: { 'icon-image': 'train-rectangle', 'icon-size': 1.25, 'icon-rotate': ['coalesce', ['get', 'rotation'], 0], 'icon-rotation-alignment': 'map', 'icon-pitch-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true }, paint: { 'icon-color': color, 'icon-halo-color': tokenColor('--background'), 'icon-halo-width': 1 } });
       }
       map.addSource('restaurant-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'restaurant-pin-glow', type: 'circle', source: 'restaurant-pin', paint: { 'circle-radius': 22, 'circle-color': '#ff4fd8', 'circle-opacity': 0.25, 'circle-blur': 0.6 } });

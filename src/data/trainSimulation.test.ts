@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { peopleMoverServiceRunning } from './schedule';
-import { MOVER_DWELL_MS, MOVER_HEADWAY_MS, MOVER_LOOP_MS, simulatedMoverPosition, simulatedMoverPositions } from './trainSimulation';
+import { MOVER_DWELL_MS, MOVER_HEADWAY_MS, MOVER_LOOP_MS, simulatedMoverPosition, simulatedMoverPositions, simulatedMoverTrain } from './trainSimulation';
 
 describe('two-train simulation', () => {
   it('models a 14.5 minute loop and 7.25 minute headway', () => {
@@ -15,6 +15,18 @@ describe('two-train simulation', () => {
   it('dwells for 15 seconds then moves along the loop', () => {
     expect(simulatedMoverPosition(MOVER_DWELL_MS - 1)).toEqual(simulatedMoverPosition(0));
     expect(simulatedMoverPosition(MOVER_DWELL_MS + 1000)).not.toEqual(simulatedMoverPosition(0));
+  });
+  it('aligns train bearings with forward travel and keeps orientation while dwelling', () => {
+    expect(simulatedMoverTrain(0).bearing).toBe(simulatedMoverTrain(MOVER_DWELL_MS - 1).bearing);
+    for (let time = MOVER_DWELL_MS + 1000; time < MOVER_LOOP_MS; time += 1000) {
+      const train = simulatedMoverTrain(time);
+      const next = simulatedMoverPosition(time + 1);
+      const dx = (next[0] - train.coordinate[0]) * Math.cos(train.coordinate[1] * Math.PI / 180);
+      const dy = next[1] - train.coordinate[1];
+      if (Math.hypot(dx, dy) < 1e-12) continue;
+      const forward = Math.atan2(dx, dy) * 180 / Math.PI;
+      expect(Math.abs(((train.bearing - forward + 540) % 360) - 180)).toBeLessThan(0.01);
+    }
   });
 });
 

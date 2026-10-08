@@ -12,3 +12,4 @@
 - [x] Keep the People Mover simulation exactly on the agency route shape.
 - [x] Add opt-in user location tracking to the map.
 - [ ] Show two rectangular simulated trains with realistic loop timing and official schedule-hours gating.
+- [ ] Slightly enlarge train icons, align them to the track, and verify the browser experience.
