@@ -1,6 +1,6 @@
 # DPM - Go!
 
-**DPM - Go!** is an advanced, mobile-first downtown transit utility application engineered by **Detroit Core Automationc LLC** the in-house software development entity housed under **Motorcity Automated Systems**. Designed specifically to remove friction from urban mobility, the app unifies Detroit's core transit arteries—the 2.9-mile elevated Detroit People Mover (DPM) loop and the QLine streetcar corridor—into a singular, zero-friction interface.
+**DPM - Go!** is an advanced, mobile-first downtown transit utility application engineered by **Motorcity Automated Systems**. Designed specifically to remove friction from urban mobility, the app unifies Detroit's core transit arteries—the 2.9-mile elevated Detroit People Mover (DPM) loop and the QLine streetcar corridor—into a singular, zero-friction interface.
 
 The core mission of DPM - Go! is to encourage tourists, commuters, and residents to "park once" (or ditch personal vehicles entirely) and explore downtown destinations, local dining, and major sports/entertainment events completely on foot.
 
