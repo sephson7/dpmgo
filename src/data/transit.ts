@@ -1,25 +1,194 @@
 export type Coordinate = [number, number];
 export { peopleMoverShape } from './peopleMoverShape';
-export type Restaurant = { name: string; category: string; price: string; url: string };
-export type Station = { id: string; name: string; coordinate: Coordinate; entrance: Coordinate; neighborhood: string; restaurants: Restaurant[] };
+
+export type Restaurant = {
+  name: string;
+  category: string;
+  price: string;
+  url: string;
+};
+
+export type Place = Restaurant & {
+  id: string;
+  coordinate: Coordinate;
+  lateNight?: boolean | undefined;
+  sponsored?: boolean | undefined;
+  sponsorTagline?: string | undefined;
+};
+
+export type Station = {
+  id: string;
+  name: string;
+  coordinate: Coordinate;
+  entrance: Coordinate;
+  neighborhood: string;
+  crossStreets: string;
+  elevator: boolean;
+  adaCompliant: boolean;
+  entranceNotes: string;
+  restaurants: Restaurant[];
+};
 
 // Platform positions and nearest public entrances from Detroit Transportation Corporation GTFS stops.txt:
 // https://hosted-gtfs-feeds.s3.amazonaws.com/DPM/gtfs.zip (location_type 1 and 2).
-// Preserve this order for the rider-facing directory; it begins at Michigan rather than Times Square.
+// Preserve this sequential order starting at Michigan Station.
 export const peopleMoverStations: Station[] = [
-  { id: 'michigan', name: 'Michigan Station', coordinate: [-83.052120, 42.331363], entrance: [-83.052151, 42.331464], neighborhood: 'West Downtown', restaurants: [] },
-  { id: 'fort-cass', name: 'Fort / Cass Station', coordinate: [-83.051150, 42.329505], entrance: [-83.051032, 42.329415], neighborhood: 'West Downtown', restaurants: [] },
-  { id: 'huntington', name: 'Huntington Place Station', coordinate: [-83.049846, 42.328212], entrance: [-83.049867, 42.328406], neighborhood: 'Convention District', restaurants: [] },
-  { id: 'water-square', name: 'Water Square Station', coordinate: [-83.052671, 42.325233], entrance: [-83.052563, 42.325192], neighborhood: 'Riverfront', restaurants: [] },
-  { id: 'financial', name: 'Financial District Station', coordinate: [-83.046691, 42.328680], entrance: [-83.046507, 42.328756], neighborhood: 'Financial District', restaurants: [] },
-  { id: 'millender', name: 'Millender Center Station', coordinate: [-83.042001, 42.330273], entrance: [-83.042146, 42.330326], neighborhood: 'Civic Center', restaurants: [] },
-  { id: 'renaissance', name: 'Renaissance Center Station', coordinate: [-83.039983, 42.330157], entrance: [-83.040065, 42.329918], neighborhood: 'Riverfront', restaurants: [] },
-  { id: 'bricktown', name: 'Bricktown Station', coordinate: [-83.041194, 42.333326], entrance: [-83.041262, 42.333473], neighborhood: 'Bricktown', restaurants: [] },
-  { id: 'greektown', name: 'Greektown Station', coordinate: [-83.042419, 42.334617], entrance: [-83.042320, 42.334693], neighborhood: 'Greektown', restaurants: [] },
-  { id: 'cadillac', name: 'Cadillac Center Station', coordinate: [-83.046157, 42.333710], entrance: [-83.046330, 42.333644], neighborhood: 'Cadillac Square', restaurants: [] },
-  { id: 'broadway', name: 'Broadway Station', coordinate: [-83.048213, 42.335449], entrance: [-83.048179, 42.335569], neighborhood: 'Broadway', restaurants: [] },
-  { id: 'grand-circus', name: 'Grand Circus Park Station', coordinate: [-83.050592, 42.335782], entrance: [-83.050629, 42.335804], neighborhood: 'Grand Circus Park', restaurants: [] },
-  { id: 'times-square', name: 'Times Square Station', coordinate: [-83.052159, 42.333579], entrance: [-83.051904, 42.333594], neighborhood: 'West Downtown', restaurants: [] },
+  {
+    id: 'michigan',
+    name: 'Michigan Station',
+    coordinate: [-83.052120, 42.331363],
+    entrance: [-83.052151, 42.331464],
+    neighborhood: 'West Downtown',
+    crossStreets: 'Michigan Ave & Cass Ave',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Street elevator and escalator lobby located on south side of Michigan Ave.',
+    restaurants: [],
+  },
+  {
+    id: 'fort-cass',
+    name: 'Fort / Cass Station',
+    coordinate: [-83.051150, 42.329505],
+    entrance: [-83.051032, 42.329415],
+    neighborhood: 'West Downtown',
+    crossStreets: 'Fort St & Cass Ave',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Elevator entrance accessible from northeast corner of Fort St.',
+    restaurants: [],
+  },
+  {
+    id: 'huntington',
+    name: 'Huntington Place Station',
+    coordinate: [-83.049846, 42.328212],
+    entrance: [-83.049867, 42.328406],
+    neighborhood: 'Convention District',
+    crossStreets: 'Washington Blvd & Congress St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Direct indoor concourse access from 3rd floor of convention center.',
+    restaurants: [],
+  },
+  {
+    id: 'water-square',
+    name: 'Water Square Station',
+    coordinate: [-83.052671, 42.325233],
+    entrance: [-83.052563, 42.325192],
+    neighborhood: 'Riverfront',
+    crossStreets: 'Atwater St & 3rd St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Ground floor riverwalk entrance adjacent to Water Square residential tower.',
+    restaurants: [],
+  },
+  {
+    id: 'financial',
+    name: 'Financial District Station',
+    coordinate: [-83.046691, 42.328680],
+    entrance: [-83.046507, 42.328756],
+    neighborhood: 'Financial District',
+    crossStreets: 'Larned St & Griswold St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Entrance at 150 W Jefferson building; elevator available via lower concourse.',
+    restaurants: [],
+  },
+  {
+    id: 'millender',
+    name: 'Millender Center Station',
+    coordinate: [-83.042001, 42.330273],
+    entrance: [-83.042146, 42.330326],
+    neighborhood: 'Civic Center',
+    crossStreets: 'Randolph St & Congress St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Skywalk connection to Millender Center atrium and Courtyard by Marriott.',
+    restaurants: [],
+  },
+  {
+    id: 'renaissance',
+    name: 'Renaissance Center Station',
+    coordinate: [-83.039983, 42.330157],
+    entrance: [-83.040065, 42.329918],
+    neighborhood: 'Riverfront',
+    crossStreets: 'Jefferson Ave & Beaubien St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Level 2 walkway directly connecting Tower 100/200 inside GM RenCen.',
+    restaurants: [],
+  },
+  {
+    id: 'bricktown',
+    name: 'Bricktown Station',
+    coordinate: [-83.041194, 42.333326],
+    entrance: [-83.041262, 42.333473],
+    neighborhood: 'Bricktown',
+    crossStreets: 'E Fort St & Brush St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Standalone brick portal entrance on south side of Fort St.',
+    restaurants: [],
+  },
+  {
+    id: 'greektown',
+    name: 'Greektown Station',
+    coordinate: [-83.042419, 42.334617],
+    entrance: [-83.042320, 42.334693],
+    neighborhood: 'Greektown',
+    crossStreets: 'Monroe St & Beaubien St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Direct pedestrian bridge to Hollywood Casino Greektown Level 3.',
+    restaurants: [],
+  },
+  {
+    id: 'cadillac',
+    name: 'Cadillac Center Station',
+    coordinate: [-83.046157, 42.333710],
+    entrance: [-83.046330, 42.333644],
+    neighborhood: 'Cadillac Square',
+    crossStreets: 'Gratiot Ave & Library St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Street-level entrance facing Campus Martius and Hudson’s Detroit development.',
+    restaurants: [],
+  },
+  {
+    id: 'broadway',
+    name: 'Broadway Station',
+    coordinate: [-83.048213, 42.335449],
+    entrance: [-83.048179, 42.335569],
+    neighborhood: 'Broadway',
+    crossStreets: 'Broadway St & John R St',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Integrated facade entrance near Detroit Opera House and Comerica Park.',
+    restaurants: [],
+  },
+  {
+    id: 'grand-circus',
+    name: 'Grand Circus Park Station',
+    coordinate: [-83.050592, 42.335782],
+    entrance: [-83.050629, 42.335804],
+    neighborhood: 'Grand Circus Park',
+    crossStreets: 'Woodward Ave & Park Ave',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Direct transfer point to QLINE Woodward streetcar and Comerica/Ford Field.',
+    restaurants: [],
+  },
+  {
+    id: 'times-square',
+    name: 'Times Square Station',
+    coordinate: [-83.052159, 42.333579],
+    entrance: [-83.051904, 42.333594],
+    neighborhood: 'West Downtown',
+    crossStreets: 'Times Square & Grand River Ave',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Elevator and dual stairwell entrance next to DTE Energy headquarters.',
+    restaurants: [],
+  },
 ];
 
 export const qlineStops: { name: string; coordinate: Coordinate }[] = [
@@ -37,9 +206,6 @@ export const qlineStops: { name: string; coordinate: Coordinate }[] = [
   { name: 'Grand Boulevard', coordinate: [-83.0741, 42.3722] },
 ];
 
-export type Place = Restaurant & { id: string; coordinate: Coordinate };
-
-// Curated downtown restaurants; distances are computed from coordinates at runtime.
 export const restaurants: Place[] = [
   ['lafayette', 'Lafayette Coney Island', 'Detroit coney dogs', '$', 'https://www.lafayetteconeyisland.com/', -83.0478, 42.3317],
   ['american', 'American Coney Island', 'Detroit coney dogs', '$', 'https://www.americanconeyisland.com/', -83.0480, 42.3318],
@@ -64,18 +230,35 @@ export const restaurants: Place[] = [
   ['shillelagh', 'The Old Shillelagh', 'Irish pub', '$$', 'https://oldshillelagh.com/', -83.0419, 42.3349],
   ['firebird', 'Firebird Tavern', 'Tavern', '$$', 'https://www.firebirdtavern.com/', -83.0428, 42.3357],
   ['sweetwater', 'Sweetwater Tavern', 'Wings & tavern', '$$', 'https://sweetwatertavern.net/', -83.0413, 42.3335],
-].map(([id, name, category, price, url, lng, lat]) => ({ id, name, category, price, url, coordinate: [lng, lat] } as Place));
+].map(([id, name, category, price, url, lng, lat]) => {
+  const isLate = ['lafayette', 'american', 'checker', 'shillelagh', 'sweetwater'].includes(id as string);
+  const isSponsored = id === 'lafayette';
+  return {
+    id: id as string,
+    name: name as string,
+    category: category as string,
+    price: price as string,
+    url: url as string,
+    coordinate: [lng as number, lat as number] as Coordinate,
+    lateNight: isLate,
+    sponsored: isSponsored,
+    ...(isSponsored ? { sponsorTagline: 'Official Downtown Partner' } : {}),
+  };
+});
 
-export function milesBetween(a: Coordinate, b: Coordinate) {
-  const r = Math.PI / 180, dLat = (b[1] - a[1]) * r, dLon = (b[0] - a[0]) * r;
+export function milesBetween(a: Coordinate, b: Coordinate): number {
+  const r = Math.PI / 180;
+  const dLat = (b[1] - a[1]) * r;
+  const dLon = (b[0] - a[0]) * r;
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLon / 2) ** 2;
   return 3958.8 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-// Walking distance approximated as straight-line × 1.25 for Detroit's street grid.
 export function nearbyRestaurants(station: Station) {
-  return restaurants.map(p => ({ ...p, walkMiles: milesBetween(station.entrance, p.coordinate) * 1.25 }))
-    .filter(p => p.walkMiles <= 0.5).sort((a, b) => a.walkMiles - b.walkMiles).slice(0, 5);
+  return restaurants
+    .map(p => ({ ...p, walkMiles: milesBetween(station.entrance, p.coordinate) * 1.25 }))
+    .filter(p => p.walkMiles <= 0.5)
+    .sort((a, b) => a.walkMiles - b.walkMiles);
 }
 
 export const sportsTeams = [

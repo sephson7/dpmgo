@@ -100,3 +100,315 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 @keyframes wake-exit { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .wake-screen, .wake-logo, .wake-progress { animation: none; } .wake-screen { display: none; } }
 @media (max-width: 700px) { .compliance-footer { display: flex; gap: 5px; flex-direction: column; align-items: center; padding: 8px 12px; } .compliance-footer nav { gap: 3px 12px; } .compliance-footer nav a, .compliance-footer nav button { font-size: 8px; } .restaurant-thumb { width: 56px; height: 48px; } .restaurant-select { gap: 8px; } .restaurant-main strong { font-size: 12px; } .restaurant-main small { font-size: 10px; } }
+
+/* =========================================================
+   Homepage Live Countdown Ticker HUD Classes
+   ========================================================= */
+.homepage-ticker-hud {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: oklch(0.88 0.15 195 / 6%);
+  border: 1px solid oklch(0.88 0.15 195 / 25%);
+  border-radius: 4px;
+}
+.ticker-hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: 500 8px var(--font-mono);
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+.ticker-hud-kicker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--primary);
+}
+.ticker-hud-target {
+  color: var(--muted-foreground);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ticker-hud-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ticker-hud-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.ticker-hud-indicator.is-live {
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+  animation: pulse-hud 2s infinite ease-in-out;
+}
+.ticker-hud-indicator.is-off {
+  background: var(--warm);
+  opacity: 0.8;
+}
+.ticker-hud-countdown {
+  font: 600 11px var(--font-mono);
+  color: var(--foreground);
+  letter-spacing: 0.4px;
+}
+.ticker-hud-countdown strong {
+  color: var(--primary);
+}
+.ticker-hud-countdown small {
+  color: var(--muted-foreground);
+  font-weight: 400;
+  margin-left: 4px;
+}
+.ticker-due-now {
+  color: var(--primary);
+  letter-spacing: 1px;
+}
+.ticker-off-hours {
+  color: var(--warm);
+  font-size: 9px;
+}
+.mobile-countdown-pill {
+  display: none;
+  margin-top: 14px;
+  padding: 6px 12px;
+  background: oklch(0.13 0.025 260 / 80%);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  border-radius: 999px;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  font: 500 9px var(--font-mono);
+}
+.mobile-countdown-label {
+  color: var(--muted-foreground);
+}
+.mobile-countdown-val {
+  color: var(--primary);
+  font-weight: 700;
+}
+.signal-pulse {
+  animation: pulse-hud 1.8s infinite ease-in-out;
+}
+.signal-idle {
+  background: var(--warm);
+  box-shadow: none;
+}
+@keyframes pulse-hud {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+@media (max-width: 700px) {
+  .mobile-countdown-pill {
+    display: inline-flex;
+  }
+}
+
+/* =========================================================
+   Dining Discovery Filter HUD & Sponsor Badges
+   ========================================================= */
+.dining-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+.filter-chip-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filter-chip-label {
+  font: 600 8px var(--font-mono);
+  color: var(--muted-foreground);
+  letter-spacing: 0.8px;
+  width: 44px;
+}
+.filter-chip {
+  background: oklch(0.13 0.025 260 / 60%);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  padding: 3px 8px;
+  font: 500 9px var(--font-mono);
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+.filter-chip:hover {
+  border-color: var(--primary);
+  color: var(--foreground);
+}
+.filter-chip.active {
+  background: oklch(0.88 0.15 195 / 15%);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 10px oklch(0.88 0.15 195 / 20%);
+}
+.filter-chip.active-warm {
+  background: oklch(0.83 0.12 67 / 15%);
+  border-color: var(--warm);
+  color: var(--warm);
+  box-shadow: 0 0 10px oklch(0.83 0.12 67 / 20%);
+}
+.restaurant-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sponsor-badge {
+  font: 700 8px var(--font-mono);
+  color: var(--warm);
+  background: oklch(0.83 0.12 67 / 15%);
+  border: 1px solid var(--warm);
+  padding: 1px 5px;
+  border-radius: 2px;
+  letter-spacing: 0.6px;
+}
+.late-indicator {
+  color: var(--warm);
+}
+.restaurant-item.restaurant-sponsored {
+  background: oklch(0.88 0.15 195 / 4%);
+}
+
+/* =========================================================
+   Station Wayfinding & Elevator Guidance Card
+   ========================================================= */
+.station-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+.wayfinding-card {
+  margin: 14px 27px 4px;
+  padding: 12px 14px;
+  background: oklch(0.19 0.024 258 / 50%);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+@media (max-width: 700px) {
+  .wayfinding-card {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+.wayfinding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.wayfinding-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 9px var(--font-mono);
+  color: var(--primary);
+  letter-spacing: 0.6px;
+}
+.accessibility-chip {
+  font: 600 8px var(--font-mono);
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+.chip-accessible {
+  background: oklch(0.88 0.15 195 / 15%);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+.chip-limited {
+  background: oklch(0.83 0.12 67 / 15%);
+  color: var(--warm);
+  border: 1px solid var(--warm);
+}
+.wayfinding-notes {
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+.wayfinding-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font: 400 9px var(--font-mono);
+  color: var(--muted-foreground);
+}
+.wayfinding-meta strong {
+  color: var(--primary);
+}
+
+/* =========================================================
+   Next-Stop Arrival Alarm & Device Vibration HUD
+   ========================================================= */
+.alarm-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: oklch(0.13 0.025 260 / 90%);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font: 600 9px var(--font-mono);
+  padding: 6px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.alarm-toggle-btn:hover {
+  border-color: var(--primary);
+  color: var(--foreground);
+}
+.alarm-toggle-btn.alarm-active {
+  background: oklch(0.88 0.15 195 / 20%);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 12px oklch(0.88 0.15 195 / 30%);
+}
+.active-alarm-banner {
+  position: absolute;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: oklch(0.13 0.025 260 / 95%);
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 25px oklch(0.88 0.15 195 / 35%);
+  backdrop-filter: blur(16px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font: 600 10px var(--font-mono);
+  color: var(--primary);
+  pointer-events: auto;
+}
+.alarm-triggered {
+  border-color: var(--warm);
+  color: var(--warm);
+  box-shadow: 0 0 30px oklch(0.83 0.12 67 / 45%);
+  animation: pulse-hud 0.8s infinite ease-in-out;
+}
+.alarm-cancel-btn {
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 2px;
+  display: grid;
+  place-items: center;
+}
+.alarm-cancel-btn:hover {
+  color: var(--foreground);
+}
