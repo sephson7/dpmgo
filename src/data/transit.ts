@@ -13,7 +13,10 @@ export type Place = Restaurant & {
   coordinate: Coordinate;
   lateNight?: boolean | undefined;
   sponsored?: boolean | undefined;
+  sponsorTier?: 'anchor' | 'featured' | undefined;
   sponsorTagline?: string | undefined;
+  sponsorPerk?: string | undefined;
+  sponsorStationId?: string | undefined; // Target a specific station (e.g. 'financial', 'greektown') or leave undefined for all nearby
 };
 
 export type Station = {
@@ -30,8 +33,6 @@ export type Station = {
 };
 
 // Platform positions and nearest public entrances from Detroit Transportation Corporation GTFS stops.txt:
-// https://hosted-gtfs-feeds.s3.amazonaws.com/DPM/gtfs.zip (location_type 1 and 2).
-// Preserve this sequential order starting at Michigan Station.
 export const peopleMoverStations: Station[] = [
   {
     id: 'michigan',
@@ -232,7 +233,10 @@ export const restaurants: Place[] = [
   ['sweetwater', 'Sweetwater Tavern', 'Wings & tavern', '$$', 'https://sweetwatertavern.net/', -83.0413, 42.3335],
 ].map(([id, name, category, price, url, lng, lat]) => {
   const isLate = ['lafayette', 'american', 'checker', 'shillelagh', 'sweetwater'].includes(id as string);
+  
+  // Configure partner status: Lafayette as top anchor sponsor
   const isSponsored = id === 'lafayette';
+  
   return {
     id: id as string,
     name: name as string,
@@ -242,7 +246,14 @@ export const restaurants: Place[] = [
     coordinate: [lng as number, lat as number] as Coordinate,
     lateNight: isLate,
     sponsored: isSponsored,
-    ...(isSponsored ? { sponsorTagline: 'Official Downtown Partner' } : {}),
+    ...(isSponsored
+      ? {
+          sponsorTier: 'anchor' as const,
+          sponsorTagline: 'Official Downtown Anchor Partner',
+          sponsorPerk: 'Show DPM - Go! for 10% off dine-in orders',
+          sponsorStationId: undefined, // Available to all nearby downtown stations
+        }
+      : {}),
   };
 });
 

@@ -442,9 +442,26 @@ function StationDetails({
   const [maxMinutes, setMaxMinutes] = useState<number | 'all'>('all');
   const [lateNightOnly, setLateNightOnly] = useState(false);
 
-  const nearby = useMemo(() => {
-    return nearbyRestaurants(station)
-      .map(r => ({ ...r, walkMinutes: Math.max(1, Math.round(r.walkMiles * 20)) }))
+  const allNearby = useMemo(() => {
+    return nearbyRestaurants(station).map(r => ({
+      ...r,
+      walkMinutes: Math.max(1, Math.round(r.walkMiles * 20)),
+    }));
+  }, [station]);
+
+  // Primary Anchor Sponsor (Highest tier paid placement)
+  const primarySponsor = useMemo(() => {
+    return (
+      allNearby.find(
+        r => r.sponsored && (r.sponsorStationId === station.id || !r.sponsorStationId)
+      ) ?? null
+    );
+  }, [allNearby, station.id]);
+
+  // Filtered standard listings (excluding the primary sponsor if already shown in the top spot)
+  const standardSpots = useMemo(() => {
+    return allNearby
+      .filter(r => r.id !== primarySponsor?.id)
       .filter(r => {
         if (priceFilter === '$' && r.price !== '$') return false;
         if (priceFilter === '$$' && r.price !== '$$') return false;
@@ -452,9 +469,8 @@ function StationDetails({
         if (maxMinutes !== 'all' && r.walkMinutes > maxMinutes) return false;
         if (lateNightOnly && !r.lateNight) return false;
         return true;
-      })
-      .sort((a, b) => (b.sponsored ? 1 : 0) - (a.sponsored ? 1 : 0));
-  }, [station, priceFilter, maxMinutes, lateNightOnly]);
+      });
+  }, [allNearby, primarySponsor?.id, priceFilter, maxMinutes, lateNightOnly]);
 
   const number = peopleMoverStations.indexOf(station) + 1;
   const next = peopleMoverStations[number % peopleMoverStations.length] ?? station;
@@ -463,7 +479,9 @@ function StationDetails({
   const radians = Math.PI / 180;
   const latDifference = (station.entrance[1] - 42.3316) * radians;
   const lonDifference = (station.entrance[0] + 83.0466) * radians;
-  const a = Math.sin(latDifference / 2) ** 2 + Math.cos(42.3316 * radians) * Math.cos(station.entrance[1] * radians) * Math.sin(lonDifference / 2) ** 2;
+  const a =
+    Math.sin(latDifference / 2) ** 2 +
+    Math.cos(42.3316 * radians) * Math.cos(station.entrance[1] * radians) * Math.sin(lonDifference / 2) ** 2;
   const walkingMiles = 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1.3;
   const walkingMinutes = Math.max(1, Math.round(walkingMiles * 20));
 
@@ -489,7 +507,7 @@ function StationDetails({
             onClick={isArmed ? onDisarm : onArm}
             title={isArmed ? 'Cancel stop alert' : 'Alert me when arriving'}
           >
-            {isArmed ? <BellOff size={14}/> : <Bell size={14}/>}
+            {isArmed ? <BellOff size={14} /> : <Bell size={14} />}
             <span>{isArmed ? 'ALARM ON' : 'SET ALARM'}</span>
           </button>
         </div>
@@ -497,9 +515,20 @@ function StationDetails({
       </DrawerHeader>
 
       <div className="detail-stats">
-        <div><span>WALK FROM CAMPUS MARTIUS*</span><strong>{walkingMinutes} <small>min · ~{walkingMiles.toFixed(1)} mi</small></strong></div>
-        <div><span>NEXT STOP</span><strong className="next-stop">{next.name}</strong></div>
-        <div><span>SERVICE NOW</span><strong className={sched.running ? 'next-stop' : 'arrival-unavailable'}>{sched.running ? 'Running' : 'Not running'}{sched.specialToday ? ' · Special event' : ''}</strong></div>
+        <div>
+          <span>WALK FROM CAMPUS MARTIUS*</span>
+          <strong>{walkingMinutes} <small>min · ~{walkingMiles.toFixed(1)} mi</small></strong>
+        </div>
+        <div>
+          <span>NEXT STOP</span>
+          <strong className="next-stop">{next.name}</strong>
+        </div>
+        <div>
+          <span>SERVICE NOW</span>
+          <strong className={sched.running ? 'next-stop' : 'arrival-unavailable'}>
+            {sched.running ? 'Running' : 'Not running'}{sched.specialToday ? ' · Special event' : ''}
+          </strong>
+        </div>
       </div>
 
       {/* Station Wayfinding & Accessibility Guidance Card */}
@@ -520,13 +549,17 @@ function StationDetails({
         </div>
       </div>
 
+      {/* Scheduled Train Times */}
       <div className="detail-body">
-        <div className="detail-section-title"><span>NEXT TRAINS · SCHEDULED</span><span>OFFICIAL TIMETABLE</span></div>
+        <div className="detail-section-title">
+          <span>NEXT TRAINS · SCHEDULED</span>
+          <span>OFFICIAL TIMETABLE</span>
+        </div>
         {sched.trains.length ? (
           <div className="restaurant-list">
             {sched.trains.map((t, i) => (
               <div key={i} className="restaurant-item">
-                <span className="restaurant-icon"><Clock3 size={16}/></span>
+                <span className="restaurant-icon"><Clock3 size={16} /></span>
                 <span className="restaurant-main">
                   <strong>{t.time}{t.day ? ` · ${t.day}` : ''}</strong>
                   <small>{t.minutes < 1 ? 'Due now' : t.minutes < 120 ? `in ${t.minutes} min` : 'Next service day'}</small>
@@ -534,15 +567,101 @@ function StationDetails({
               </div>
             ))}
           </div>
-        ) : <p className="detail-note">No scheduled trains found.</p>}
-        {sched.specialDays.length > 0 && <p className="detail-note">Special-event service: {sched.specialDays.join(', ')}.</p>}
+        ) : (
+          <p className="detail-note">No scheduled trains found.</p>
+        )}
+        {sched.specialDays.length > 0 && (
+          <p className="detail-note">Special-event service: {sched.specialDays.join(', ')}.</p>
+        )}
         <p className="detail-note">Times come from the official People Mover schedule and are not live. Trains may run early, late or not at all.</p>
       </div>
 
+      {/* PRIMARY HIGHLIGHTED TOP SPOT & NEARBY SPOTS */}
       <div className="detail-body">
-        <div className="detail-section-title"><span>NEAR THIS STATION</span><span>LOCAL SPOTS ↗</span></div>
+        <div className="detail-section-title">
+          <span>STATION ANCHOR &amp; DINING</span>
+          <span>LOCAL HUBS ↗</span>
+        </div>
 
-        {/* Discovery Filters HUD */}
+        {/* --- HIGHLIGHTED PRIMARY TOP SPOT (PAID PARTNER) --- */}
+        {primarySponsor ? (
+          <div className="primary-anchor-container">
+            <div className="primary-anchor-kicker">
+              <span className="anchor-pulse" />
+              <span>OFFICIAL STATION PARTNER SPOT</span>
+            </div>
+            <div className={`primary-anchor-card ${restaurantId === primarySponsor.id ? 'anchor-selected' : ''}`}>
+              <div className="anchor-header">
+                <div className="anchor-thumb-wrap">
+                  {diningImage(primarySponsor.id) ? (
+                    <img src={diningImage(primarySponsor.id)} alt={primarySponsor.name} className="anchor-thumb" />
+                  ) : (
+                    <div className="anchor-thumb-fallback"><MapPin size={20} /></div>
+                  )}
+                </div>
+                <div className="anchor-info">
+                  <div className="anchor-title-row">
+                    <h3 className="anchor-name">{primarySponsor.name}</h3>
+                    <span className="anchor-price-tag">{primarySponsor.price}</span>
+                  </div>
+                  <div className="anchor-meta">
+                    <span>{primarySponsor.category}</span>
+                    <span>·</span>
+                    <span>{primarySponsor.walkMiles.toFixed(2)} mi (~{primarySponsor.walkMinutes} min walk)</span>
+                  </div>
+                  {primarySponsor.sponsorTagline && (
+                    <div className="anchor-tagline">{primarySponsor.sponsorTagline}</div>
+                  )}
+                </div>
+              </div>
+
+              {primarySponsor.sponsorPerk && (
+                <div className="anchor-perk-box">
+                  <span className="perk-label">EXCLUSIVE RIDER PERK:</span>
+                  <span className="perk-text">{primarySponsor.sponsorPerk}</span>
+                </div>
+              )}
+
+              <div className="anchor-actions">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="hudActive"
+                  className="anchor-map-btn"
+                  onClick={() => onRestaurant(primarySponsor.id)}
+                >
+                  <MapPin size={13} />
+                  <span>SHOW ON 3D MAP</span>
+                </Button>
+                <a
+                  href={primarySponsor.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="anchor-web-link"
+                >
+                  <span>MENU &amp; VISIT</span>
+                  <ExternalLink size={13} />
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* UNCLAIMED STATION PROMPT (DIRECT TO /pricing) */
+          <div className="claim-station-slot">
+            <div className="claim-slot-inner">
+              <div>
+                <strong>FEATURE YOUR DOWNTOWN BUSINESS HERE</strong>
+                <p>Claim the exclusive Station Anchor top spot for {station.name}.</p>
+              </div>
+              <a href="/pricing" className="claim-slot-btn">
+                <span>VIEW TIERS</span>
+                <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Discovery Filter HUD for standard listings */}
         <div className="dining-filter-bar">
           <div className="filter-chip-group">
             <span className="filter-chip-label">PRICE:</span>
@@ -580,9 +699,10 @@ function StationDetails({
           </div>
         </div>
 
-        {nearby.length ? (
+        {/* Standard Nearby Directory */}
+        {standardSpots.length ? (
           <div className="restaurant-list">
-            {nearby.map(r => (
+            {standardSpots.map(r => (
               <div
                 key={r.id}
                 className={`restaurant-item ${restaurantId === r.id ? 'station-selected' : ''} ${r.sponsored ? 'restaurant-sponsored' : ''}`}
@@ -598,7 +718,7 @@ function StationDetails({
                     {diningImage(r.id) ? (
                       <img src={diningImage(r.id)} alt={`Map thumbnail of ${r.name}`} loading="lazy" />
                     ) : (
-                      <MapPin size={17}/>
+                      <MapPin size={17} />
                     )}
                   </span>
                   <span className="restaurant-main">
@@ -613,7 +733,13 @@ function StationDetails({
                   </span>
                   <span className="restaurant-price">{r.price}</span>
                 </Button>
-                <a href={r.url} target="_blank" rel="noopener noreferrer" aria-label={`${r.name} website`} className="restaurant-arrow">
+                <a
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${r.name} website`}
+                  className="restaurant-arrow"
+                >
                   <ExternalLink size={15} />
                 </a>
               </div>
@@ -627,17 +753,17 @@ function StationDetails({
         <div className="station-actions">
           <Button variant="hudActive" asChild>
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-              <Navigation2 size={16}/> WALKING DIRECTIONS <ExternalLink size={13}/>
+              <Navigation2 size={16} /> WALKING DIRECTIONS <ExternalLink size={13} />
             </a>
           </Button>
           <div className="coordinates">
-            <Compass size={14}/>{station.coordinate[1].toFixed(4)}° N, {Math.abs(station.coordinate[0]).toFixed(4)}° W
+            <Compass size={14} />{station.coordinate[1].toFixed(4)}° N, {Math.abs(station.coordinate[0]).toFixed(4)}° W
           </div>
         </div>
       </div>
 
       <div className="detail-disclaimer">
-        <Clock3 size={13}/> *Walk is an estimate, not a routed trip. Train times are scheduled, not live. Vehicle markers are simulated.
+        <Clock3 size={13} /> *Walk is an estimate, not a routed trip. Train times are scheduled, not live. Vehicle markers are simulated.
       </div>
     </div>
   );

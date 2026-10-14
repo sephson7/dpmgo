@@ -278,6 +278,240 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 .restaurant-item.restaurant-sponsored {
   background: oklch(0.88 0.15 195 / 4%);
 }
+/* =========================================================
+   Primary Station Anchor Top Spot & Sponsor Card
+   ========================================================= */
+
+.primary-anchor-container {
+  margin: 10px 0 16px;
+}
+
+.primary-anchor-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 6px;
+  font: 700 9px var(--font-mono);
+  color: var(--warm);
+  letter-spacing: 1px;
+}
+
+.anchor-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warm);
+  box-shadow: 0 0 10px var(--warm);
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.primary-anchor-card {
+  position: relative;
+  background: linear-gradient(135deg, oklch(0.21 0.035 70 / 40%) 0%, oklch(0.15 0.025 260 / 95%) 100%);
+  border: 1px solid oklch(0.83 0.12 67 / 65%);
+  box-shadow: 0 0 18px oklch(0.83 0.12 67 / 20%), inset 0 0 12px oklch(0.83 0.12 67 / 10%);
+  border-radius: 6px;
+  padding: 14px;
+  transition: all 0.2s ease-in-out;
+}
+
+.primary-anchor-card.anchor-selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 24px oklch(0.88 0.15 195 / 35%);
+}
+
+.anchor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.anchor-thumb-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid oklch(0.83 0.12 67 / 50%);
+  flex-shrink: 0;
+  background: oklch(0.12 0.02 260);
+}
+
+.anchor-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.anchor-thumb-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--warm);
+}
+
+.anchor-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.anchor-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.anchor-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.3px;
+}
+
+.anchor-price-tag {
+  font: 700 12px var(--font-mono);
+  color: var(--warm);
+  background: oklch(0.83 0.12 67 / 15%);
+  border: 1px solid oklch(0.83 0.12 67 / 40%);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.anchor-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: oklch(0.85 0.02 220);
+  margin-top: 2px;
+}
+
+.anchor-tagline {
+  font: 600 10px var(--font-mono);
+  color: var(--warm);
+  letter-spacing: 0.4px;
+  margin-top: 3px;
+}
+
+.anchor-perk-box {
+  margin-top: 10px;
+  padding: 7px 10px;
+  background: oklch(0.83 0.12 67 / 10%);
+  border-left: 2px solid var(--warm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 0 4px 4px 0;
+}
+
+.perk-label {
+  font: 700 8px var(--font-mono);
+  color: var(--warm);
+  letter-spacing: 0.8px;
+}
+
+.perk-text {
+  font-size: 11px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.anchor-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid oklch(0.83 0.12 67 / 20%);
+}
+
+.anchor-map-btn {
+  flex: 1;
+  font: 700 10px var(--font-mono);
+  letter-spacing: 0.8px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.anchor-web-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 700 10px var(--font-mono);
+  color: var(--warm);
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid oklch(0.83 0.12 67 / 40%);
+  border-radius: 3px;
+  background: oklch(0.83 0.12 67 / 8%);
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.anchor-web-link:hover {
+  background: oklch(0.83 0.12 67 / 20%);
+}
+
+/* Unclaimed Station Opportunity Card */
+.claim-station-slot {
+  margin: 10px 0 16px;
+  padding: 12px 14px;
+  background: oklch(0.16 0.025 260 / 60%);
+  border: 1px dashed oklch(0.88 0.15 195 / 35%);
+  border-radius: 4px;
+}
+
+.claim-slot-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.claim-slot-inner strong {
+  display: block;
+  font: 700 10px var(--font-mono);
+  color: var(--primary);
+  letter-spacing: 0.7px;
+}
+
+.claim-slot-inner p {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin: 2px 0 0;
+}
+
+.claim-slot-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 700 9px var(--font-mono);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  background: oklch(0.88 0.15 195 / 10%);
+  padding: 5px 9px;
+  border-radius: 3px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.claim-slot-btn:hover {
+  background: oklch(0.88 0.15 195 / 25%);
+}
 
 /* =========================================================
    Station Wayfinding & Elevator Guidance Card
