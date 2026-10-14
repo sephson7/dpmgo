@@ -646,3 +646,39 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 .alarm-cancel-btn:hover {
   color: var(--foreground);
 }
+/* --- BOARDED RIDE MODE & UNTOGGLE EXTENSIONS --- */
+.boarded-action-wrap {
+  margin: 10px 0 14px;
+  display: flex;
+  align-items: center;
+}
+
+.boarded-mode-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+  background: oklch(0.16 0.025 260 / 75%);
+  backdrop-filter: blur(12px);
+}
+
+.boarded-mode-btn.is-boarded {
+  background: oklch(0.75 0.18 155 / 20%);
+  color: oklch(0.85 0.19 155);
+  border-color: oklch(0.75 0.18 155 / 75%);
+  box-shadow: 0 0 16px oklch(0.75 0.18 155 / 35%);
+}
+
+.anchor-map-btn.is-untoggle {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  border-color: var(--destructive);
+}

@@ -6,7 +6,7 @@ import { peopleMoverServiceRunning } from '@/data/schedule';
 import { simulatedMoverTrains } from '@/data/trainSimulation';
 import { peopleMoverShape, peopleMoverStations, qlineStops, restaurants, type Coordinate } from '@/data/transit';
 
-type Props = { peopleMover: boolean; qline: boolean; selectedId: string | null; onSelect: (id: string) => void; onReady?: (ready: boolean) => void; restaurantId?: string | null };
+type Props = { peopleMover: boolean; qline: boolean; selectedId: string | null; onSelect: (id: string) => void; onReady?: (ready: boolean) => void; restaurantId?: string | null; isBoarded?: boolean; userPosition?: Coordinate | null };
 type Point = GeoJSON.Feature<GeoJSON.Point>;
 const point = (coordinate: Coordinate): Point => ({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: coordinate } });
 const route = (coordinates: Coordinate[]): GeoJSON.Feature<GeoJSON.LineString> => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } });
@@ -39,7 +39,7 @@ function simulatedPosition(path: Coordinate[], elapsed: number, loop: boolean): 
   return [a[0] + (b[0] - a[0]) * progress, a[1] + (b[1] - a[1]) * progress];
 }
 
-export default function TransitMap({ peopleMover, qline, selectedId, onSelect, onReady, restaurantId }: Props) {
+export default function TransitMap({ peopleMover, qline, selectedId, onSelect, onReady, restaurantId, isBoarded, userPosition }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const onSelectRef = useRef(onSelect);
@@ -160,9 +160,30 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
     const map = mapRef.current;
     const source = map?.getSource('restaurant-pin') as mapboxgl.GeoJSONSource | undefined;
     const place = restaurants.find(r => r.id === restaurantId);
-    source?.setData({ type: 'FeatureCollection', features: place ? [{ ...point(place.coordinate), properties: { name: place.name } }] : [] });
-    if (map && place) map.flyTo({ center: place.coordinate, zoom: 17, duration: 1000, essential: true, padding: { top: 0, bottom: window.innerHeight * 0.45, left: 0, right: 0 } });
-  }, [restaurantId]);
+
+    if (place) {
+      source?.setData({ type: 'FeatureCollection', features: [{ ...point(place.coordinate), properties: { name: place.name } }] });
+      if (map) map.flyTo({ center: place.coordinate, zoom: 17, duration: 900, essential: true, padding: { top: 0, bottom: window.innerHeight * 0.45, left: 0, right: 0 } });
+    } else {
+      source?.setData({ type: 'FeatureCollection', features: [] });
+      const station = peopleMoverStations.find(s => s.id === selectedId);
+      if (map && station && !isBoarded) {
+        map.flyTo({ center: station.coordinate, zoom: 15.5, duration: 800, essential: true, padding: { top: 0, bottom: Math.min(window.innerHeight * 0.42, 330), left: 0, right: 0 } });
+      }
+    }
+  }, [restaurantId, selectedId, isBoarded]);
+
+  // Live rider tracking while boarded on the People Mover
+  useEffect(() => {
+    if (!isBoarded || !userPosition || !mapRef.current) return;
+    mapRef.current.easeTo({
+      center: userPosition,
+      zoom: 16.8,
+      pitch: 55,
+      duration: 1200,
+      essential: true,
+    });
+  }, [isBoarded, userPosition]);
 
   return <div ref={container} className="h-full w-full" aria-label="Satellite map of downtown Detroit transit stops" />;
 }

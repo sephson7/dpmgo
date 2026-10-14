@@ -251,7 +251,7 @@ export const restaurants: Place[] = [
           sponsorTier: 'anchor' as const,
           sponsorTagline: 'Official Downtown Anchor Partner',
           sponsorPerk: 'Show DPM - Go! for 10% off dine-in orders',
-          sponsorStationId: undefined, // Available to all nearby downtown stations
+          sponsorStationId: 'fort-cass', // Strictly locked to Fort / Cass Station
         }
       : {}),
   };

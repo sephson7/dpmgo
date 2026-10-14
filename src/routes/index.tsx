@@ -24,7 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { peopleMoverStations, nearbyRestaurants, sportsTeams, activities, type Station } from '@/data/transit';
+import { peopleMoverStations, nearbyRestaurants, sportsTeams, activities, milesBetween, type Station } from '@/data/transit';
+import { getNextTrainForStation } from '@/data/trainSimulation';
 import { stationSchedule } from '@/data/schedule';
 import { useStationAlert } from '@/hooks/useStationAlert';
 import logo from '@/assets/dpm-go-logo.jpg.asset.json';
@@ -32,7 +33,7 @@ import logo from '@/assets/dpm-go-logo.jpg.asset.json';
 const diningImages = import.meta.glob<{ url: string }>('/src/assets/dining/*.asset.json', { eager: true, import: 'default' });
 const diningImage = (id: string) => diningImages[`/src/assets/dining/${id}.jpg.asset.json`]?.url;
 
-type MapProps = { peopleMover: boolean; qline: boolean; selectedId: string | null; onSelect: (id: string) => void; onReady?: (ready: boolean) => void; restaurantId?: string | null };
+type MapProps = { peopleMover: boolean; qline: boolean; selectedId: string | null; onSelect: (id: string) => void; onReady?: (ready: boolean) => void; restaurantId?: string | null; isBoarded?: boolean; userPosition?: [number, number] | null };
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -57,6 +58,29 @@ function Index() {
   const [search, setSearch] = useState('');
   const [stationListOpen, setStationListOpen] = useState(false);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [isBoarded, setIsBoarded] = useState(false);
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+
+  // GPS watcher when rider is boarded on the train
+  useEffect(() => {
+    if (!isBoarded || typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      return;
+    }
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserPos([pos.coords.longitude, pos.coords.latitude]);
+      },
+      (err) => {
+        console.warn('Boarded GPS error:', err);
+      },
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [isBoarded]);
+
+  const toggleRestaurant = (id: string) => {
+    setRestaurantId(prev => (prev === id ? null : id));
+  };
   const [panel, setPanel] = useState<null | 'activities' | string>(null);
   const [legal, setLegal] = useState<'terms' | 'privacy' | null>(null);
   const [waking, setWaking] = useState(true);
@@ -74,11 +98,29 @@ function Index() {
   const selected = peopleMoverStations.find(station => station.id === selectedId) ?? null;
   const filtered = peopleMoverStations.filter(station => station.name.toLowerCase().includes(search.toLowerCase()));
 
-  // Active station for homepage countdown (selected station or default Michigan Station)
-  const defaultStation = peopleMoverStations[0] as Station;
-  const tickerStation = selected ?? defaultStation;
+  // Active station for hero countdown: if rider selected a station, use it;
+  // otherwise dynamically lock onto the nearest station via GPS (or default)
+  const nearestStation = useMemo(() => {
+    if (!userPos) return peopleMoverStations[0] as Station;
+    const sorted = [...peopleMoverStations].sort(
+      (a, b) => milesBetween(userPos, a.coordinate) - milesBetween(userPos, b.coordinate)
+    );
+    return (sorted[0] as Station) ?? (peopleMoverStations[0] as Station);
+  }, [userPos]);
+
+  const tickerStation = selected ?? nearestStation;
   const tickerSchedule = useMemo(() => stationSchedule(tickerStation.id, now), [tickerStation.id, now]);
   const nextDeparture = tickerSchedule.trains[0] ?? null;
+
+  // Live countdown synchronized to physical loop trains
+  const [liveArrival, setLiveArrival] = useState(() => getNextTrainForStation(tickerStation.id));
+  useEffect(() => {
+    setLiveArrival(getNextTrainForStation(tickerStation.id));
+    const liveTimer = window.setInterval(() => {
+      setLiveArrival(getNextTrainForStation(tickerStation.id));
+    }, 1000);
+    return () => window.clearInterval(liveTimer);
+  }, [tickerStation.id]);
 
   useEffect(() => {
     import('@/components/TransitMap').then(module => setMapComponent(() => module.default));
@@ -112,6 +154,8 @@ function Index() {
             onSelect={openStation}
             onReady={setMapReady}
             restaurantId={restaurantId}
+            isBoarded={isBoarded}
+            userPosition={userPos}
           />
         )}
         <div className="map-vignette" />
@@ -176,15 +220,28 @@ function Index() {
           <h1>Move through<br/><em>the Motor City.</em></h1>
           <p>Two lines. One city. Find your next stop.</p>
 
-          {/* Mobile HUD Countdown Pill */}
+          {/* Mobile HUD Countdown Pill & Boarded Mode */}
           <div className="mobile-countdown-pill" role="status" aria-live="polite">
             <span className={`signal-dot ${tickerSchedule.running ? 'signal-pulse' : 'signal-idle'}`} />
-            <span className="mobile-countdown-label">NEXT TRAIN · {tickerStation.name.toUpperCase()}:</span>
+            <span className="mobile-countdown-label">
+              {isBoarded ? 'NEXT STOP' : 'NEXT TRAIN'} · {tickerStation.name.toUpperCase()}:
+            </span>
             <strong className="mobile-countdown-val">
-              {tickerSchedule.running
-                ? (nextDeparture ? (nextDeparture.minutes <= 0 ? 'DUE NOW' : `${nextDeparture.minutes} MIN`) : 'STANDBY')
-                : 'OFFLINE'}
+              {tickerSchedule.running ? liveArrival.formatted : 'OFFLINE'}
             </strong>
+          </div>
+
+          <div className="boarded-action-wrap">
+            <Button
+              type="button"
+              variant={isBoarded ? 'default' : 'outline'}
+              size="sm"
+              className={`boarded-mode-btn ${isBoarded ? 'is-boarded' : ''}`}
+              onClick={() => setIsBoarded(v => !v)}
+            >
+              <Navigation2 size={13} className={isBoarded ? 'animate-pulse text-emerald-400' : ''} />
+              <span>{isBoarded ? 'ON TRAIN · FOLLOWING RIDE' : 'BOARDED THE TRAIN?'}</span>
+            </Button>
           </div>
 
           <div className="route-switches" role="group" aria-label="Map layers">
@@ -328,7 +385,7 @@ function Index() {
             <StationDetails
               station={selected}
               restaurantId={restaurantId}
-              onRestaurant={setRestaurantId}
+              onRestaurant={toggleRestaurant}
               isArmed={alertSystem.targetStation?.id === selected.id}
               onArm={() => alertSystem.armAlert(selected)}
               onDisarm={alertSystem.cancelAlert}
@@ -449,13 +506,9 @@ function StationDetails({
     }));
   }, [station]);
 
-  // Primary Anchor Sponsor (Highest tier paid placement)
+  // Primary Anchor Sponsor: Only matches when explicitly contracted for THIS station
   const primarySponsor = useMemo(() => {
-    return (
-      allNearby.find(
-        r => r.sponsored && (r.sponsorStationId === station.id || !r.sponsorStationId)
-      ) ?? null
-    );
+    return allNearby.find(r => r.sponsored && r.sponsorStationId === station.id) ?? null;
   }, [allNearby, station.id]);
 
   // Filtered standard listings (excluding the primary sponsor if already shown in the top spot)
@@ -626,12 +679,12 @@ function StationDetails({
                 <Button
                   type="button"
                   size="sm"
-                  variant="hudActive"
-                  className="anchor-map-btn"
+                  variant={restaurantId === primarySponsor.id ? 'default' : 'hudActive'}
+                  className={`anchor-map-btn ${restaurantId === primarySponsor.id ? 'is-untoggle' : ''}`}
                   onClick={() => onRestaurant(primarySponsor.id)}
                 >
                   <MapPin size={13} />
-                  <span>SHOW ON 3D MAP</span>
+                  <span>{restaurantId === primarySponsor.id ? 'UNTOGGLE 3D PIN' : 'SHOW ON 3D MAP'}</span>
                 </Button>
                 <a
                   href={primarySponsor.url}

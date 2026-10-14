@@ -55,3 +55,39 @@ export function simulatedMoverTrain(elapsed: number): SimulatedTrain {
 export const simulatedMoverPosition = (elapsed: number): Coordinate => simulatedMoverTrain(elapsed).coordinate;
 export const simulatedMoverTrains = (elapsed: number): SimulatedTrain[] => [simulatedMoverTrain(elapsed), simulatedMoverTrain(elapsed + MOVER_HEADWAY_MS)];
 export const simulatedMoverPositions = (elapsed: number): Coordinate[] => [simulatedMoverPosition(elapsed), simulatedMoverPosition(elapsed + MOVER_HEADWAY_MS)];
+
+// Calculate exact time until next train reaches a specific station along the loop
+export function getNextTrainForStation(stationId: string, elapsed = performance.now()) {
+  const stationIndex = peopleMoverStations.findIndex(s => s.id === stationId);
+  if (stationIndex === -1) {
+    return { minutes: 0, seconds: 0, formatted: 'OFFLINE' };
+  }
+
+  // Loop progression offset for this station
+  const stationOffsetMs = (stationIndex / peopleMoverStations.length) * MOVER_LOOP_MS;
+
+  const trainPhases = [
+    ((elapsed % MOVER_LOOP_MS) + MOVER_LOOP_MS) % MOVER_LOOP_MS,
+    (((elapsed + MOVER_HEADWAY_MS) % MOVER_LOOP_MS) + MOVER_LOOP_MS) % MOVER_LOOP_MS,
+  ];
+
+  let minArrivalDiff = Infinity;
+  for (const phase of trainPhases) {
+    let diff = stationOffsetMs - phase;
+    if (diff < 0) diff += MOVER_LOOP_MS;
+    if (diff < minArrivalDiff) {
+      minArrivalDiff = diff;
+    }
+  }
+
+  const totalSeconds = Math.round(minArrivalDiff / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return {
+    minutes,
+    seconds,
+    totalSeconds,
+    formatted: totalSeconds <= 35 ? 'DUE NOW' : `${minutes} MIN`,
+  };
+}
