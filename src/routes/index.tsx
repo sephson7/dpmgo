@@ -816,7 +816,7 @@ function StationDetails({
       </div>
 
       <div className="detail-disclaimer">
-        <Clock3 size={13} /> *Walk is an estimate, not a routed trip. Train times are scheduled, not live. Vehicle markers are simulated.
+        <Clock3 size={13} /> *Walk is an estimate, not a routed trip. Train times are estimated, not live. Vehicle markers are simulated.
       </div>
     </div>
   );
