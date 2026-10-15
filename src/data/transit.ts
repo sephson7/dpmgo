@@ -16,7 +16,7 @@ export type Place = Restaurant & {
   sponsorTier?: 'anchor' | 'featured' | undefined;
   sponsorTagline?: string | undefined;
   sponsorPerk?: string | undefined;
-  sponsorStationId?: string | undefined; // Target a specific station (e.g. 'financial', 'greektown') or leave undefined for all nearby
+  sponsorStationId?: string | undefined;
 };
 
 export type Station = {
@@ -30,6 +30,26 @@ export type Station = {
   adaCompliant: boolean;
   entranceNotes: string;
   restaurants: Restaurant[];
+};
+
+export type ParkingStructure = {
+  id: string;
+  name: string;
+  stationId: string;
+  address: string;
+  coordinate: Coordinate;
+  walkMinutes: number;
+  capacityNote: string;
+};
+
+export type VenueDestination = {
+  id: string;
+  name: string;
+  category: 'sports' | 'entertainment' | 'civic' | 'convention';
+  nearestStationId: string;
+  coordinate: Coordinate;
+  address: string;
+  description: string;
 };
 
 // Platform positions and nearest public entrances from Detroit Transportation Corporation GTFS stops.txt:
@@ -192,6 +212,140 @@ export const peopleMoverStations: Station[] = [
   },
 ];
 
+// Park Once Engine: Parking Structures Paired with Stations
+export const parkingStructures: ParkingStructure[] = [
+  {
+    id: 'ford-underground',
+    name: 'Ford Underground Garage',
+    stationId: 'huntington',
+    address: '30 E. Jefferson Ave, Detroit, MI',
+    coordinate: [-83.0475, 42.3278],
+    walkMinutes: 3,
+    capacityNote: 'High Capacity · Direct Convention Center Access',
+  },
+  {
+    id: 'grand-circus-garage',
+    name: 'Grand Circus Park Underground Garage',
+    stationId: 'grand-circus',
+    address: '1600 Woodward Ave, Detroit, MI',
+    coordinate: [-83.0508, 42.3355],
+    walkMinutes: 2,
+    capacityNote: 'Ideal for Tigers, Lions & Ford Field Events',
+  },
+  {
+    id: 'millennium-garage',
+    name: 'Millennium Garage',
+    stationId: 'financial',
+    address: '432 W. Congress St, Detroit, MI',
+    coordinate: [-83.0470, 42.3280],
+    walkMinutes: 3,
+    capacityNote: 'Covered Gateway to Financial Core & Hart Plaza',
+  },
+  {
+    id: 'z-deck-garage',
+    name: 'Z Deck Garage / One Campus Martius',
+    stationId: 'cadillac',
+    address: '1234 Library St, Detroit, MI',
+    coordinate: [-83.0455, 42.3335],
+    walkMinutes: 2,
+    capacityNote: 'Murals & Central Downtown Hub',
+  },
+  {
+    id: 'opera-house-garage',
+    name: 'Opera House Parking Center Garage',
+    stationId: 'broadway',
+    address: '248 John R St, Detroit, MI',
+    coordinate: [-83.0485, 42.3350],
+    walkMinutes: 2,
+    capacityNote: 'Directly Adjacent to Theater District',
+  },
+  {
+    id: 'rencen-garage',
+    name: 'Millender Center / RenCen Garage',
+    stationId: 'millender',
+    address: '333 E. Renaissance Dr, Detroit, MI',
+    coordinate: [-83.0410, 42.3300],
+    walkMinutes: 3,
+    capacityNote: 'Covered Walkway to Tower Core',
+  },
+];
+
+// "I'm Going To" Intent Dropdown Venues
+export const venueDestinations: VenueDestination[] = [
+  {
+    id: 'lca',
+    name: 'Little Caesars Arena',
+    category: 'sports',
+    nearestStationId: 'grand-circus',
+    coordinate: [-83.0553, 42.3410],
+    address: '2645 Woodward Ave, Detroit, MI',
+    description: 'Home of the Detroit Red Wings & Detroit Pistons, plus major concert tours.',
+  },
+  {
+    id: 'ford-field',
+    name: 'Ford Field',
+    category: 'sports',
+    nearestStationId: 'broadway',
+    coordinate: [-83.0456, 42.3400],
+    address: '2000 Brush St, Detroit, MI',
+    description: 'Home of the Detroit Lions and massive stadium events.',
+  },
+  {
+    id: 'comerica-park',
+    name: 'Comerica Park',
+    category: 'sports',
+    nearestStationId: 'broadway',
+    coordinate: [-83.0485, 42.3390],
+    address: '2100 Woodward Ave, Detroit, MI',
+    description: 'Home of the Detroit Tigers open-air ballpark.',
+  },
+  {
+    id: 'hart-plaza',
+    name: 'Hart Plaza',
+    category: 'civic',
+    nearestStationId: 'financial',
+    coordinate: [-83.0440, 42.3275],
+    address: '1 Hart Plaza, Detroit, MI',
+    description: 'Iconic riverfront festival grounds hosting Movement, Jazz Fest, and cultural fairs.',
+  },
+  {
+    id: 'campus-martius',
+    name: 'Campus Martius Park',
+    category: 'civic',
+    nearestStationId: 'cadillac',
+    coordinate: [-83.0474, 42.3326],
+    address: '800 Woodward Ave, Detroit, MI',
+    description: 'Detroit’s vibrant central gathering hub with seasonal beach, ice rink, and dining.',
+  },
+  {
+    id: 'grand-circus-park',
+    name: 'Grand Circus Park',
+    category: 'civic',
+    nearestStationId: 'grand-circus',
+    coordinate: [-83.0505, 42.3361],
+    address: 'Park Ave & Woodward Ave, Detroit, MI',
+    description: 'Historic downtown park linking theater district and downtown core.',
+  },
+  {
+    id: 'huntington-place',
+    name: 'Huntington Place',
+    category: 'convention',
+    nearestStationId: 'huntington',
+    coordinate: [-83.0490, 42.3270],
+    address: '1 Washington Blvd, Detroit, MI',
+    description: 'World-class convention center hosting the Detroit Auto Show and major expos.',
+  },
+  {
+    id: 'detroit-opera-house',
+    name: 'Detroit Opera House',
+    category: 'entertainment',
+    nearestStationId: 'broadway',
+    coordinate: [-83.0480, 42.3348],
+    address: '1526 Broadway St, Detroit, MI',
+    description: 'Historic performing arts venue for opera, ballet, and touring concerts.',
+  },
+];
+
 export const qlineStops: { name: string; coordinate: Coordinate }[] = [
   { name: 'Congress Street', coordinate: [-83.0445, 42.3295] },
   { name: 'Campus Martius', coordinate: [-83.0474, 42.3326] },
@@ -221,7 +375,7 @@ export const restaurants: Place[] = [
   ['lumen', 'Lumen Detroit', 'American', '$$', 'https://www.lumendetroit.com/', -83.0530, 42.3297],
   ['wright', 'Wright & Company', 'Small plates', '$$$', 'https://www.wrightdetroit.com/', -83.0478, 42.3346],
   ['hudson', 'Hudson Café', 'Breakfast & brunch', '$$', 'https://hudsoncafedetroit.com/', -83.0479, 42.3336],
-  ['townhouse', 'Townhouse Detroit', 'American', '$$$', 'https://townhousedetroit.com/', -83.0470, 42.3335],
+  ['townhouse', 'Townhouse Detroit', 'American', '$$$', 'https://towntownsetroit.com/', -83.0470, 42.3335],
   ['sanmorello', 'San Morello', 'Italian', '$$$', 'https://sanmorello.com/', -83.0487, 42.3356],
   ['mootz', 'Mootz Pizzeria + Bar', 'Pizza', '$$', 'https://mootzpizzeria.com/', -83.0455, 42.3352],
   ['cliffbells', 'Cliff Bell’s', 'Jazz club & dining', '$$$', 'https://www.cliffbells.com/', -83.0533, 42.3358],
@@ -233,8 +387,6 @@ export const restaurants: Place[] = [
   ['sweetwater', 'Sweetwater Tavern', 'Wings & tavern', '$$', 'https://sweetwatertavern.net/', -83.0413, 42.3335],
 ].map(([id, name, category, price, url, lng, lat]) => {
   const isLate = ['lafayette', 'american', 'checker', 'shillelagh', 'sweetwater'].includes(id as string);
-  
-  // Configure partner status: Lafayette as top anchor sponsor
   const isSponsored = id === 'lafayette';
   
   return {
@@ -251,7 +403,7 @@ export const restaurants: Place[] = [
           sponsorTier: 'anchor' as const,
           sponsorTagline: 'Official Downtown Anchor Partner',
           sponsorPerk: 'Show DPM - Go! for 10% off dine-in orders',
-          sponsorStationId: 'fort-cass', // Strictly locked to Fort / Cass Station
+          sponsorStationId: 'fort-cass',
         }
       : {}),
   };
@@ -270,6 +422,10 @@ export function nearbyRestaurants(station: Station) {
     .map(p => ({ ...p, walkMiles: milesBetween(station.entrance, p.coordinate) * 1.25 }))
     .filter(p => p.walkMiles <= 0.5)
     .sort((a, b) => a.walkMiles - b.walkMiles);
+}
+
+export function nearbyParking(stationId: string): ParkingStructure[] {
+  return parkingStructures.filter(p => p.stationId === stationId);
 }
 
 export const sportsTeams = [
