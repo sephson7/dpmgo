@@ -3,7 +3,6 @@ import { useEffect, useState, useMemo, type ComponentType } from 'react';
 import {
   Accessibility,
   AlertCircle,
-  ArrowDownRight,
   ArrowRight,
   Bell,
   BellOff,
@@ -24,7 +23,16 @@ import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { peopleMoverStations, nearbyRestaurants, sportsTeams, activities, milesBetween, type Station } from '@/data/transit';
+import {
+  peopleMoverStations,
+  qlineStations,
+  allTransitStations,
+  nearbyRestaurants,
+  sportsTeams,
+  activities,
+  milesBetween,
+  type Station,
+} from '@/data/transit';
 import { getNextTrainForStation } from '@/data/trainSimulation';
 import { stationSchedule } from '@/data/schedule';
 import { useStationAlert } from '@/hooks/useStationAlert';
@@ -33,7 +41,16 @@ import logo from '@/assets/dpm-go-logo.jpg.asset.json';
 const diningImages = import.meta.glob<{ url: string }>('/src/assets/dining/*.asset.json', { eager: true, import: 'default' });
 const diningImage = (id: string) => diningImages[`/src/assets/dining/${id}.jpg.asset.json`]?.url;
 
-type MapProps = { peopleMover: boolean; qline: boolean; selectedId: string | null; onSelect: (id: string) => void; onReady?: (ready: boolean) => void; restaurantId?: string | null; isBoarded?: boolean; userPosition?: [number, number] | null };
+type MapProps = {
+  peopleMover: boolean;
+  qline: boolean;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onReady?: (ready: boolean) => void;
+  restaurantId?: string | null;
+  isBoarded?: boolean;
+  userPosition?: [number, number] | null;
+};
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -61,18 +78,12 @@ function Index() {
   const [isBoarded, setIsBoarded] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
-  // GPS watcher when rider is boarded on the train
+  // GPS watcher when rider is boarded
   useEffect(() => {
-    if (!isBoarded || typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-      return;
-    }
+    if (!isBoarded || typeof navigator === 'undefined' || !('geolocation' in navigator)) return;
     const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        setUserPos([pos.coords.longitude, pos.coords.latitude]);
-      },
-      (err) => {
-        console.warn('Boarded GPS error:', err);
-      },
+      pos => setUserPos([pos.coords.longitude, pos.coords.latitude]),
+      err => console.warn('Boarded GPS error:', err),
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
@@ -81,44 +92,47 @@ function Index() {
   const toggleRestaurant = (id: string) => {
     setRestaurantId(prev => (prev === id ? null : id));
   };
+
   const [panel, setPanel] = useState<null | 'activities' | string>(null);
   const [legal, setLegal] = useState<'terms' | 'privacy' | null>(null);
   const [waking, setWaking] = useState(true);
   const [now, setNow] = useState(() => new Date());
 
-  // GPS arrival alert hook
   const alertSystem = useStationAlert();
 
-  // 10-second ticker interval
   useEffect(() => {
     const ticker = window.setInterval(() => setNow(new Date()), 10000);
     return () => window.clearInterval(ticker);
   }, []);
 
-  const selected = peopleMoverStations.find(station => station.id === selectedId) ?? null;
-  const filtered = peopleMoverStations.filter(station => station.name.toLowerCase().includes(search.toLowerCase()));
+  // Filter stations based on the active homepage route buttons
+  const activeStations = useMemo(() => {
+    if (peopleMover && !qline) return peopleMoverStations;
+    if (!peopleMover && qline) return qlineStations;
+    return allTransitStations;
+  }, [peopleMover, qline]);
 
-  // Active station for hero countdown: if rider selected a station, use it;
-  // otherwise dynamically lock onto the nearest station via GPS (or default)
+  const selected = allTransitStations.find(station => station.id === selectedId) ?? null;
+  const filtered = activeStations.filter(station => station.name.toLowerCase().includes(search.toLowerCase()));
+
+  // Active station for hero countdown ticker
   const nearestStation = useMemo(() => {
-    if (!userPos) return peopleMoverStations[0] as Station;
-    const sorted = [...peopleMoverStations].sort(
-      (a, b) => milesBetween(userPos, a.coordinate) - milesBetween(userPos, b.coordinate)
-    );
-    return (sorted[0] as Station) ?? (peopleMoverStations[0] as Station);
-  }, [userPos]);
+    if (!userPos) return activeStations[0] as Station;
+    const sorted = [...activeStations].sort((a, b) => milesBetween(userPos, a.coordinate) - milesBetween(userPos, b.coordinate));
+    return (sorted[0] as Station) ?? (activeStations[0] as Station);
+  }, [userPos, activeStations]);
 
   const tickerStation = selected ?? nearestStation;
+  const isQLineTicker = tickerStation.line === 'qline';
   const tickerSchedule = useMemo(() => stationSchedule(tickerStation.id, now), [tickerStation.id, now]);
   const nextDeparture = tickerSchedule.trains[0] ?? null;
 
-  // Live countdown synchronized to physical loop trains
   const [liveArrival, setLiveArrival] = useState(() => getNextTrainForStation(tickerStation.id));
   useEffect(() => {
     setLiveArrival(getNextTrainForStation(tickerStation.id));
     const liveTimer = window.setInterval(() => {
       setLiveArrival(getNextTrainForStation(tickerStation.id));
-    }, 1000);
+    }, 2000);
     return () => window.clearInterval(liveTimer);
   }, [tickerStation.id]);
 
@@ -145,7 +159,9 @@ function Index() {
   return (
     <main className="app-shell">
       <div className="map-plane" aria-hidden={!MapComponent}>
-        <div className="map-placeholder" aria-hidden="true"><div className="map-placeholder-grid" /></div>
+        <div className="map-placeholder" aria-hidden="true">
+          <div className="map-placeholder-grid" />
+        </div>
         {MapComponent && (
           <MapComponent
             peopleMover={peopleMover}
@@ -166,41 +182,46 @@ function Index() {
           <div className="brand-block">
             <img src={logo.url} alt="DPM - Go! logo" className="brand-logo" />
             <div>
-              <div className="brand-name">DPM <span>–</span> Go<span className="brand-bang">!</span></div>
+              <div className="brand-name">
+                DPM <span>–</span> Go<span className="brand-bang">!</span>
+              </div>
               <div className="brand-caption">MOTORCITY AUTOMATED SYSTEMS</div>
             </div>
           </div>
           <div className="topbar-right">
-            <div className="city-tag"><span className="signal-dot" /> DETROIT, MI <span className="tag-divider">/</span> TRANSIT NETWORK</div>
+            <div className="city-tag">
+              <span className="signal-dot" /> DETROIT, MI <span className="tag-divider">/</span> TRANSIT NETWORK
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="hudOutline" size="hud" aria-label="Open Detroit events and sports links">
                   <span className="desktop-label">EXPLORE DETROIT</span>
                   <span className="mobile-label">EVENTS</span>
-                  <ChevronDown size={14}/>
+                  <ChevronDown size={14} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="event-menu">
-                <DropdownMenuLabel className="event-menu-heading">DETROIT SPORTS</DropdownMenuLabel>
-                {sportsTeams.map((t, i) => (
-                  <DropdownMenuItem key={t.id} onSelect={() => setPanel(t.id)} className="event-link">
-                    <span className="event-index">{String(i + 1).padStart(2, '0')}</span>
-                    <span><strong>{t.team}</strong><small>{t.league} · {t.venue}</small></span>
-                    <ArrowRight size={13} />
+              <DropdownMenuContent align="end" className="glass-menu">
+                <DropdownMenuLabel>LOCAL DESTINATIONS</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setPanel('activities')}>
+                  <span>Downtown Activities</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>DETROIT SPORTS</DropdownMenuLabel>
+                {sportsTeams.map(item => (
+                  <DropdownMenuItem key={item.id} onClick={() => setPanel(item.id)}>
+                    <span>{item.team}</span>
+                    <small className="menu-sub">{item.league}</small>
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setPanel('activities')} className="event-link">
-                  <span className="event-index">05</span>
-                  <span><strong>Activities</strong><small>Public events in Downtown Detroit</small></span>
-                  <ArrowRight size={13} />
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button variant="hudOutline" size="hud" className="station-list-btn" onClick={() => setStationListOpen(true)}>
+              <Layers3 size={14} />
+              <span>STATIONS</span>
+            </Button>
           </div>
         </header>
 
-        {/* Floating Active Alarm Pill */}
         {alertSystem.targetStation && (
           <div className={`active-alarm-banner ${alertSystem.hasAlerted ? 'alarm-triggered' : ''}`}>
             <Bell size={14} className="animate-bounce" />
@@ -216,18 +237,23 @@ function Index() {
         )}
 
         <section className="headline-area" aria-label="Transit overview">
-          <div className="overline"><span className="overline-bar" /> DOWNTOWN DETROIT <span className="overline-slash">/</span> SYSTEM OVERVIEW</div>
-          <h1>Move through<br/><em>the Motor City.</em></h1>
+          <div className="overline">
+            <span className="overline-bar" /> DOWNTOWN DETROIT <span className="overline-slash">/</span> SYSTEM OVERVIEW
+          </div>
+          <h1>
+            Move through
+            <br />
+            <em>the Motor City.</em>
+          </h1>
           <p>Two lines. One city. Find your next stop.</p>
 
-          {/* Mobile HUD Countdown Pill & Boarded Mode */}
           <div className="mobile-countdown-pill" role="status" aria-live="polite">
-            <span className={`signal-dot ${tickerSchedule.running ? 'signal-pulse' : 'signal-idle'}`} />
+            <span className={`signal-dot ${isQLineTicker || tickerSchedule.running ? 'signal-pulse' : 'signal-idle'}`} />
             <span className="mobile-countdown-label">
-              {isBoarded ? 'NEXT STOP' : 'NEXT TRAIN'} · {tickerStation.name.toUpperCase()}:
+              {isBoarded ? 'NEXT STOP' : 'NEXT ARRIVAL'} · {tickerStation.name.toUpperCase()}:
             </span>
             <strong className="mobile-countdown-val">
-              {tickerSchedule.running ? liveArrival.formatted : 'OFFLINE'}
+              {isQLineTicker ? 'EVERY 10-15 MIN' : tickerSchedule.running ? liveArrival.formatted : 'OFFLINE'}
             </strong>
           </div>
 
@@ -240,45 +266,87 @@ function Index() {
               onClick={() => setIsBoarded(v => !v)}
             >
               <Navigation2 size={13} className={isBoarded ? 'animate-pulse text-emerald-400' : ''} />
-              <span>{isBoarded ? 'ON TRAIN · FOLLOWING RIDE' : 'BOARDED THE TRAIN?'}</span>
+              <span>{isBoarded ? 'ON BOARD · FOLLOWING RIDE' : 'BOARDED THE TRAIN?'}</span>
             </Button>
           </div>
 
+          {/* Toggle buttons between People Mover and QLINE */}
           <div className="route-switches" role="group" aria-label="Map layers">
-            <Button variant={peopleMover ? 'hudActive' : 'hudInactive'} size="route" aria-pressed={peopleMover} onClick={() => setPeopleMover(v => !v)}>
+            <Button
+              variant={peopleMover ? 'hudActive' : 'hudInactive'}
+              size="route"
+              aria-pressed={peopleMover}
+              onClick={() => {
+                // Ensure at least one route is visible
+                if (peopleMover && !qline) {
+                  setQline(true);
+                  setPeopleMover(false);
+                } else {
+                  setPeopleMover(v => !v);
+                }
+              }}
+            >
               <span className="route-pill-dot" /> PEOPLE MOVER <span className="route-pill-state">{peopleMover ? 'ON' : 'OFF'}</span>
             </Button>
-            <Button variant={qline ? 'hudWarm' : 'hudInactive'} size="route" aria-pressed={qline} onClick={() => setQline(v => !v)}>
+            <Button
+              variant={qline ? 'hudWarm' : 'hudInactive'}
+              size="route"
+              aria-pressed={qline}
+              onClick={() => {
+                // Ensure at least one route is visible
+                if (qline && !peopleMover) {
+                  setPeopleMover(true);
+                  setQline(false);
+                } else {
+                  setQline(v => !v);
+                }
+              }}
+            >
               <span className="route-pill-dot" /> QLINE <span className="route-pill-state">{qline ? 'ON' : 'OFF'}</span>
             </Button>
           </div>
         </section>
 
-        <aside className="network-panel" aria-label="People Mover stations">
+        {/* Directory Sidebar adapted to active network toggles */}
+        <aside className="network-panel" aria-label="Transit stations">
           <div className="panel-header">
             <div>
-              <div className="panel-kicker"><span className="signal-dot"/> NETWORK 01</div>
-              <h2>People Mover</h2>
-              <p>Downtown loop <span>·</span> 13 stations <span>·</span> 2.9 miles</p>
+              <div className="panel-kicker">
+                <span className="signal-dot" />{' '}
+                {!peopleMover && qline ? 'NETWORK 02 · QLINE' : peopleMover && !qline ? 'NETWORK 01 · DPM' : 'TRANSIT DIRECTORY'}
+              </div>
+              <h2>{!peopleMover && qline ? 'QLINE Streetcar' : peopleMover && !qline ? 'People Mover' : 'Detroit Transit'}</h2>
+              <p>
+                {!peopleMover && qline
+                  ? 'Woodward Corridor · 12 stations · 3.3 miles'
+                  : peopleMover && !qline
+                    ? 'Downtown loop · 13 stations · 2.9 miles'
+                    : 'People Mover & QLINE · 25 stations'}
+              </p>
 
-              {/* Homepage Live Ticker inside panel header */}
               <div className="homepage-ticker-hud" role="status" aria-live="polite">
                 <div className="ticker-hud-header">
                   <span className="ticker-hud-kicker">
-                    <Timer size={11} className={tickerSchedule.running ? 'text-primary' : 'text-muted-foreground'} />
-                    NEXT SCHEDULED TRAIN
+                    <Timer size={11} className={isQLineTicker || tickerSchedule.running ? 'text-primary' : 'text-muted-foreground'} />
+                    {isQLineTicker ? 'STREETCAR FREQUENCY' : 'NEXT SCHEDULED TRAIN'}
                   </span>
                   <span className="ticker-hud-target">{tickerStation.name}</span>
                 </div>
                 <div className="ticker-hud-display">
-                  <span className={`ticker-hud-indicator ${tickerSchedule.running ? 'is-live' : 'is-off'}`} />
+                  <span className={`ticker-hud-indicator ${isQLineTicker || tickerSchedule.running ? 'is-live' : 'is-off'}`} />
                   <span className="ticker-hud-countdown">
-                    {tickerSchedule.running ? (
+                    {isQLineTicker ? (
+                      <>
+                        HEADWAY: <strong>10–15</strong> MIN <small>(Mon-Sat 8A-10P)</small>
+                      </>
+                    ) : tickerSchedule.running ? (
                       nextDeparture ? (
                         nextDeparture.minutes <= 0 ? (
                           <strong className="ticker-due-now">DUE AT PLATFORM</strong>
                         ) : (
-                          <>IN <strong>{nextDeparture.minutes}</strong> MIN <small>({nextDeparture.time})</small></>
+                          <>
+                            IN <strong>{nextDeparture.minutes}</strong> MIN <small>({nextDeparture.time})</small>
+                          </>
                         )
                       ) : (
                         <span>LOOKING UP NEXT RUN...</span>
@@ -294,15 +362,18 @@ function Index() {
           </div>
 
           <div className="panel-rule" />
-          <div className="panel-section-title"><span>STATION DIRECTORY</span><span>01 — 13</span></div>
+          <div className="panel-section-title">
+            <span>STATION DIRECTORY</span>
+            <span>01 — {String(activeStations.length).padStart(2, '0')}</span>
+          </div>
           <label className="station-search">
-            <Search size={15}/>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a station" aria-label="Find a station"/>
+            <Search size={15} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a station..." aria-label="Find a station" />
             <kbd>⌕</kbd>
           </label>
           <div className="station-scroll">
             {filtered.length ? (
-              filtered.map((station) => (
+              filtered.map(station => (
                 <Button
                   key={station.id}
                   variant="station"
@@ -310,8 +381,13 @@ function Index() {
                   onClick={() => openStation(station.id)}
                   className={selectedId === station.id ? 'station-selected' : ''}
                 >
-                  <span className="station-number">{String(peopleMoverStations.indexOf(station) + 1).padStart(2, '0')}</span>
-                  <span className="station-track"><span className="station-node"/></span>
+                  <span className="station-number">
+                    {station.line === 'qline' ? 'QL' : 'DPM'}
+                    {String(activeStations.indexOf(station) + 1).padStart(2, '0')}
+                  </span>
+                  <span className="station-track">
+                    <span className="station-node" />
+                  </span>
                   <span className="station-name">{station.name}</span>
                   <ArrowRight size={14} className="station-arrow" />
                 </Button>
@@ -321,24 +397,41 @@ function Index() {
             )}
           </div>
           <div className="panel-bottom">
-            <span><span className="tiny-diamond" /> ROUTE VISUALIZATION</span>
-            <span>SIMULATED VEHICLE</span>
+            <span>
+              <span className="tiny-diamond" /> INTERACTIVE PLATFORMS
+            </span>
+            <span>SIMULATED VEHICLES</span>
           </div>
         </aside>
 
         <div className="map-overlay-info">
           <span className="map-crosshair">⊕</span>
-          <div><strong>DOWNTOWN DETROIT</strong><small>42.3314° N &nbsp; 83.0458° W</small></div>
+          <div>
+            <strong>DOWNTOWN DETROIT</strong>
+            <small>42.3314° N &nbsp; 83.0458° W</small>
+          </div>
         </div>
         <div className="map-controls">
-          <Button variant="mapControl" size="icon" title="Reset map view" aria-label="Reset map view" onClick={() => window.dispatchEvent(new CustomEvent('dpm-map-reset'))}>
-            <LocateFixed size={18}/>
+          <Button
+            variant="mapControl"
+            size="icon"
+            title="Reset map view"
+            aria-label="Reset map view"
+            onClick={() => window.dispatchEvent(new CustomEvent('dpm-map-reset'))}
+          >
+            <LocateFixed size={18} />
           </Button>
         </div>
         <div className="map-legend">
-          <span><i className="legend-line cyan-line" /> PEOPLE MOVER</span>
-          <span><i className="legend-line warm-line" /> QLINE</span>
-          <span><i className="legend-vehicle" /> SIMULATED VEHICLE</span>
+          <span>
+            <i className="legend-line cyan-line" /> PEOPLE MOVER
+          </span>
+          <span>
+            <i className="legend-line warm-line" /> QLINE
+          </span>
+          <span>
+            <i className="legend-vehicle" /> SIMULATED VEHICLE
+          </span>
         </div>
         <div className="status-strip">
           <div>
@@ -349,38 +442,31 @@ function Index() {
           </div>
           <span>VEHICLE POSITIONS ARE SIMULATED · NOT LIVE ARRIVALS</span>
         </div>
-        <Button variant="mobileStations" className="mobile-station-trigger" onClick={() => setStationListOpen(true)}>
-          <Layers3 size={18}/> VIEW ALL 13 STATIONS <ArrowDownRight size={17}/>
-        </Button>
+
         <footer className="compliance-footer">
-          <span className="footer-brand">MOTORCITY AUTOMATED SYSTEMS <span>·</span> DPM - Go! <span className="footer-end">Building Targeted Autonomous Solutions for Detroit</span></span>
-          <nav aria-label="Official and legal links">
-            <a href="https://www.thepeoplemover.com/" target="_blank" rel="noopener noreferrer">Official People Mover <ExternalLink size={11}/></a>
-            <Button variant="link" onClick={() => setLegal('terms')}>Terms &amp; Conditions</Button>
-            <Button variant="link" onClick={() => setLegal('privacy')}>Privacy Policy</Button>
-          </nav>
+          <div>
+            <span>MOTORCITY AUTOMATED SYSTEMS · DPM - Go!</span>
+            <span className="footer-sub">Building Targeted Autonomous Solutions for Detroit</span>
+          </div>
+          <div className="footer-links">
+            <a href="https://www.thepeoplemover.com" target="_blank" rel="noopener noreferrer" className="footer-external">
+              thepeoplemover.com <ExternalLink size={12} />
+            </a>
+            <span className="footer-divider">·</span>
+            <button type="button" onClick={() => setLegal('terms')} className="legal-btn">
+              Terms &amp; Conditions
+            </button>
+            <span className="footer-divider">·</span>
+            <button type="button" onClick={() => setLegal('privacy')} className="legal-btn">
+              Privacy Policy
+            </button>
+          </div>
         </footer>
       </div>
 
-      <Drawer open={stationListOpen} onOpenChange={setStationListOpen} shouldScaleBackground={false}>
-        <DrawerContent className="station-drawer">
-          <DrawerHeader>
-            <div className="drawer-eyebrow">PEOPLE MOVER / DIRECTORY</div>
-            <DrawerTitle>Choose a station</DrawerTitle>
-            <DrawerDescription>Downtown Detroit · 13 stops</DrawerDescription>
-          </DrawerHeader>
-          <div className="mobile-directory">
-            {peopleMoverStations.map((station, index) => (
-              <Button key={station.id} variant="directory" onClick={() => openStation(station.id)}>
-                <span>{String(index + 1).padStart(2, '0')}</span>{station.name}<ArrowRight size={15}/>
-              </Button>
-            ))}
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      <Drawer open={!!selected} onOpenChange={open => { if (!open) setSelectedId(null); }} shouldScaleBackground={false}>
-        <DrawerContent className="detail-drawer">
+      {/* Station Drawer with Dining & Anchor Partner Logic */}
+      <Drawer open={Boolean(selected)} onOpenChange={open => !open && setSelectedId(null)}>
+        <DrawerContent className="drawer-shell">
           {selected && (
             <StationDetails
               station={selected}
@@ -394,59 +480,102 @@ function Index() {
         </DrawerContent>
       </Drawer>
 
-      <Drawer open={!!panel} onOpenChange={open => { if (!open) setPanel(null); }} shouldScaleBackground={false}>
-        <DrawerContent className="station-drawer">{panel && <InfoPanel panel={panel} />}</DrawerContent>
+      <Drawer open={stationListOpen} onOpenChange={setStationListOpen}>
+        <DrawerContent className="drawer-shell">
+          <DrawerHeader>
+            <div className="drawer-eyebrow">DETROIT TRANSIT</div>
+            <DrawerTitle>Station Directory</DrawerTitle>
+            <DrawerDescription>Select any station across the People Mover and QLINE corridors.</DrawerDescription>
+          </DrawerHeader>
+          <div className="station-drawer-list">
+            {activeStations.map(station => (
+              <Button key={station.id} variant="station" size="station" onClick={() => openStation(station.id)}>
+                <span className="station-number">{String(activeStations.indexOf(station) + 1).padStart(2, '0')}</span>
+                <span className="station-track">
+                  <span className="station-node" />
+                </span>
+                <span className="station-name">
+                  {station.name} <small className="text-muted-foreground ml-1">({station.line === 'qline' ? 'QLINE' : 'DPM'})</small>
+                </span>
+                <ArrowRight size={14} className="station-arrow" />
+              </Button>
+            ))}
+          </div>
+        </DrawerContent>
       </Drawer>
 
-      <Dialog open={!!legal} onOpenChange={open => { if (!open) setLegal(null); }}>
+      <Drawer open={Boolean(panel)} onOpenChange={open => !open && setPanel(null)}>
+        <DrawerContent className="drawer-shell">
+          <InfoPanel panel={panel} />
+        </DrawerContent>
+      </Drawer>
+
+      <Dialog open={Boolean(legal)} onOpenChange={open => !open && setLegal(null)}>
         <DialogContent className="legal-dialog">
           <DialogHeader>
-            <DialogTitle>{legal === 'terms' ? 'Terms & Conditions' : 'Privacy Policy'}</DialogTitle>
-            <DialogDescription>DPM - Go! · Motorcity Automated Systems, LLC</DialogDescription>
+            <DialogTitle>{legal === 'terms' ? 'Terms and Conditions' : 'Privacy Policy'}</DialogTitle>
+            <DialogDescription>
+              Software developed by Detroit Core Automation, LLC, a subsidiary of Motorcity Automated Systems, LLC.
+            </DialogDescription>
           </DialogHeader>
-          {legal === 'terms' ? (
-            <div className="legal-copy">
-              <p>DPM - Go! is provided by Motorcity Automated Systems, LLC for general trip planning and informational use. Software developed by Detroit Core Automation, LLC, a subsidiary of Motorcity Automated Systems, LLC.</p>
-              <h3>Transit information</h3><p>Map locations, walking distances, vehicle animations, business listings and any future schedules or arrivals may be approximate, delayed, incomplete or unavailable. Vehicle positions shown here are simulations, not live tracking. Neither company operates the Detroit People Mover or QLINE, and neither guarantees transit service, arrival times, accessibility, opening hours, or third-party data accuracy. Always confirm service and travel conditions with the transit operator before traveling. Neither company is responsible for missed connections, transit delays, interruptions or decisions made in reliance on this app.</p>
-              <h3>Third-party services</h3><p>Links to restaurants, transit agencies, map providers and event listings lead to independent services. Their content, pricing, availability and privacy practices are outside our control. Use of this app is at your own risk. To the extent permitted by law, Motorcity Automated Systems, LLC and Detroit Core Automation, LLC disclaim warranties and liability for losses arising from the app or third-party content. Nothing here limits rights that cannot legally be excluded.</p>
-            </div>
-          ) : (
-            <div className="legal-copy">
-              <p>Software developed by Detroit Core Automation, LLC, a subsidiary of Motorcity Automated Systems, LLC.</p>
-              <h3>Information and services</h3><p>DPM - Go! does not require an account or ask for your name, email or precise device location. Station search, map selections and dining selections are handled in your browser and are not saved to an account. Our hosting infrastructure may process standard technical information such as IP address and request logs to deliver and secure the site.</p>
-              <h3>External providers</h3><p>Mapbox supplies map imagery and may receive your IP address and map requests when the map loads. Restaurant and transit links open independent websites governed by their own privacy policies. We do not control their data practices. We do not sell personal information through this app.</p>
-              <h3>Questions</h3><p>For privacy questions, contact Motorcity Automated Systems, LLC through its official business channels. This policy applies to the DPM - Go! app and may change as live integrations are added.</p>
-            </div>
-          )}
+          <div className="legal-body">
+            {legal === 'terms' ? (
+              <>
+                <p>
+                  <strong>Disclaimer of Transit Data &amp; Timetables:</strong> DPM - Go! is an independent utility created to assist
+                  Detroit transit riders. All schedules, next-train countdowns, and moving vehicle markers represent published GTFS
+                  timetables and visual simulations. Motorcity Automated Systems, LLC and Detroit Core Automation, LLC make no guarantee of
+                  real-time accuracy and expressly disclaim all liability for transit delays, service interruptions, or missed connections.
+                </p>
+                <p>
+                  <strong>Third-Party Venues:</strong> Restaurant walking metrics, menus, and external links are provided for convenience.
+                  Motorcity Automated Systems, LLC does not operate or endorse third-party establishments.
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  <strong>Privacy Policy:</strong> DPM - Go! does not store your location data or sell personal information to third parties.
+                  Location permissions are utilized on-device solely to calculate walking distances and trigger arrival alerts.
+                </p>
+                <p>All map telemetry is loaded client-side via Mapbox GL.</p>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
       {waking && (
-        <div className="wake-screen" aria-label="Loading DPM - Go!" role="status">
-          <img src={logo.url} alt="DPM - Go!" className="wake-logo"/>
-          <span className="wake-progress" />
+        <div className="wake-screen" aria-hidden="true">
+          <div className="wake-content">
+            <img src={logo.url} alt="DPM - Go! logo" className="wake-logo" />
+            <div className="wake-title">DPM - Go!</div>
+            <div className="wake-sub">INITIALIZING DETROIT TRANSIT HUD...</div>
+          </div>
         </div>
       )}
     </main>
   );
 }
 
-function InfoPanel({ panel }: { panel: string }) {
+function InfoPanel({ panel }: { panel: string | null }) {
   if (panel === 'activities') {
     return (
       <>
         <DrawerHeader>
-          <div className="drawer-eyebrow">DOWNTOWN DETROIT / PUBLIC ACTIVITIES</div>
-          <DrawerTitle>Activities</DrawerTitle>
-          <DrawerDescription>Downtown-only public spots · live event feed coming soon</DrawerDescription>
+          <div className="drawer-eyebrow">DOWNTOWN CALENDAR</div>
+          <DrawerTitle>Public Activities</DrawerTitle>
+          <DrawerDescription>Downtown Detroit and Woodward corridor events.</DrawerDescription>
         </DrawerHeader>
-        <div className="restaurant-list info-list">
-          {activities.map(a => (
-            <a key={a.name} href={a.href} target="_blank" rel="noopener noreferrer" className="restaurant-item">
-              <span className="restaurant-icon"><MapPin size={17}/></span>
+        <div className="info-list">
+          {activities.map((a, i) => (
+            <a key={i} href={a.href} target="_blank" rel="noopener noreferrer" className="restaurant-item">
               <span className="restaurant-main">
                 <strong>{a.name}</strong>
-                <small>{a.note} · near {a.station}</small>
+                <small>
+                  {a.area} · nearest stop: {a.station}
+                </small>
+                <p className="activity-note">{a.note}</p>
               </span>
               <ExternalLink size={15} className="restaurant-arrow" />
             </a>
@@ -464,16 +593,29 @@ function InfoPanel({ panel }: { panel: string }) {
       <DrawerHeader>
         <div className="drawer-eyebrow">{t.league} / DETROIT SPORTS</div>
         <DrawerTitle>{t.team}</DrawerTitle>
-        <DrawerDescription>{t.venue} · ride to {t.station}</DrawerDescription>
+        <DrawerDescription>
+          {t.venue} · ride to {t.station}
+        </DrawerDescription>
       </DrawerHeader>
       <div className="info-list">
         <div className="detail-stats">
-          <div><span>NEXT / RECENT GAME</span><strong className="arrival-unavailable">Live data coming soon</strong></div>
-          <div><span>VENUE</span><strong className="next-stop">{t.venue}</strong></div>
-          <div><span>NEAREST STOP</span><strong className="next-stop">{t.station}</strong></div>
+          <div>
+            <span>NEXT / RECENT GAME</span>
+            <strong className="arrival-unavailable">Live data coming soon</strong>
+          </div>
+          <div>
+            <span>VENUE</span>
+            <strong className="next-stop">{t.venue}</strong>
+          </div>
+          <div>
+            <span>NEAREST STOP</span>
+            <strong className="next-stop">{t.station}</strong>
+          </div>
         </div>
         <Button variant="hudActive" asChild className="info-button">
-          <a href={t.href} target="_blank" rel="noopener noreferrer">OFFICIAL SCHEDULE <ExternalLink size={13}/></a>
+          <a href={t.href} target="_blank" rel="noopener noreferrer">
+            OFFICIAL SCHEDULE <ExternalLink size={13} />
+          </a>
         </Button>
       </div>
     </>
@@ -499,6 +641,8 @@ function StationDetails({
   const [maxMinutes, setMaxMinutes] = useState<number | 'all'>('all');
   const [lateNightOnly, setLateNightOnly] = useState(false);
 
+  const isQLine = station.line === 'qline';
+
   const allNearby = useMemo(() => {
     return nearbyRestaurants(station).map(r => ({
       ...r,
@@ -506,12 +650,12 @@ function StationDetails({
     }));
   }, [station]);
 
-  // Primary Anchor Sponsor: Only matches when explicitly contracted for THIS station
+  // Primary Anchor Sponsor: strictly matches if contracted for THIS station
   const primarySponsor = useMemo(() => {
     return allNearby.find(r => r.sponsored && r.sponsorStationId === station.id) ?? null;
   }, [allNearby, station.id]);
 
-  // Filtered standard listings (excluding the primary sponsor if already shown in the top spot)
+  // Filtered standard listings
   const standardSpots = useMemo(() => {
     return allNearby
       .filter(r => r.id !== primarySponsor?.id)
@@ -525,8 +669,9 @@ function StationDetails({
       });
   }, [allNearby, primarySponsor?.id, priceFilter, maxMinutes, lateNightOnly]);
 
-  const number = peopleMoverStations.indexOf(station) + 1;
-  const next = peopleMoverStations[number % peopleMoverStations.length] ?? station;
+  const stationsInLine = isQLine ? qlineStations : peopleMoverStations;
+  const number = stationsInLine.findIndex(s => s.id === station.id) + 1;
+  const next = stationsInLine[number % stationsInLine.length] ?? station;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${station.entrance[1]},${station.entrance[0]}`;
 
   const radians = Math.PI / 180;
@@ -550,7 +695,8 @@ function StationDetails({
     <div className="detail-content">
       <DrawerHeader className="detail-heading">
         <div className="drawer-eyebrow">
-          <span className="signal-dot" /> PEOPLE MOVER <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
+          <span className="signal-dot" /> {isQLine ? 'QLINE STREETCAR' : 'PEOPLE MOVER'}{' '}
+          <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
         </div>
         <div className="station-title-row">
           <DrawerTitle>{station.name}</DrawerTitle>
@@ -564,13 +710,17 @@ function StationDetails({
             <span>{isArmed ? 'ALARM ON' : 'SET ALARM'}</span>
           </button>
         </div>
-        <DrawerDescription>{station.neighborhood}, Detroit · {station.crossStreets}</DrawerDescription>
+        <DrawerDescription>
+          {station.neighborhood}, Detroit · {station.crossStreets}
+        </DrawerDescription>
       </DrawerHeader>
 
       <div className="detail-stats">
         <div>
           <span>WALK FROM CAMPUS MARTIUS*</span>
-          <strong>{walkingMinutes} <small>min · ~{walkingMiles.toFixed(1)} mi</small></strong>
+          <strong>
+            {walkingMinutes} <small>min · ~{walkingMiles.toFixed(1)} mi</small>
+          </strong>
         </div>
         <div>
           <span>NEXT STOP</span>
@@ -578,93 +728,118 @@ function StationDetails({
         </div>
         <div>
           <span>SERVICE NOW</span>
-          <strong className={sched.running ? 'next-stop' : 'arrival-unavailable'}>
-            {sched.running ? 'Running' : 'Not running'}{sched.specialToday ? ' · Special event' : ''}
-          </strong>
+          {isQLine ? (
+            <strong className="status-open">ACTIVE (8A–10P)</strong>
+          ) : (
+            <strong className={sched.running ? 'status-open' : 'status-closed'}>{sched.running ? 'OPEN' : 'CLOSED'}</strong>
+          )}
         </div>
       </div>
 
-      {/* Station Wayfinding & Accessibility Guidance Card */}
-      <div className="wayfinding-card">
-        <div className="wayfinding-header">
-          <span className="wayfinding-title">
-            <Accessibility size={13} className="text-primary" />
-            STATION WAYFINDING &amp; ENTRANCE GUIDE
-          </span>
-          <span className={`accessibility-chip ${station.elevator ? 'chip-accessible' : 'chip-limited'}`}>
-            {station.elevator ? 'ELEVATOR AVAILABLE' : 'STAIRS / ESCALATOR ONLY'}
-          </span>
+      <div className="entrance-hud-card">
+        <div className="entrance-hud-header">
+          <div className="entrance-hud-title">
+            <Accessibility size={14} className="text-primary" />
+            <span>PLATFORM &amp; ENTRANCE GUIDANCE</span>
+          </div>
+          <div className="entrance-badges">
+            <span className={`hud-pill ${station.adaCompliant ? 'pill-green' : 'pill-amber'}`}>
+              {station.adaCompliant ? 'ADA COMPLIANT' : 'LIMITED ACCESS'}
+            </span>
+            <span className={`hud-pill ${station.elevator ? 'pill-cyan' : 'pill-muted'}`}>
+              {station.elevator ? 'ELEVATOR VERIFIED' : 'STAIRS / RAMP'}
+            </span>
+          </div>
         </div>
-        <p className="wayfinding-notes">{station.entranceNotes}</p>
-        <div className="wayfinding-meta">
-          <span><strong>CROSS STREETS:</strong> {station.crossStreets}</span>
-          <span><strong>ADA STATUS:</strong> {station.adaCompliant ? 'Fully Accessible' : 'Limited'}</span>
-        </div>
+        <p className="entrance-notes-text">{station.entranceNotes}</p>
       </div>
 
-      {/* Scheduled Train Times */}
-      <div className="detail-body">
-        <div className="detail-section-title">
-          <span>NEXT TRAINS · SCHEDULED</span>
-          <span>OFFICIAL TIMETABLE</span>
+      <div className="departures-card">
+        <div className="departures-header">
+          <div className="departures-title">
+            <Clock3 size={15} />
+            <span>{isQLine ? 'STREETCAR FREQUENCY' : 'SCHEDULED TRAINS'}</span>
+          </div>
+          <span className="departures-subtitle">
+            {isQLine ? 'EVERY 10-15 MIN' : sched.specialToday ? 'SPECIAL EVENT SERVICE' : 'REGULAR TIMETABLE'}
+          </span>
         </div>
-        {sched.trains.length ? (
-          <div className="restaurant-list">
-            {sched.trains.map((t, i) => (
-              <div key={i} className="restaurant-item">
-                <span className="restaurant-icon"><Clock3 size={16} /></span>
-                <span className="restaurant-main">
-                  <strong>{t.time}{t.day ? ` · ${t.day}` : ''}</strong>
-                  <small>{t.minutes < 1 ? 'Due now' : t.minutes < 120 ? `in ${t.minutes} min` : 'Next service day'}</small>
-                </span>
+
+        {isQLine ? (
+          <div className="departures-grid">
+            <div className="departure-slot is-imminent">
+              <span className="dep-time">NEXT RUN</span>
+              <strong className="dep-mins">~5-10 MIN</strong>
+              <small className="dep-day">HEADWAY</small>
+            </div>
+            <div className="departure-slot">
+              <span className="dep-time">HOURS</span>
+              <strong className="dep-mins">8A–10P</strong>
+              <small className="dep-day">MON–SAT</small>
+            </div>
+            <div className="departure-slot">
+              <span className="dep-time">SUNDAYS</span>
+              <strong className="dep-mins">8A–8P</strong>
+              <small className="dep-day">REGULAR</small>
+            </div>
+            <div className="departure-slot">
+              <span className="dep-time">FARE</span>
+              <strong className="dep-mins">FREE</strong>
+              <small className="dep-day">CORRIDOR</small>
+            </div>
+          </div>
+        ) : sched.trains.length ? (
+          <div className="departures-grid">
+            {sched.trains.map((train, i) => (
+              <div key={i} className={`departure-slot ${train.minutes <= 4 ? 'is-imminent' : ''}`}>
+                <span className="dep-time">{train.time}</span>
+                <strong className="dep-mins">
+                  {train.minutes <= 0 ? 'DUE' : `in ${train.minutes}m`}
+                </strong>
+                {train.day && <small className="dep-day">{train.day}</small>}
               </div>
             ))}
           </div>
         ) : (
-          <p className="detail-note">No scheduled trains found.</p>
+          <div className="departures-empty">No departures scheduled for this station right now.</div>
         )}
-        {sched.specialDays.length > 0 && (
-          <p className="detail-note">Special-event service: {sched.specialDays.join(', ')}.</p>
-        )}
-        <p className="detail-note">Times come from the official People Mover schedule and are not live. Trains may run early, late or not at all.</p>
       </div>
 
-      {/* PRIMARY HIGHLIGHTED TOP SPOT & NEARBY SPOTS */}
-      <div className="detail-body">
-        <div className="detail-section-title">
-          <span>STATION ANCHOR &amp; DINING</span>
-          <span>LOCAL HUBS ↗</span>
+      <div className="restaurant-section">
+        <div className="section-title">
+          <span>NEARBY RESTAURANTS</span>
+          <span className="dining-count-badge">
+            {allNearby.length} {allNearby.length === 1 ? 'SPOT' : 'SPOTS'} WITHIN 0.5 MI
+          </span>
         </div>
 
-        {/* --- HIGHLIGHTED PRIMARY TOP SPOT (PAID PARTNER) --- */}
+        {/* Anchor Sponsor Banner (Matches for Fort / Cass and Sproat / Adelaide) */}
         {primarySponsor ? (
-          <div className="primary-anchor-container">
-            <div className="primary-anchor-kicker">
-              <span className="anchor-pulse" />
-              <span>OFFICIAL STATION PARTNER SPOT</span>
-            </div>
-            <div className={`primary-anchor-card ${restaurantId === primarySponsor.id ? 'anchor-selected' : ''}`}>
-              <div className="anchor-header">
-                <div className="anchor-thumb-wrap">
+          <div className="station-anchor-card">
+            <div className="anchor-glow-border" />
+            <div className="anchor-content">
+              <div className="anchor-badge-row">
+                <span className="anchor-partner-pill">★ EXCLUSIVE STATION ANCHOR</span>
+                <span className="anchor-price-tag">{primarySponsor.price}</span>
+              </div>
+              <div className="anchor-body">
+                <span className="anchor-thumb">
                   {diningImage(primarySponsor.id) ? (
-                    <img src={diningImage(primarySponsor.id)} alt={primarySponsor.name} className="anchor-thumb" />
+                    <img src={diningImage(primarySponsor.id)} alt={primarySponsor.name} loading="lazy" />
                   ) : (
-                    <div className="anchor-thumb-fallback"><MapPin size={20} /></div>
+                    <MapPin size={22} />
                   )}
-                </div>
-                <div className="anchor-info">
-                  <div className="anchor-title-row">
-                    <h3 className="anchor-name">{primarySponsor.name}</h3>
-                    <span className="anchor-price-tag">{primarySponsor.price}</span>
-                  </div>
+                </span>
+                <div className="anchor-details">
+                  <h3 className="anchor-title">{primarySponsor.name}</h3>
                   <div className="anchor-meta">
                     <span>{primarySponsor.category}</span>
                     <span>·</span>
-                    <span>{primarySponsor.walkMiles.toFixed(2)} mi (~{primarySponsor.walkMinutes} min walk)</span>
+                    <span>
+                      {primarySponsor.walkMiles.toFixed(2)} mi (~{primarySponsor.walkMinutes} min walk)
+                    </span>
                   </div>
-                  {primarySponsor.sponsorTagline && (
-                    <div className="anchor-tagline">{primarySponsor.sponsorTagline}</div>
-                  )}
+                  {primarySponsor.sponsorTagline && <div className="anchor-tagline">{primarySponsor.sponsorTagline}</div>}
                 </div>
               </div>
 
@@ -686,12 +861,7 @@ function StationDetails({
                   <MapPin size={13} />
                   <span>{restaurantId === primarySponsor.id ? 'UNTOGGLE 3D PIN' : 'SHOW ON 3D MAP'}</span>
                 </Button>
-                <a
-                  href={primarySponsor.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="anchor-web-link"
-                >
+                <a href={primarySponsor.url} target="_blank" rel="noopener noreferrer" className="anchor-web-link">
                   <span>MENU &amp; VISIT</span>
                   <ExternalLink size={13} />
                 </a>
@@ -699,11 +869,11 @@ function StationDetails({
             </div>
           </div>
         ) : (
-          /* UNCLAIMED STATION PROMPT (DIRECT TO /pricing) */
+          /* Unclaimed Station Anchor Prompt for other QLine & DPM stops */
           <div className="claim-station-slot">
             <div className="claim-slot-inner">
               <div>
-                <strong>FEATURE YOUR DOWNTOWN BUSINESS HERE</strong>
+                <strong>FEATURE YOUR BUSINESS HERE</strong>
                 <p>Claim the exclusive Station Anchor top spot for {station.name}.</p>
               </div>
               <a href="/pricing" className="claim-slot-btn">
@@ -714,7 +884,7 @@ function StationDetails({
           </div>
         )}
 
-        {/* Discovery Filter HUD for standard listings */}
+        {/* Filter bar for standard spots */}
         <div className="dining-filter-bar">
           <div className="filter-chip-group">
             <span className="filter-chip-label">PRICE:</span>
@@ -752,7 +922,6 @@ function StationDetails({
           </div>
         </div>
 
-        {/* Standard Nearby Directory */}
         {standardSpots.length ? (
           <div className="restaurant-list">
             {standardSpots.map(r => (
@@ -786,13 +955,7 @@ function StationDetails({
                   </span>
                   <span className="restaurant-price">{r.price}</span>
                 </Button>
-                <a
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${r.name} website`}
-                  className="restaurant-arrow"
-                >
+                <a href={r.url} target="_blank" rel="noopener noreferrer" aria-label={`${r.name} website`} className="restaurant-arrow">
                   <ExternalLink size={15} />
                 </a>
               </div>
@@ -810,7 +973,8 @@ function StationDetails({
             </a>
           </Button>
           <div className="coordinates">
-            <Compass size={14} />{station.coordinate[1].toFixed(4)}° N, {Math.abs(station.coordinate[0]).toFixed(4)}° W
+            <Compass size={14} />
+            {station.coordinate[1].toFixed(4)}° N, {Math.abs(station.coordinate[0]).toFixed(4)}° W
           </div>
         </div>
       </div>
