@@ -18,9 +18,10 @@ import {
   Route as RouteIcon,
   Search,
   Timer,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -466,7 +467,7 @@ function Index() {
 
       {/* Station Drawer with Dining & Anchor Partner Logic */}
       <Drawer open={Boolean(selected)} onOpenChange={open => !open && setSelectedId(null)}>
-        <DrawerContent className="drawer-shell">
+        <DrawerContent className="drawer-shell detail-drawer">
           {selected && (
             <StationDetails
               station={selected}
@@ -481,31 +482,58 @@ function Index() {
       </Drawer>
 
       <Drawer open={stationListOpen} onOpenChange={setStationListOpen}>
-        <DrawerContent className="drawer-shell">
-          <DrawerHeader>
-            <div className="drawer-eyebrow">DETROIT TRANSIT</div>
+        <DrawerContent className="drawer-shell station-drawer">
+          <DrawerHeader className="detail-heading">
+            <div className="drawer-header-top">
+              <div className="drawer-eyebrow">DETROIT TRANSIT</div>
+              <DrawerClose asChild>
+                <button type="button" className="drawer-close-btn" aria-label="Close station directory">
+                  <X size={18} />
+                </button>
+              </DrawerClose>
+            </div>
             <DrawerTitle>Station Directory</DrawerTitle>
             <DrawerDescription>Select any station across the People Mover and QLINE corridors.</DrawerDescription>
           </DrawerHeader>
+          <div className="drawer-search-wrap">
+            <label className="station-search">
+              <Search size={15} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Find a station..."
+                aria-label="Filter station directory"
+              />
+              {search && (
+                <button type="button" onClick={() => setSearch('')} className="search-clear-btn" aria-label="Clear search">
+                  <X size={13} />
+                </button>
+              )}
+            </label>
+          </div>
           <div className="station-drawer-list">
-            {activeStations.map(station => (
-              <Button key={station.id} variant="station" size="station" onClick={() => openStation(station.id)}>
-                <span className="station-number">{String(activeStations.indexOf(station) + 1).padStart(2, '0')}</span>
-                <span className="station-track">
-                  <span className="station-node" />
-                </span>
-                <span className="station-name">
-                  {station.name} <small className="text-muted-foreground ml-1">({station.line === 'qline' ? 'QLINE' : 'DPM'})</small>
-                </span>
-                <ArrowRight size={14} className="station-arrow" />
-              </Button>
-            ))}
+            {filtered.length ? (
+              filtered.map(station => (
+                <Button key={station.id} variant="station" size="station" onClick={() => openStation(station.id)}>
+                  <span className="station-number">{String(activeStations.indexOf(station) + 1).padStart(2, '0')}</span>
+                  <span className="station-track">
+                    <span className="station-node" />
+                  </span>
+                  <span className="station-name">
+                    {station.name} <small className="text-muted-foreground ml-1">({station.line === 'qline' ? 'QLINE' : 'DPM'})</small>
+                  </span>
+                  <ArrowRight size={14} className="station-arrow" />
+                </Button>
+              ))
+            ) : (
+              <div className="empty-search">No stations match "{search}".</div>
+            )}
           </div>
         </DrawerContent>
       </Drawer>
 
       <Drawer open={Boolean(panel)} onOpenChange={open => !open && setPanel(null)}>
-        <DrawerContent className="drawer-shell">
+        <DrawerContent className="drawer-shell detail-drawer">
           <InfoPanel panel={panel} />
         </DrawerContent>
       </Drawer>
@@ -562,8 +590,15 @@ function InfoPanel({ panel }: { panel: string | null }) {
   if (panel === 'activities') {
     return (
       <>
-        <DrawerHeader>
-          <div className="drawer-eyebrow">DOWNTOWN CALENDAR</div>
+        <DrawerHeader className="detail-heading">
+          <div className="drawer-header-top">
+            <div className="drawer-eyebrow">DOWNTOWN CALENDAR</div>
+            <DrawerClose asChild>
+              <button type="button" className="drawer-close-btn" aria-label="Close activities drawer">
+                <X size={18} />
+              </button>
+            </DrawerClose>
+          </div>
           <DrawerTitle>Public Activities</DrawerTitle>
           <DrawerDescription>Downtown Detroit and Woodward corridor events.</DrawerDescription>
         </DrawerHeader>
@@ -590,8 +625,15 @@ function InfoPanel({ panel }: { panel: string | null }) {
 
   return (
     <>
-      <DrawerHeader>
-        <div className="drawer-eyebrow">{t.league} / DETROIT SPORTS</div>
+      <DrawerHeader className="detail-heading">
+        <div className="drawer-header-top">
+          <div className="drawer-eyebrow">{t.league} / DETROIT SPORTS</div>
+          <DrawerClose asChild>
+            <button type="button" className="drawer-close-btn" aria-label="Close sports details">
+              <X size={18} />
+            </button>
+          </DrawerClose>
+        </div>
         <DrawerTitle>{t.team}</DrawerTitle>
         <DrawerDescription>
           {t.venue} · ride to {t.station}
@@ -674,13 +716,8 @@ function StationDetails({
   const next = stationsInLine[number % stationsInLine.length] ?? station;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${station.entrance[1]},${station.entrance[0]}`;
 
-  const radians = Math.PI / 180;
-  const latDifference = (station.entrance[1] - 42.3316) * radians;
-  const lonDifference = (station.entrance[0] + 83.0466) * radians;
-  const a =
-    Math.sin(latDifference / 2) ** 2 +
-    Math.cos(42.3316 * radians) * Math.cos(station.entrance[1] * radians) * Math.sin(lonDifference / 2) ** 2;
-  const walkingMiles = 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1.3;
+  // Walk estimate from downtown center (Campus Martius [-83.0466, 42.3316])
+  const walkingMiles = milesBetween([-83.0466, 42.3316], station.entrance) * 1.3;
   const walkingMinutes = Math.max(1, Math.round(walkingMiles * 20));
 
   const [now, setNow] = useState(() => new Date());
@@ -694,9 +731,16 @@ function StationDetails({
   return (
     <div className="detail-content">
       <DrawerHeader className="detail-heading">
-        <div className="drawer-eyebrow">
-          <span className="signal-dot" /> {isQLine ? 'QLINE STREETCAR' : 'PEOPLE MOVER'}{' '}
-          <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
+        <div className="drawer-header-top">
+          <div className="drawer-eyebrow">
+            <span className="signal-dot" /> {isQLine ? 'QLINE STREETCAR' : 'PEOPLE MOVER'}{' '}
+            <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
+          </div>
+          <DrawerClose asChild>
+            <button type="button" className="drawer-close-btn" aria-label="Close station drawer">
+              <X size={18} />
+            </button>
+          </DrawerClose>
         </div>
         <div className="station-title-row">
           <DrawerTitle>{station.name}</DrawerTitle>

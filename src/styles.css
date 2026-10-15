@@ -970,3 +970,88 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
     padding: 16px 18px !important;
   }
 }
+
+
+/* =========================================================
+   DRAWER ACCESSIBILITY, CLOSE CONTROLS & ERGONOMICS
+   ========================================================= */
+.drawer-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.drawer-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: oklch(0.20 0.025 258 / 80%);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.drawer-close-btn:hover,
+.drawer-close-btn:focus-visible {
+  color: var(--foreground);
+  background: oklch(0.26 0.03 258);
+  border-color: var(--primary);
+}
+
+.drawer-shell {
+  background: var(--panel) !important;
+  border-top: 1px solid var(--border) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px);
+  color: var(--foreground) !important;
+  max-height: 85dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+
+.drawer-search-wrap {
+  padding: 0 16px 8px;
+  flex-shrink: 0;
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 2px 4px;
+  display: grid;
+  place-items: center;
+}
+
+.search-clear-btn:hover {
+  color: var(--foreground);
+}
+
+.station-drawer-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-color: var(--primary) transparent;
+  scrollbar-width: thin;
+}
+
+.station-drawer-list button {
+  height: 48px;
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 12px;
+}
