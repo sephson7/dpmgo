@@ -682,3 +682,291 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
   color: var(--destructive-foreground);
   border-color: var(--destructive);
 }
+
+/* =========================================================
+   DPM - GO! MOBILE-FIRST TRANSIT LAYOUT OVERRIDES (<= 768px)
+   ========================================================= */
+@media (max-width: 768px) {
+  /* 1. Prevent bounce and lock viewport to dynamic viewport height */
+  html, body {
+    overflow: hidden;
+    height: 100dvh;
+    touch-action: pan-x pan-y;
+  }
+
+  .app-shell {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 2. Full-bleed interactive map plane */
+  .map-plane {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+  .map-vignette {
+    /* Gentle gradient from top bar and bottom card without blocking center map */
+    background: linear-gradient(
+      180deg,
+      oklch(0.13 0.025 260 / 92%) 0%,
+      oklch(0.13 0.025 260 / 60%) 14%,
+      transparent 30%,
+      transparent 70%,
+      oklch(0.13 0.025 260 / 80%) 95%
+    ) !important;
+    pointer-events: none;
+  }
+
+  /* 3. Floating Compact Top Header */
+  .topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 14px 0 14px;
+    background: oklch(0.13 0.025 260 / 88%) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .brand-block {
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px;
+  }
+
+  .brand-name {
+    font-size: 18px !important;
+  }
+
+  .brand-caption {
+    display: none !important;
+  }
+
+  .topbar-right {
+    gap: 8px !important;
+  }
+
+  .topbar-right button {
+    height: 32px !important;
+    padding: 0 9px !important;
+    font-size: 9px !important;
+  }
+
+  /* 4. Streamlined In-Map Floating Capsule for Route & Boarded toggles */
+  .headline-area {
+    position: absolute;
+    top: calc(64px + env(safe-area-inset-top, 0px));
+    left: 12px;
+    right: 12px;
+    width: auto !important;
+    margin: 0 !important;
+    z-index: 25;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .headline-area > *:not(.route-switches):not(.mobile-countdown-pill):not(.boarded-action-wrap) {
+    display: none !important; /* Hide verbose desktop hero text ("Move through the Motor City") to maximize map space */
+  }
+
+  .headline-area .mobile-countdown-pill,
+  .headline-area .boarded-action-wrap,
+  .headline-area .route-switches {
+    pointer-events: auto;
+  }
+
+  .mobile-countdown-pill {
+    margin: 0;
+    align-self: flex-start;
+    padding: 5px 10px;
+    font-size: 9px;
+    background: oklch(0.14 0.025 260 / 92%);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: 0 4px 18px oklch(0 0 0 / 40%);
+  }
+
+  .boarded-action-wrap {
+    margin: 2px 0 0 0 !important;
+    align-self: flex-start;
+  }
+
+  .boarded-mode-btn {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 9px;
+    background: oklch(0.14 0.025 260 / 92%);
+    border: 1px solid var(--border);
+  }
+
+  .route-switches {
+    margin: 2px 0 0 0 !important;
+    display: flex;
+    gap: 6px;
+  }
+
+  .route-switches button {
+    height: 30px !important;
+    padding: 0 10px !important;
+    font-size: 9px !important;
+    background: oklch(0.14 0.025 260 / 92%) !important;
+    backdrop-filter: blur(16px) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 4px 14px oklch(0 0 0 / 35%);
+  }
+
+  /* 5. Floating Quick Controls on Right Side (Thumb reachable) */
+  .map-controls {
+    position: absolute;
+    bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 14px !important;
+    z-index: 28;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .map-controls button {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    background: oklch(0.15 0.025 260 / 94%) !important;
+    border: 1px solid var(--border) !important;
+    backdrop-filter: blur(18px) !important;
+    box-shadow: 0 6px 20px oklch(0 0 0 / 45%) !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  /* Hide distracting technical coordinates on tiny mobile screens */
+  .map-overlay-info {
+    display: none !important;
+  }
+
+  /* Compact legend banner */
+  .map-legend {
+    position: absolute;
+    bottom: calc(118px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 14px !important;
+    z-index: 24;
+    background: oklch(0.14 0.025 260 / 88%);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    gap: 10px !important;
+    font-size: 8px !important;
+  }
+
+  /* 6. Mobile Floating Bottom Sheet Launcher */
+  .interface-shell {
+    position: relative;
+    height: 100dvh;
+    justify-content: flex-end;
+  }
+
+  .mobile-station-trigger {
+    position: absolute;
+    bottom: calc(48px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 14px !important;
+    right: 14px !important;
+    width: auto !important;
+    margin: 0 !important;
+    z-index: 30;
+    height: 48px !important;
+    border-radius: 12px !important;
+    background: oklch(0.16 0.028 258 / 95%) !important;
+    border: 1px solid var(--primary) !important;
+    box-shadow: 0 10px 30px oklch(0 0 0 / 60%), 0 0 20px oklch(0.88 0.15 195 / 20%) !important;
+    font-size: 11px !important;
+  }
+
+  /* Mini status footer at the very bottom */
+  .status-strip {
+    position: absolute;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 14px;
+    background: oklch(0.12 0.02 260 / 92%);
+    font-size: 8px;
+    border-top: 1px solid oklch(0.88 0.15 195 / 15%);
+    z-index: 29;
+  }
+
+  .compliance-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(24px + env(safe-area-inset-bottom, 0px));
+    min-height: calc(24px + env(safe-area-inset-bottom, 0px));
+    padding: 0 14px env(safe-area-inset-bottom, 0px);
+    background: var(--background);
+    font-size: 7.5px;
+    z-index: 29;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .compliance-footer nav {
+    gap: 8px;
+  }
+
+  /* 7. Slide-up Drawers mobile ergonomics */
+  .station-drawer, .detail-drawer {
+    max-height: 88dvh !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    background: oklch(0.14 0.024 258 / 98%) !important;
+    backdrop-filter: blur(35px) !important;
+  }
+
+  .detail-heading {
+    padding: 16px 18px 12px !important;
+  }
+
+  .detail-heading h2 {
+    font-size: 24px !important;
+  }
+
+  .detail-stats {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+
+  .detail-stats > div {
+    padding: 10px 8px !important;
+  }
+
+  .detail-stats strong {
+    font-size: 14px !important;
+  }
+
+  .detail-body {
+    padding: 16px 18px !important;
+  }
+}
