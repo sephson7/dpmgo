@@ -19,6 +19,7 @@ import {
   Search,
   Timer,
   X,
+  HelpCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -92,6 +93,32 @@ function Index() {
 
   const toggleRestaurant = (id: string) => {
     setRestaurantId(prev => (prev === id ? null : id));
+  };
+
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const [dontShowWalkthroughAgain, setDontShowWalkthroughAgain] = useState(true);
+
+  useEffect(() => {
+    try {
+      const seen = typeof window !== 'undefined' ? localStorage.getItem('dpmgo_walkthrough_seen') : null;
+      if (!seen) {
+        const timer = window.setTimeout(() => {
+          setWalkthroughOpen(true);
+        }, 1300);
+        return () => window.clearTimeout(timer);
+      }
+    } catch {
+      // Ignore storage errors in restricted contexts
+    }
+  }, []);
+
+  const dismissWalkthrough = (permanently: boolean) => {
+    setWalkthroughOpen(false);
+    if (permanently || dontShowWalkthroughAgain) {
+      try {
+        localStorage.setItem('dpmgo_walkthrough_seen', 'true');
+      } catch {}
+    }
   };
 
   const [panel, setPanel] = useState<null | 'activities' | string>(null);
@@ -448,14 +475,32 @@ function Index() {
         </div>
 
         <footer className="compliance-footer">
-          <div>
-            <span>MOTORCITY AUTOMATED SYSTEMS · DPM - Go!</span>
+          <div className="footer-brand-wrap">
+            <span className="footer-title">MOTORCITY AUTOMATED SYSTEMS · DPM - Go!</span>
             <span className="footer-sub">Building Targeted Autonomous Solutions for Detroit</span>
           </div>
+
+          <p className="footer-disclaimer">
+            The DPM - Go! Software is an open-source public project under Motorcity Automated Systems, LLC and is not associated with the DTC or the official Detroit People Mover entity.
+          </p>
+
           <div className="footer-links">
-            <a href="https://www.thepeoplemover.com" target="_blank" rel="noopener noreferrer" className="footer-external">
-              thepeoplemover.com <ExternalLink size={12} />
+            <a
+              href="https://www.thepeoplemover.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-external"
+            >
+              thepeoplemover.com <ExternalLink size={11} />
             </a>
+            <span className="footer-divider">·</span>
+            <button
+              type="button"
+              onClick={() => setWalkthroughOpen(true)}
+              className="legal-btn footer-guide-btn"
+            >
+              <HelpCircle size={11} /> How It Works
+            </button>
             <span className="footer-divider">·</span>
             <button type="button" onClick={() => setLegal('terms')} className="legal-btn">
               Terms &amp; Conditions
@@ -572,6 +617,114 @@ function Index() {
                 <p>All map telemetry is loaded client-side via Mapbox GL.</p>
               </>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Walkthrough & Onboarding Guide Dialog */}
+      <Dialog open={walkthroughOpen} onOpenChange={open => !open && dismissWalkthrough(false)}>
+        <DialogContent className="walkthrough-dialog">
+          <div className="walkthrough-header">
+            <div className="walkthrough-eyebrow">
+              <Compass size={13} />
+              <span>RIDER QUICK GUIDE</span>
+            </div>
+            <DialogTitle>How DPM - Go! Works</DialogTitle>
+            <DialogDescription className="walkthrough-subtitle">
+              Your lightweight companion for navigating the Detroit People Mover &amp; QLINE transit corridors.
+            </DialogDescription>
+          </div>
+
+          <div className="walkthrough-body">
+            <div className="walkthrough-step">
+              <div className="walkthrough-step-icon">
+                <Compass size={18} />
+              </div>
+              <div className="walkthrough-step-content">
+                <div className="walkthrough-step-title">1. Interactive 3D Transit Map</div>
+                <p className="walkthrough-step-desc">
+                  Tap any station node on the map or tap <strong>STATIONS DIRECTORY</strong> to view scheduled departures, elevator accessibility status, and walking wayfinding.
+                </p>
+              </div>
+            </div>
+
+            <div className="walkthrough-step">
+              <div className="walkthrough-step-icon">
+                <LocateFixed size={18} />
+              </div>
+              <div className="walkthrough-step-content">
+                <div className="walkthrough-step-title">2. "Boarded" GPS Following</div>
+                <p className="walkthrough-step-desc">
+                  Riding the train? Tap <strong>BOARDED</strong> in the top bar to follow your GPS movement along the elevated track loop directly in your browser.
+                </p>
+              </div>
+            </div>
+
+            <div className="walkthrough-step">
+              <div className="walkthrough-step-icon">
+                <MapPin size={18} />
+              </div>
+              <div className="walkthrough-step-content">
+                <div className="walkthrough-step-title">3. Station Anchors &amp; Local Dining</div>
+                <p className="walkthrough-step-desc">
+                  Discover top-rated Detroit eateries and exclusive rider perks near every stop. Tap <strong>SHOW ON 3D MAP</strong> on any restaurant to spotlight its pin on the 3D grid.
+                </p>
+              </div>
+            </div>
+
+            <div className="walkthrough-step">
+              <div className="walkthrough-step-icon">
+                <Bell size={18} />
+              </div>
+              <div className="walkthrough-step-content">
+                <div className="walkthrough-step-title">4. Proximity Station Alerts</div>
+                <p className="walkthrough-step-desc">
+                  Tap <strong>NOTIFY ON ARRIVAL</strong> inside any station card. DPM - Go! will chime and vibrate your device as your train approaches your destination.
+                </p>
+              </div>
+            </div>
+
+            <div className="walkthrough-step">
+              <div className="walkthrough-step-icon">
+                <Clock3 size={18} />
+              </div>
+              <div className="walkthrough-step-content">
+                <div className="walkthrough-step-title">5. Headways &amp; Scheduled Loop Cadence</div>
+                <p className="walkthrough-step-desc">
+                  Next-train countdowns follow published headway schedules (every 4–6 mins). Moving trains on the 3D map are simulated to visualize loop cadence.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="walkthrough-footer">
+            <label className="walkthrough-opt-out">
+              <input
+                type="checkbox"
+                checked={dontShowWalkthroughAgain}
+                onChange={e => setDontShowWalkthroughAgain(e.target.checked)}
+              />
+              <span>Don't show this guide automatically on startup</span>
+            </label>
+
+            <div className="walkthrough-actions">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => dismissWalkthrough(false)}
+              >
+                Close
+              </Button>
+              <Button
+                type="button"
+                variant="hudActive"
+                size="sm"
+                onClick={() => dismissWalkthrough(true)}
+              >
+                Got It, Let's Ride!
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -879,62 +879,111 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
     font-size: 8px !important;
   }
 
-  /* 6. Mobile Floating Bottom Sheet Launcher */
+  /* 6. Mobile Floating Bottom Sheet Launcher & Viewport */
   .interface-shell {
-    position: relative;
-    height: 100dvh;
-    justify-content: flex-end;
+    position: relative !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    pointer-events: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
+  /* Mobile Floating Bottom Sheet Launcher & Fluid Footer */
   .mobile-station-trigger {
-    position: absolute;
-    bottom: calc(48px + env(safe-area-inset-bottom, 0px)) !important;
-    left: 14px !important;
-    right: 14px !important;
-    width: auto !important;
-    margin: 0 !important;
-    z-index: 30;
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin: auto 14px 10px !important;
+    width: calc(100% - 28px) !important;
+    z-index: 30 !important;
     height: 48px !important;
     border-radius: 12px !important;
     background: oklch(0.16 0.028 258 / 95%) !important;
     border: 1px solid var(--primary) !important;
     box-shadow: 0 10px 30px oklch(0 0 0 / 60%), 0 0 20px oklch(0.88 0.15 195 / 20%) !important;
     font-size: 11px !important;
+    flex-shrink: 0 !important;
+    pointer-events: auto !important;
   }
 
   /* Mini status footer at the very bottom */
   .status-strip {
-    position: absolute;
-    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-    left: 0;
-    right: 0;
-    height: 24px;
-    min-height: 24px;
-    padding: 0 14px;
-    background: oklch(0.12 0.02 260 / 92%);
-    font-size: 8px;
-    border-top: 1px solid oklch(0.88 0.15 195 / 15%);
-    z-index: 29;
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 26px !important;
+    padding: 6px 14px !important;
+    background: oklch(0.12 0.02 260 / 94%) !important;
+    font-size: 8px !important;
+    border-top: 1px solid oklch(0.88 0.15 195 / 15%) !important;
+    z-index: 29 !important;
+    flex-shrink: 0 !important;
+    pointer-events: auto !important;
   }
 
   .compliance-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: calc(24px + env(safe-area-inset-bottom, 0px));
-    min-height: calc(24px + env(safe-area-inset-bottom, 0px));
-    padding: 0 14px env(safe-area-inset-bottom, 0px);
-    background: var(--background);
-    font-size: 7.5px;
-    z-index: 29;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--background) !important;
+    font-size: 8px !important;
+    line-height: 1.5 !important;
+    z-index: 30 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 6px !important;
+    pointer-events: auto !important;
+    border-top: 1px solid oklch(0.88 0.15 195 / 12%) !important;
+    box-sizing: border-box !important;
   }
 
-  .compliance-footer nav {
-    gap: 8px;
+  .compliance-footer .footer-brand-wrap {
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+
+  .compliance-footer .footer-disclaimer {
+    font-size: 7.5px !important;
+    line-height: 1.4 !important;
+    padding: 0 4px !important;
+    max-width: 100% !important;
+  }
+
+  .compliance-footer .footer-links {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px 12px !important;
+    margin-top: 4px !important;
+  }
+
+  .compliance-footer .footer-links a,
+  .compliance-footer .footer-links button,
+  .footer-external,
+  .legal-btn {
+    font-size: 8.5px !important;
+    min-height: 28px !important;
+    padding: 4px 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
   }
 
   /* 7. Slide-up Drawers mobile ergonomics */
@@ -1703,4 +1752,216 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
   font-size: 0.75rem;
   color: #64748b;
   font-family: monospace;
+}
+
+
+/* =========================================================
+   COMPLIANCE FOOTER & LEGAL STYLING (GLOBAL)
+   ========================================================= */
+.footer-brand-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footer-title {
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.footer-sub {
+  color: var(--muted-foreground);
+  opacity: 0.85;
+}
+
+.footer-disclaimer {
+  margin: 4px auto 0;
+  font-size: 8.5px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+  max-width: 680px;
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.footer-external,
+.legal-btn {
+  color: var(--primary);
+  font: 500 9px var(--font-mono);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.footer-external:hover,
+.legal-btn:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.footer-guide-btn {
+  color: var(--warm) !important;
+  font-weight: 600;
+}
+
+.footer-divider {
+  color: var(--border);
+  opacity: 0.6;
+}
+
+/* =========================================================
+   WALKTHROUGH & ONBOARDING QUICK GUIDE DIALOG
+   ========================================================= */
+.walkthrough-dialog {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  width: min(94vw, 560px) !important;
+  max-width: 560px !important;
+  max-height: 88dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 20px 70px oklch(0 0 0 / 70%), 0 0 30px oklch(0.88 0.15 195 / 20%) !important;
+}
+
+.walkthrough-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  background: oklch(0.15 0.024 258 / 90%);
+}
+
+.walkthrough-eyebrow {
+  font: 700 9px var(--font-mono);
+  color: var(--primary);
+  letter-spacing: 1.2px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.walkthrough-dialog h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--foreground);
+}
+
+.walkthrough-dialog p.walkthrough-subtitle {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.4;
+}
+
+.walkthrough-body {
+  padding: 16px 22px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-color: var(--primary) transparent;
+  scrollbar-width: thin;
+}
+
+.walkthrough-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: oklch(0.14 0.02 260 / 60%);
+  border: 1px solid oklch(0.88 0.15 195 / 15%);
+  border-radius: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.walkthrough-step:hover {
+  border-color: oklch(0.88 0.15 195 / 35%);
+}
+
+.walkthrough-step-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: oklch(0.88 0.15 195 / 12%);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.walkthrough-step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.walkthrough-step-title {
+  font: 700 12px var(--font-mono);
+  color: var(--foreground);
+  margin-bottom: 3px;
+  letter-spacing: 0.3px;
+}
+
+.walkthrough-step-desc {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.walkthrough-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  background: oklch(0.14 0.024 258 / 90%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.walkthrough-opt-out {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 10px var(--font-mono);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  user-select: none;
+}
+
+.walkthrough-opt-out input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.walkthrough-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
 }
