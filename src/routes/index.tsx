@@ -251,7 +251,7 @@ function Index() {
           <div className="mobile-countdown-pill" role="status" aria-live="polite">
             <span className={`signal-dot ${isQLineTicker || tickerSchedule.running ? 'signal-pulse' : 'signal-idle'}`} />
             <span className="mobile-countdown-label">
-              {isBoarded ? 'NEXT STOP' : 'NEXT ARRIVAL'} · {tickerStation.name.toUpperCase()}:
+              {isBoarded ? 'NEXT STOP' : 'SCHEDULED CADENCE'} · {tickerStation.name.toUpperCase()}:
             </span>
             <strong className="mobile-countdown-val">
               {isQLineTicker ? 'EVERY 10-15 MIN' : tickerSchedule.running ? liveArrival.formatted : 'OFFLINE'}
@@ -325,17 +325,18 @@ function Index() {
                     : 'People Mover & QLINE · 25 stations'}
               </p>
 
-              <div className="homepage-ticker-hud" role="status" aria-live="polite">
+                           <div className="homepage-ticker-hud" role="status" aria-live="polite">
                 <div className="ticker-hud-header">
                   <span className="ticker-hud-kicker">
                     <Timer size={11} className={isQLineTicker || tickerSchedule.running ? 'text-primary' : 'text-muted-foreground'} />
-                    {isQLineTicker ? 'STREETCAR FREQUENCY' : 'NEXT SCHEDULED TRAIN'}
+                    {isQLineTicker ? 'STREETCAR FREQUENCY' : 'SIMULATED LOOP CADENCE'}
                   </span>
                   <span className="ticker-hud-target">{tickerStation.name}</span>
                 </div>
                 <div className="ticker-hud-display">
                   <span className={`ticker-hud-indicator ${isQLineTicker || tickerSchedule.running ? 'is-live' : 'is-off'}`} />
                   <span className="ticker-hud-countdown">
+
                     {isQLineTicker ? (
                       <>
                         HEADWAY: <strong>10–15</strong> MIN <small>(Mon-Sat 8A-10P)</small>
@@ -434,14 +435,16 @@ function Index() {
             <i className="legend-vehicle" /> SIMULATED VEHICLE
           </span>
         </div>
-        <div className="status-strip">
+                <div className="status-strip">
           <div>
             <Radio size={14} />
             <strong>NETWORK VISUALIZATION</strong>
             <span className="status-divider">/</span>
             <span>{mapReady ? 'MAP ONLINE' : 'LOADING MAP'}</span>
           </div>
-          <span>VEHICLE POSITIONS ARE SIMULATED · NOT LIVE ARRIVALS</span>
+          <span className="truncate max-w-md">
+            Arrivals calculated from published headway schedules. Real-time agency telemetry currently unavailable from DTC.
+          </span>
         </div>
 
         <footer className="compliance-footer">
@@ -1025,8 +1028,8 @@ function StationDetails({
         </div>
       </div>
 
-      <div className="detail-disclaimer">
-        <Clock3 size={13} /> *Walk is an estimate, not a routed trip. Train times are scheduled, not live. Vehicle markers are simulated.
+           <div className="detail-disclaimer">
+        <Clock3 size={13} /> Arrivals calculated from published headway schedules. Real-time agency telemetry currently unavailable from DTC. Vehicle markers are simulated.
       </div>
     </div>
   );
