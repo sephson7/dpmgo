@@ -692,7 +692,7 @@ function StationDetails({
     }));
   }, [station]);
 
-  // Primary Anchor Sponsor: strictly matches if contracted for THIS station
+  // Primary Anchor Sponsor strictly matched to this station
   const primarySponsor = useMemo(() => {
     return allNearby.find(r => r.sponsored && r.sponsorStationId === station.id) ?? null;
   }, [allNearby, station.id]);
@@ -729,12 +729,12 @@ function StationDetails({
   const sched = stationSchedule(station.id, now);
 
   return (
-    <div className="detail-content">
+    <div className="detail-content station-drawer-v2">
+      {/* Header */}
       <DrawerHeader className="detail-heading">
         <div className="drawer-header-top">
           <div className="drawer-eyebrow">
-            <span className="signal-dot" /> {isQLine ? 'QLINE STREETCAR' : 'PEOPLE MOVER'}{' '}
-            <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
+            <span className="signal-dot" /> {isQLine ? 'QLINE' : 'PEOPLE MOVER'} <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
           </div>
           <DrawerClose asChild>
             <button type="button" className="drawer-close-btn" aria-label="Close station drawer">
@@ -743,7 +743,7 @@ function StationDetails({
           </DrawerClose>
         </div>
         <div className="station-title-row">
-          <DrawerTitle>{station.name}</DrawerTitle>
+          <DrawerTitle className="station-main-title">{station.name}</DrawerTitle>
           <button
             type="button"
             className={`alarm-toggle-btn ${isArmed ? 'alarm-active' : ''}`}
@@ -754,189 +754,189 @@ function StationDetails({
             <span>{isArmed ? 'ALARM ON' : 'SET ALARM'}</span>
           </button>
         </div>
-        <DrawerDescription>
+        <DrawerDescription className="station-sub-location">
           {station.neighborhood}, Detroit · {station.crossStreets}
         </DrawerDescription>
       </DrawerHeader>
 
-      <div className="detail-stats">
-        <div>
-          <span>WALK FROM CAMPUS MARTIUS*</span>
-          <strong>
-            {walkingMinutes} <small>min · ~{walkingMiles.toFixed(1)} mi</small>
-          </strong>
+      {/* 3-Column Top Stats Grid */}
+      <div className="stat-tri-grid">
+        <div className="stat-tri-cell">
+          <span className="stat-tri-label">WALK FROM CAMPUS MARTIUS*</span>
+          <div className="stat-tri-value">
+            <span className="stat-tri-accent">{walkingMinutes}</span> min <span className="stat-tri-sub">· ~{walkingMiles.toFixed(1)} mi</span>
+          </div>
         </div>
-        <div>
-          <span>NEXT STOP</span>
-          <strong className="next-stop">{next.name}</strong>
+        <div className="stat-tri-cell">
+          <span className="stat-tri-label">NEXT STOP</span>
+          <div className="stat-tri-next-name">{next.name}</div>
         </div>
-        <div>
-          <span>SERVICE NOW</span>
-          {isQLine ? (
-            <strong className="status-open">ACTIVE (8A–10P)</strong>
-          ) : (
-            <strong className={sched.running ? 'status-open' : 'status-closed'}>{sched.running ? 'OPEN' : 'CLOSED'}</strong>
-          )}
+        <div className="stat-tri-cell">
+          <span className="stat-tri-label">SERVICE NOW</span>
+          <div className={`stat-tri-status ${sched.running || isQLine ? 'is-running' : 'not-running'}`}>
+            {isQLine ? 'Active' : sched.running ? 'Running' : 'Not running'}
+          </div>
         </div>
       </div>
 
-      <div className="entrance-hud-card">
-        <div className="entrance-hud-header">
-          <div className="entrance-hud-title">
-            <Accessibility size={14} className="text-primary" />
-            <span>PLATFORM &amp; ENTRANCE GUIDANCE</span>
+      {/* Station Wayfinding & Entrance Guide */}
+      <div className="wayfinding-card">
+        <div className="wayfinding-header">
+          <div className="wayfinding-title-group">
+            <Accessibility size={16} className="text-cyan-400" />
+            <span>STATION WAYFINDING &amp; ENTRANCE GUIDE</span>
           </div>
-          <div className="entrance-badges">
-            <span className={`hud-pill ${station.adaCompliant ? 'pill-green' : 'pill-amber'}`}>
-              {station.adaCompliant ? 'ADA COMPLIANT' : 'LIMITED ACCESS'}
-            </span>
-            <span className={`hud-pill ${station.elevator ? 'pill-cyan' : 'pill-muted'}`}>
-              {station.elevator ? 'ELEVATOR VERIFIED' : 'STAIRS / RAMP'}
-            </span>
+          <div className={`wayfinding-elevator-pill ${station.elevator ? 'elevator-yes' : 'elevator-no'}`}>
+            {station.elevator ? 'ELEVATOR AVAILABLE' : 'STAIRS / RAMP'}
           </div>
         </div>
-        <p className="entrance-notes-text">{station.entranceNotes}</p>
-      </div>
 
-      <div className="departures-card">
-        <div className="departures-header">
-          <div className="departures-title">
-            <Clock3 size={15} />
-            <span>{isQLine ? 'STREETCAR FREQUENCY' : 'SCHEDULED TRAINS'}</span>
-          </div>
-          <span className="departures-subtitle">
-            {isQLine ? 'EVERY 10-15 MIN' : sched.specialToday ? 'SPECIAL EVENT SERVICE' : 'REGULAR TIMETABLE'}
+        <p className="wayfinding-body-text">{station.entranceNotes}</p>
+
+        <div className="wayfinding-meta-row">
+          <span className="wayfinding-meta-tag">CROSS STREETS:</span>
+          <span className="wayfinding-meta-val">{station.crossStreets}</span>
+        </div>
+
+        <div className="wayfinding-meta-row">
+          <span className="wayfinding-meta-tag">ADA STATUS:</span>
+          <span className="wayfinding-meta-val">
+            {station.adaCompliant ? 'Fully Accessible' : 'Limited Access / Check Elevator'}
           </span>
+        </div>
+      </div>
+
+      {/* Scheduled Timetable Section */}
+      <div className="timetable-section">
+        <div className="timetable-header">
+          <span className="timetable-heading">NEXT TRAINS · SCHEDULED</span>
+          <span className="timetable-subheading">OFFICIAL TIMETABLE</span>
         </div>
 
         {isQLine ? (
-          <div className="departures-grid">
-            <div className="departure-slot is-imminent">
-              <span className="dep-time">NEXT RUN</span>
-              <strong className="dep-mins">~5-10 MIN</strong>
-              <small className="dep-day">HEADWAY</small>
-            </div>
-            <div className="departure-slot">
-              <span className="dep-time">HOURS</span>
-              <strong className="dep-mins">8A–10P</strong>
-              <small className="dep-day">MON–SAT</small>
-            </div>
-            <div className="departure-slot">
-              <span className="dep-time">SUNDAYS</span>
-              <strong className="dep-mins">8A–8P</strong>
-              <small className="dep-day">REGULAR</small>
-            </div>
-            <div className="departure-slot">
-              <span className="dep-time">FARE</span>
-              <strong className="dep-mins">FREE</strong>
-              <small className="dep-day">CORRIDOR</small>
+          <div className="timetable-rows">
+            <div className="timetable-row">
+              <div className="timetable-clock-box">
+                <Clock3 size={18} />
+              </div>
+              <div className="timetable-time-col">
+                <div className="timetable-primary-time">Every 10–15 Min</div>
+                <div className="timetable-day-note">Regular streetcar frequency</div>
+              </div>
+              <div className="timetable-status-tag">ACTIVE</div>
             </div>
           </div>
-        ) : sched.trains.length ? (
-          <div className="departures-grid">
-            {sched.trains.map((train, i) => (
-              <div key={i} className={`departure-slot ${train.minutes <= 4 ? 'is-imminent' : ''}`}>
-                <span className="dep-time">{train.time}</span>
-                <strong className="dep-mins">
-                  {train.minutes <= 0 ? 'DUE' : `in ${train.minutes}m`}
-                </strong>
-                {train.day && <small className="dep-day">{train.day}</small>}
+        ) : sched.trains.length > 0 ? (
+          <div className="timetable-rows">
+            {sched.trains.slice(0, 3).map((train, i) => (
+              <div key={i} className="timetable-row">
+                <div className="timetable-clock-box">
+                  <Clock3 size={18} />
+                </div>
+                <div className="timetable-time-col">
+                  <div className="timetable-primary-time">{train.time}</div>
+                  <div className="timetable-day-note">
+                    {train.minutes <= 0 ? 'Due at platform' : train.minutes <= 15 ? `In ~${train.minutes} min` : train.day ? train.day : 'Scheduled run'}
+                  </div>
+                </div>
+                {train.minutes > 0 && train.minutes <= 10 && (
+                  <span className="timetable-pill-due">APPROACHING</span>
+                )}
               </div>
             ))}
           </div>
         ) : (
-          <div className="departures-empty">No departures scheduled for this station right now.</div>
+          <div className="timetable-empty">Service currently closed. Next service begins tomorrow at 6:00 AM.</div>
         )}
       </div>
 
-      <div className="restaurant-section">
-        <div className="section-title">
-          <span>NEARBY RESTAURANTS</span>
-          <span className="dining-count-badge">
-            {allNearby.length} {allNearby.length === 1 ? 'SPOT' : 'SPOTS'} WITHIN 0.5 MI
-          </span>
+      {/* Station Anchor & Dining Section */}
+      <div className="dining-block">
+        <div className="dining-section-header">
+          <span className="dining-section-title">STATION ANCHOR &amp; DINING</span>
+          <a href="/pricing" className="dining-section-link">
+            LOCAL HUBS <ExternalLink size={12} />
+          </a>
         </div>
 
-        {/* Anchor Sponsor Banner (Matches for Fort / Cass and Sproat / Adelaide) */}
+        {/* Exclusive Anchor Partner Spot */}
         {primarySponsor ? (
-          <div className="station-anchor-card">
-            <div className="anchor-glow-border" />
-            <div className="anchor-content">
-              <div className="anchor-badge-row">
-                <span className="anchor-partner-pill">★ EXCLUSIVE STATION ANCHOR</span>
-                <span className="anchor-price-tag">{primarySponsor.price}</span>
-              </div>
-              <div className="anchor-body">
-                <span className="anchor-thumb">
+          <div className="anchor-spot-wrapper">
+            <div className="anchor-spot-eyebrow">
+              <span className="anchor-spot-dot" /> OFFICIAL STATION PARTNER SPOT
+            </div>
+            <div className="anchor-spot-box">
+              <div className="anchor-spot-top">
+                <div className="anchor-spot-thumb">
                   {diningImage(primarySponsor.id) ? (
                     <img src={diningImage(primarySponsor.id)} alt={primarySponsor.name} loading="lazy" />
                   ) : (
                     <MapPin size={22} />
                   )}
-                </span>
-                <div className="anchor-details">
-                  <h3 className="anchor-title">{primarySponsor.name}</h3>
-                  <div className="anchor-meta">
-                    <span>{primarySponsor.category}</span>
-                    <span>·</span>
-                    <span>
-                      {primarySponsor.walkMiles.toFixed(2)} mi (~{primarySponsor.walkMinutes} min walk)
-                    </span>
+                </div>
+                <div className="anchor-spot-info">
+                  <div className="anchor-spot-name-row">
+                    <h3 className="anchor-spot-name">{primarySponsor.name}</h3>
+                    <span className="anchor-spot-price">{primarySponsor.price}</span>
                   </div>
-                  {primarySponsor.sponsorTagline && <div className="anchor-tagline">{primarySponsor.sponsorTagline}</div>}
+                  <div className="anchor-spot-meta">
+                    {primarySponsor.category} · {primarySponsor.walkMiles.toFixed(2)} mi (~{primarySponsor.walkMinutes} min walk)
+                  </div>
+                  <div className="anchor-spot-partner-tag">
+                    {primarySponsor.sponsorTagline ?? 'Official Downtown Anchor Partner'}
+                  </div>
                 </div>
               </div>
 
               {primarySponsor.sponsorPerk && (
-                <div className="anchor-perk-box">
-                  <span className="perk-label">EXCLUSIVE RIDER PERK:</span>
-                  <span className="perk-text">{primarySponsor.sponsorPerk}</span>
+                <div className="anchor-perk-container">
+                  <div className="anchor-perk-label">EXCLUSIVE RIDER PERK:</div>
+                  <div className="anchor-perk-body">{primarySponsor.sponsorPerk}</div>
                 </div>
               )}
 
-              <div className="anchor-actions">
-                <Button
+              <div className="anchor-btn-grid">
+                <button
                   type="button"
-                  size="sm"
-                  variant={restaurantId === primarySponsor.id ? 'default' : 'hudActive'}
-                  className={`anchor-map-btn ${restaurantId === primarySponsor.id ? 'is-untoggle' : ''}`}
+                  className={`anchor-action-btn ${restaurantId === primarySponsor.id ? 'active' : ''}`}
                   onClick={() => onRestaurant(primarySponsor.id)}
                 >
-                  <MapPin size={13} />
+                  <MapPin size={14} />
                   <span>{restaurantId === primarySponsor.id ? 'UNTOGGLE 3D PIN' : 'SHOW ON 3D MAP'}</span>
-                </Button>
-                <a href={primarySponsor.url} target="_blank" rel="noopener noreferrer" className="anchor-web-link">
+                </button>
+                <a
+                  href={primarySponsor.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="anchor-action-btn anchor-action-visit"
+                >
                   <span>MENU &amp; VISIT</span>
-                  <ExternalLink size={13} />
+                  <ExternalLink size={14} />
                 </a>
               </div>
             </div>
           </div>
         ) : (
-          /* Unclaimed Station Anchor Prompt for other QLine & DPM stops */
-          <div className="claim-station-slot">
-            <div className="claim-slot-inner">
-              <div>
-                <strong>FEATURE YOUR BUSINESS HERE</strong>
-                <p>Claim the exclusive Station Anchor top spot for {station.name}.</p>
-              </div>
-              <a href="/pricing" className="claim-slot-btn">
-                <span>VIEW TIERS</span>
-                <ExternalLink size={12} />
-              </a>
+          <div className="unclaimed-anchor-banner">
+            <div>
+              <div className="unclaimed-title">★ CLAIM THIS STATION ANCHOR</div>
+              <p className="unclaimed-text">Lock in the exclusive top spot for {station.name}.</p>
             </div>
+            <a href="/pricing" className="unclaimed-btn">
+              CLAIM SLOT <ExternalLink size={12} />
+            </a>
           </div>
         )}
 
-        {/* Filter bar for standard spots */}
-        <div className="dining-filter-bar">
-          <div className="filter-chip-group">
-            <span className="filter-chip-label">PRICE:</span>
+        {/* Filter Bar */}
+        <div className="filters-strip">
+          <div className="filter-group">
+            <span className="filter-title">PRICE:</span>
             {(['all', '$', '$$', '$$$+'] as const).map(p => (
               <button
                 key={p}
                 type="button"
-                className={`filter-chip ${priceFilter === p ? 'active' : ''}`}
+                className={`filter-button ${priceFilter === p ? 'selected' : ''}`}
                 onClick={() => setPriceFilter(p)}
               >
                 {p === 'all' ? 'ALL' : p}
@@ -944,13 +944,13 @@ function StationDetails({
             ))}
           </div>
 
-          <div className="filter-chip-group">
-            <span className="filter-chip-label">WALK:</span>
+          <div className="filter-group">
+            <span className="filter-title">WALK:</span>
             {([['all', 'ANY'], [5, '≤5M'], [10, '≤10M']] as const).map(([val, lbl]) => (
               <button
                 key={String(val)}
                 type="button"
-                className={`filter-chip ${maxMinutes === val ? 'active' : ''}`}
+                className={`filter-button ${maxMinutes === val ? 'selected' : ''}`}
                 onClick={() => setMaxMinutes(val as any)}
               >
                 {lbl}
@@ -958,7 +958,7 @@ function StationDetails({
             ))}
             <button
               type="button"
-              className={`filter-chip ${lateNightOnly ? 'active active-warm' : ''}`}
+              className={`filter-button ${lateNightOnly ? 'selected-warm' : ''}`}
               onClick={() => setLateNightOnly(v => !v)}
             >
               LATE NIGHT
@@ -966,42 +966,44 @@ function StationDetails({
           </div>
         </div>
 
-        {standardSpots.length ? (
-          <div className="restaurant-list">
+        {/* Restaurants List */}
+        {standardSpots.length > 0 ? (
+          <div className="restaurants-scroll-list">
             {standardSpots.map(r => (
               <div
                 key={r.id}
-                className={`restaurant-item ${restaurantId === r.id ? 'station-selected' : ''} ${r.sponsored ? 'restaurant-sponsored' : ''}`}
+                className={`restaurant-row-card ${restaurantId === r.id ? 'is-selected' : ''}`}
+                onClick={() => onRestaurant(r.id)}
               >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="restaurant-select"
-                  onClick={() => onRestaurant(r.id)}
-                  aria-label={`Show ${r.name} on map`}
-                >
-                  <span className="restaurant-thumb">
-                    {diningImage(r.id) ? (
-                      <img src={diningImage(r.id)} alt={`Map thumbnail of ${r.name}`} loading="lazy" />
-                    ) : (
-                      <MapPin size={17} />
-                    )}
-                  </span>
-                  <span className="restaurant-main">
-                    <span className="restaurant-title-row">
-                      <strong>{r.name}</strong>
-                      {r.sponsored && <span className="sponsor-badge">FEATURED PARTNER</span>}
-                    </span>
-                    <small>
-                      {r.category} · {r.walkMiles.toFixed(2)} mi · ~{r.walkMinutes} min walk
-                      {r.lateNight && <span className="late-indicator"> · Late Night</span>}
-                    </small>
-                  </span>
-                  <span className="restaurant-price">{r.price}</span>
-                </Button>
-                <a href={r.url} target="_blank" rel="noopener noreferrer" aria-label={`${r.name} website`} className="restaurant-arrow">
-                  <ExternalLink size={15} />
-                </a>
+                <div className="restaurant-thumb-box">
+                  {diningImage(r.id) ? (
+                    <img src={diningImage(r.id)} alt={r.name} loading="lazy" />
+                  ) : (
+                    <MapPin size={18} />
+                  )}
+                </div>
+                <div className="restaurant-info-box">
+                  <div className="restaurant-name-header">
+                    <span className="restaurant-name">{r.name}</span>
+                  </div>
+                  <div className="restaurant-meta-line">
+                    {r.category} · {r.walkMiles.toFixed(2)} mi · ~{r.walkMinutes} min walk
+                    {r.lateNight && <span className="restaurant-late-tag"> · Late Night</span>}
+                  </div>
+                </div>
+                <div className="restaurant-actions-box">
+                  <span className="restaurant-price-indicator">{r.price}</span>
+                  <a
+                    href={r.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="restaurant-external-link"
+                    onClick={e => e.stopPropagation()}
+                    aria-label={`Open ${r.name} menu`}
+                  >
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
               </div>
             ))}
           </div>
@@ -1009,14 +1011,14 @@ function StationDetails({
           <div className="empty-search">No spots match the selected filters.</div>
         )}
 
-        <p className="thumbnail-credit">Thumbnail maps © Mapbox © OpenStreetMap</p>
-        <div className="station-actions">
-          <Button variant="hudActive" asChild>
+        {/* Directions & Footer */}
+        <div className="station-actions-row">
+          <Button variant="hudActive" asChild className="directions-cta-btn">
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
               <Navigation2 size={16} /> WALKING DIRECTIONS <ExternalLink size={13} />
             </a>
           </Button>
-          <div className="coordinates">
+          <div className="coordinates-label">
             <Compass size={14} />
             {station.coordinate[1].toFixed(4)}° N, {Math.abs(station.coordinate[0]).toFixed(4)}° W
           </div>
