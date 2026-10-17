@@ -594,7 +594,7 @@ function Index() {
           <DialogHeader>
             <DialogTitle>{legal === 'terms' ? 'Terms and Conditions' : 'Privacy Policy'}</DialogTitle>
             <DialogDescription>
-              Software developed by Detroit Core Automation, LLC, a subsidiary of Motorcity Automated Systems, LLC.
+              Software developed by Motorcity Automated Systems, LLC.
             </DialogDescription>
           </DialogHeader>
           <div className="legal-body">
@@ -603,7 +603,7 @@ function Index() {
                 <p>
                   <strong>Disclaimer of Transit Data &amp; Timetables:</strong> DPM - Go! is an independent utility created to assist
                   Detroit transit riders. All schedules, next-train countdowns, and moving vehicle markers represent published GTFS
-                  timetables and visual simulations. Motorcity Automated Systems, LLC and Detroit Core Automation, LLC make no guarantee of
+                  timetables and visual simulations. Motorcity Automated Systems, LLC make no guarantee of
                   real-time accuracy and expressly disclaim all liability for transit delays, service interruptions, or missed connections.
                 </p>
                 <p>
