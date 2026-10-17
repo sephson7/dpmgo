@@ -479,8 +479,8 @@ function Index() {
 
         <footer className="compliance-footer">
           <div className="footer-brand-wrap">
-            <span className="footer-title">MOTORCITY AUTOMATED SYSTEMS!</span>
-            <span className="footer-sub">Building Autonomous Civic-Tech Solutions</span>
+            <span className="footer-title">MOTORCITY AUTOMATED SYSTEMS</span>
+            <span className="footer-sub">Building Targeted Autonomous Civic-Tech Solutions</span>
           </div>
 
           <p className="footer-disclaimer">
