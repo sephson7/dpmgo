@@ -480,11 +480,11 @@ function Index() {
         <footer className="compliance-footer">
           <div className="footer-brand-wrap">
             <span className="footer-title">MOTORCITY AUTOMATED SYSTEMS!</span>
-            <span className="footer-sub">Building Targeted Autonomous Civic-Tech Solutions</span>
+            <span className="footer-sub">Building Autonomous Civic-Tech Solutions</span>
           </div>
 
           <p className="footer-disclaimer">
-            The DPM - Go! Software is an open-source public project under Motorcity Automated Systems, LLC and is not associated with the DTC or the official Detroit People Mover entity.
+          DPM - Go! is an open-source project under Motorcity Automated Systems, LLC and is not associated with the DTC or the official Detroit People Mover entity.
           </p>
 
           <div className="footer-links">
