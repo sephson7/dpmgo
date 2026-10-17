@@ -16,7 +16,7 @@ export type Place = Restaurant & {
   sponsorTier?: 'anchor' | 'featured';
   sponsorTagline?: string;
   sponsorPerk?: string;
-  sponsorStationId?: string; // Station ID this anchor spot is locked to (e.g. 'fort-cass', 'ql-adelaide')
+  sponsorStationId?: string;
 };
 
 export type Station = {
@@ -35,6 +35,7 @@ export type Station = {
 
 // ==========================================
 // DETROIT PEOPLE MOVER (13 Loop Stations)
+// Verified against official DTC GTFS stops & shape
 // ==========================================
 export const peopleMoverStations: Station[] = [
   {
@@ -131,8 +132,8 @@ export const peopleMoverStations: Station[] = [
   {
     id: 'bricktown',
     name: 'Bricktown Station',
-    coordinate: [-83.041697, 42.333068],
-    entrance: [-83.041768, 42.332976],
+    coordinate: [-83.041194, 42.333326],
+    entrance: [-83.041262, 42.333473],
     neighborhood: 'Bricktown',
     crossStreets: 'E Fort St & Beaubien St',
     elevator: true,
@@ -144,8 +145,8 @@ export const peopleMoverStations: Station[] = [
   {
     id: 'greektown',
     name: 'Greektown Station',
-    coordinate: [-83.042457, 42.334757],
-    entrance: [-83.042296, 42.334689],
+    coordinate: [-83.042419, 42.334617],
+    entrance: [-83.04232, 42.334693],
     neighborhood: 'Greektown',
     crossStreets: 'Monroe St & Beaubien St',
     elevator: true,
@@ -157,8 +158,8 @@ export const peopleMoverStations: Station[] = [
   {
     id: 'cadillac',
     name: 'Cadillac Center Station',
-    coordinate: [-83.045624, 42.334746],
-    entrance: [-83.045517, 42.334663],
+    coordinate: [-83.046157, 42.33371],
+    entrance: [-83.04633, 42.333644],
     neighborhood: 'Downtown Core',
     crossStreets: 'Gratiot Ave & Library St',
     elevator: true,
@@ -170,8 +171,8 @@ export const peopleMoverStations: Station[] = [
   {
     id: 'broadway',
     name: 'Broadway Station',
-    coordinate: [-83.047509, 42.336049],
-    entrance: [-83.047401, 42.336151],
+    coordinate: [-83.048213, 42.335449],
+    entrance: [-83.048179, 42.335569],
     neighborhood: 'Theater District',
     crossStreets: 'Broadway St & John R St',
     elevator: true,
@@ -183,8 +184,8 @@ export const peopleMoverStations: Station[] = [
   {
     id: 'grand-circus',
     name: 'Grand Circus Park Station',
-    coordinate: [-83.050514, 42.335967],
-    entrance: [-83.050631, 42.336021],
+    coordinate: [-83.050592, 42.335782],
+    entrance: [-83.050629, 42.335804],
     neighborhood: 'Entertainment District',
     crossStreets: 'Park Ave & Woodward Ave',
     elevator: true,
@@ -210,13 +211,14 @@ export const peopleMoverStations: Station[] = [
 
 // ==========================================
 // QLINE STREETCAR (12 Woodward Ave Stations)
+// Verified along Woodward Avenue corridor centerline
 // ==========================================
 export const qlineStations: Station[] = [
   {
     id: 'ql-congress',
     name: 'Congress Street',
-    coordinate: [-83.0445, 42.3295],
-    entrance: [-83.0445, 42.3295],
+    coordinate: [-83.04554, 42.32979],
+    entrance: [-83.04554, 42.32979],
     neighborhood: 'Financial District',
     crossStreets: 'Woodward Ave & Congress St',
     elevator: false,
@@ -228,8 +230,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-campus-martius',
     name: 'Campus Martius',
-    coordinate: [-83.0474, 42.3326],
-    entrance: [-83.0474, 42.3326],
+    coordinate: [-83.0474, 42.33238],
+    entrance: [-83.0474, 42.33238],
     neighborhood: 'Downtown Core',
     crossStreets: 'Woodward Ave & Michigan Ave',
     elevator: false,
@@ -241,8 +243,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-grand-circus',
     name: 'Grand Circus',
-    coordinate: [-83.0503, 42.3361],
-    entrance: [-83.0503, 42.3361],
+    coordinate: [-83.05042, 42.33634],
+    entrance: [-83.05042, 42.33634],
     neighborhood: 'Grand Circus Park',
     crossStreets: 'Woodward Ave & Park Ave',
     elevator: false,
@@ -254,8 +256,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-montcalm',
     name: 'Montcalm Street',
-    coordinate: [-83.0534, 42.3395],
-    entrance: [-83.0534, 42.3395],
+    coordinate: [-83.05232, 42.33914],
+    entrance: [-83.05232, 42.33914],
     neighborhood: 'Foxtown / Entertainment',
     crossStreets: 'Woodward Ave & Montcalm St',
     elevator: false,
@@ -267,8 +269,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-adelaide',
     name: 'Sproat / Adelaide',
-    coordinate: [-83.0562, 42.3427],
-    entrance: [-83.0562, 42.3427],
+    coordinate: [-83.05397, 42.34156],
+    entrance: [-83.05397, 42.34156],
     neighborhood: 'Brush Park / LCA',
     crossStreets: 'Woodward Ave & Adelaide St',
     elevator: false,
@@ -280,8 +282,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-mlk',
     name: 'Mack / MLK Jr. Blvd',
-    coordinate: [-83.0598, 42.3468],
-    entrance: [-83.0598, 42.3468],
+    coordinate: [-83.05773, 42.34716],
+    entrance: [-83.05773, 42.34716],
     neighborhood: 'Midtown South',
     crossStreets: 'Woodward Ave & MLK Jr Blvd',
     elevator: false,
@@ -293,8 +295,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-canfield',
     name: 'Canfield Street',
-    coordinate: [-83.0642, 42.3516],
-    entrance: [-83.0642, 42.3516],
+    coordinate: [-83.06133, 42.35251],
+    entrance: [-83.06133, 42.35251],
     neighborhood: 'Midtown Commercial',
     crossStreets: 'Woodward Ave & Canfield St',
     elevator: false,
@@ -306,8 +308,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-warren',
     name: 'Warren Avenue',
-    coordinate: [-83.0658, 42.3575],
-    entrance: [-83.0658, 42.3575],
+    coordinate: [-83.0645, 42.35713],
+    entrance: [-83.0645, 42.35713],
     neighborhood: 'Cultural Center',
     crossStreets: 'Woodward Ave & Warren Ave',
     elevator: false,
@@ -319,8 +321,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-ferry',
     name: 'Ferry Street',
-    coordinate: [-83.0667, 42.3615],
-    entrance: [-83.0667, 42.3615],
+    coordinate: [-83.06713, 42.36105],
+    entrance: [-83.06713, 42.36105],
     neighborhood: 'Cultural Center North',
     crossStreets: 'Woodward Ave & Ferry St',
     elevator: false,
@@ -332,8 +334,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-amsterdam',
     name: 'Amsterdam Street',
-    coordinate: [-83.0705, 42.3665],
-    entrance: [-83.0705, 42.3665],
+    coordinate: [-83.07068, 42.36623],
+    entrance: [-83.07068, 42.36623],
     neighborhood: 'New Center South',
     crossStreets: 'Woodward Ave & Amsterdam St',
     elevator: false,
@@ -345,8 +347,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-baltimore',
     name: 'Baltimore Street',
-    coordinate: [-83.0725, 42.3695],
-    entrance: [-83.0725, 42.3695],
+    coordinate: [-83.07231, 42.36872],
+    entrance: [-83.07231, 42.36872],
     neighborhood: 'New Center / Amtrak',
     crossStreets: 'Woodward Ave & Baltimore St',
     elevator: false,
@@ -358,8 +360,8 @@ export const qlineStations: Station[] = [
   {
     id: 'ql-grand-blvd',
     name: 'Grand Boulevard',
-    coordinate: [-83.0741, 42.3722],
-    entrance: [-83.0741, 42.3722],
+    coordinate: [-83.07354, 42.37061],
+    entrance: [-83.07354, 42.37061],
     neighborhood: 'New Center Terminal',
     crossStreets: 'Woodward Ave & W Grand Blvd',
     elevator: false,
@@ -370,13 +372,9 @@ export const qlineStations: Station[] = [
   },
 ];
 
-// Preserved for backwards compatibility with map polyline rendering
 export const qlineStops = qlineStations.map(s => ({ name: s.name, coordinate: s.coordinate }));
-
-// Unified transit directory
 export const allTransitStations: Station[] = [...peopleMoverStations, ...qlineStations];
 
-// Anchor Sponsorship Registry: maps restaurant ID to the contracted station anchor spot
 const anchorSponsorRegistry: Record<string, { tier: 'anchor'; tagline: string; perk: string; stationId: string }> = {
   lafayette: {
     tier: 'anchor',
@@ -392,9 +390,7 @@ const anchorSponsorRegistry: Record<string, { tier: 'anchor'; tagline: string; p
   },
 };
 
-// Curated dining directory spanning Downtown, Brush Park, Midtown, and New Center
 export const restaurants: Place[] = [
-  // Downtown Core & People Mover Loop
   ['lafayette', 'Lafayette Coney Island', 'Detroit coney dogs', '$', 'https://www.lafayetteconeyisland.com/', -83.0478, 42.3317],
   ['american', 'American Coney Island', 'Detroit coney dogs', '$', 'https://www.americanconeyisland.com/', -83.0480, 42.3318],
   ['parc', 'Parc', 'New American', '$$$', 'https://www.parcdetroit.com/', -83.0467, 42.3318],
@@ -418,8 +414,6 @@ export const restaurants: Place[] = [
   ['shillelagh', 'The Old Shillelagh', 'Irish pub', '$$', 'https://oldshillelagh.com/', -83.0419, 42.3349],
   ['firebird', 'Firebird Tavern', 'Tavern', '$$', 'https://www.firebirdtavern.com/', -83.0428, 42.3357],
   ['sweetwater', 'Sweetwater Tavern', 'Wings & tavern', '$$', 'https://sweetwatertavern.net/', -83.0413, 42.3335],
-
-  // QLine Woodward Corridor & Brush Park
   ['brushpark-brunch', 'Brush Park Brunch', 'Brunch & Café', '$$', 'https://www.brushparkbrunch.com/', -83.0558, 42.3438],
   ['grey-ghost', 'Grey Ghost Detroit', 'Steak & Cocktails', '$$$', 'https://greyghostdetroit.com/', -83.0567, 42.3444],
   ['bar-pigalle', 'Bar Pigalle', 'French Bistro', '$$$', 'https://www.barpigalle.com/', -83.0549, 42.3431],

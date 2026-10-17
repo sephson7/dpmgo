@@ -38,8 +38,8 @@ const qlineVehicleData = (elapsed: number): GeoJSON.FeatureCollection => {
 // Visual streetcar simulation pacing along Woodward
 function simulatedPosition(path: Coordinate[], elapsed: number, loop: boolean): Coordinate {
   if (path.length < 2) return path[0] ?? [-83.0458, 42.3314];
-  const dwell = 12000;
-  const travel = 11000;
+  const dwell = 15000; // 15-second dwell intermission at each station
+  const travel = 20000; // Pacing between consecutive corridor stations
   const segments = loop ? path.length : (path.length - 1) * 2;
   const step = Math.floor(elapsed / (dwell + travel)) % segments;
   const progress = Math.max(0, Math.min(1, ((elapsed % (dwell + travel)) - dwell) / travel));
@@ -49,6 +49,7 @@ function simulatedPosition(path: Coordinate[], elapsed: number, loop: boolean): 
   const b = path[to] ?? path[0] ?? [-83.0458, 42.3314];
   return [a[0] + (b[0] - a[0]) * progress, a[1] + (b[1] - a[1]) * progress];
 }
+
 
 export default function TransitMap({ peopleMover, qline, selectedId, onSelect, onReady, restaurantId, isBoarded, userPosition }: Props) {
   const container = useRef<HTMLDivElement>(null);

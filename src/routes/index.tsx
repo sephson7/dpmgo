@@ -99,17 +99,20 @@ function Index() {
   const [dontShowWalkthroughAgain, setDontShowWalkthroughAgain] = useState(true);
 
   useEffect(() => {
+    let timer: number | undefined;
     try {
       const seen = typeof window !== 'undefined' ? localStorage.getItem('dpmgo_walkthrough_seen') : null;
       if (!seen) {
-        const timer = window.setTimeout(() => {
+        timer = window.setTimeout(() => {
           setWalkthroughOpen(true);
         }, 1300);
-        return () => window.clearTimeout(timer);
       }
     } catch {
       // Ignore storage errors in restricted contexts
     }
+    return () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
   }, []);
 
   const dismissWalkthrough = (permanently: boolean) => {
