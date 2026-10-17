@@ -1774,36 +1774,38 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
    COMPLIANCE FOOTER & LEGAL STYLING (GLOBAL)
    ========================================================= */
 .compliance-footer {
-  padding: 6px 12px;
-  background-color: rgba(7, 11, 20, 0.92);
+  padding: 4px 8px;
+  background-color: rgba(7, 11, 20, 0.95);
   border-top: 1px solid rgba(0, 240, 255, 0.2);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .footer-brand-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
 .footer-title {
   color: var(--primary);
   font-weight: 700;
-  font-size: 9.5px;
+  font-size: 9px;
   letter-spacing: 0.5px;
 }
 
 .footer-sub {
   color: var(--muted-foreground);
   opacity: 0.85;
-  font-size: 8.5px;
+  font-size: 8px;
 }
 
 .footer-disclaimer {
-  margin: 2px auto 0;
-  font-size: 8px;
-  line-height: 1.35;
+  margin: 1px auto 0;
+  font-size: 7.5px;
+  line-height: 1.25;
   color: var(--muted-foreground);
   max-width: 680px;
   text-align: center;
@@ -1813,15 +1815,15 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .footer-external,
 .legal-btn {
   color: var(--primary);
-  font: 500 8.5px var(--font-mono);
+  font: 500 8px var(--font-mono);
   text-decoration: none;
   background: none;
   border: none;
@@ -1848,9 +1850,8 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 .footer-divider {
   color: var(--border);
   opacity: 0.6;
-  font-size: 8px;
+  font-size: 7.5px;
 }
-
 /* =========================================================
    WALKTHROUGH & ONBOARDING QUICK GUIDE DIALOG
    ========================================================= */
