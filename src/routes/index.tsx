@@ -85,6 +85,26 @@ export const Route = createFileRoute('/')({
 });
 
 function Index() {
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  const handleShareApp = async () => {
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({
+        title: 'DPM - Go! | Detroit Transit HUD',
+        text: 'Live 3D Detroit People Mover & QLINE transit companion.',
+        url: window.location.origin,
+      });
+    } catch {
+      // User dismissed share dialog
+    }
+  } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    await navigator.clipboard.writeText(window.location.origin);
+    setCopiedShare(true);
+    setTimeout(() => setCopiedShare(false), 2500);
+  }
+};
+
   const [MapComponent, setMapComponent] = useState<ComponentType<MapProps> | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [peopleMover, setPeopleMover] = useState(true);
