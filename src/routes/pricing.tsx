@@ -4,6 +4,16 @@ import { CheckCircle2, Clock, Mail, ShieldCheck, Sparkles, ArrowRight, Building,
 import { peopleMoverStations, qlineStations } from '../data/transit';
 
 export const Route = createFileRoute('/pricing')({
+  head: () => ({
+    meta: [
+      { title: 'Station Anchor Partnership | DPM - Go!' },
+      { name: 'description', content: 'Claim exclusive station anchor sponsorship on Detroit’s DPM - Go! 3D transit HUD.' },
+      { property: 'og:title', content: 'Station Anchor Partnership | DPM - Go!' },
+      { property: 'og:description', content: 'Claim exclusive station anchor sponsorship on Detroit’s DPM - Go! 3D transit HUD.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+  }),
   component: PricingPage,
 });
 
@@ -19,6 +29,33 @@ function PricingPage() {
   const [intakeDone, setIntakeDone] = useState(false);
 
   const stripeContainerRef = useRef<HTMLDivElement>(null);
+
+  // Ensure document and body scroll freely on mobile devices for checkout
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    const body = document.body;
+
+    const prevRootOverflow = root.style.overflowY;
+    const prevRootHeight = root.style.height;
+    const prevBodyOverflow = body.style.overflowY;
+    const prevBodyHeight = body.style.height;
+    const prevBodyTouch = body.style.touchAction;
+
+    root.style.overflowY = 'auto';
+    root.style.height = 'auto';
+    body.style.overflowY = 'auto';
+    body.style.height = 'auto';
+    body.style.touchAction = 'auto';
+
+    return () => {
+      root.style.overflowY = prevRootOverflow;
+      root.style.height = prevRootHeight;
+      body.style.overflowY = prevBodyOverflow;
+      body.style.height = prevBodyHeight;
+      body.style.touchAction = prevBodyTouch;
+    };
+  }, []);
 
   // Check URL parameters for station attribution and Stripe redirect
   useEffect(() => {
@@ -73,7 +110,7 @@ function PricingPage() {
   const allStations = [...peopleMoverStations, ...qlineStations];
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white flex flex-col items-center justify-between p-6 font-sans">
+    <div className="pricing-page min-h-screen bg-[#070B14] text-white flex flex-col items-center justify-between p-4 sm:p-6 font-sans w-full overflow-y-auto">
       {/* Header */}
       <header className="w-full max-w-4xl flex items-center justify-between pb-6 border-b border-cyan-500/30">
         <div className="flex items-center gap-3">
@@ -260,8 +297,8 @@ function PricingPage() {
             </div>
 
             {/* Stripe Pricing Table */}
-            <div className="w-full rounded-2xl bg-slate-900/60 border border-cyan-500/30 backdrop-blur-xl p-6 shadow-2xl">
-              <div ref={stripeContainerRef} className="w-full flex justify-center" />
+            <div className="w-full rounded-2xl bg-slate-900/60 border border-cyan-500/30 backdrop-blur-xl p-3 sm:p-6 shadow-2xl overflow-x-auto">
+              <div ref={stripeContainerRef} className="w-full min-w-[280px] flex justify-center" />
             </div>
           </>
         )}
