@@ -685,54 +685,30 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 
 
 /* =========================================================
-   DPM - GO! MOBILE-FIRST TRANSIT LAYOUT OVERRIDES (<= 768px)
+   DPM - GO! MOBILE-FIRST TRANSIT LAYOUT FIX (<= 768px)
    ========================================================= */
 @media (max-width: 768px) {
-  /* 1. Lock viewport only for the full-screen interactive transit HUD map */
-  html:has(.app-shell),
-  body:has(.app-shell) {
+  /* 1. Use standard safe sizing on html/body to prevent mobile toolbar gaps */
+  html,
+  body {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    height: 100dvh;
-    touch-action: pan-x pan-y;
+    position: fixed; /* Prevents body bounce/scroll on mobile */
+    inset: 0;
   }
 
-  /* 2. Enable natural mobile scrolling for standalone pages like partner checkout */
-  html:has(.pricing-page),
-  body:has(.pricing-page),
-  .pricing-page {
-    overflow-x: hidden;
-    overflow-y: auto !important;
-    height: auto !important;
-    min-height: 100% !important;
-    touch-action: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
+  /* 2. App shell locked to small/dynamic viewport height without bottom clipping */
   .app-shell {
+    width: 100%;
     height: 100dvh;
-    min-height: 100dvh;
-    max-height: 100dvh;
-    position: relative;
+    height: 100svh; /* Fallback for stable mobile view without toolbar gaps */
+    position: absolute;
+    inset: 0;
     overflow: hidden;
   }
 
-@media (max-width: 768px) {
-  /* 1. Prevent bounce and lock viewport to dynamic viewport height */
-  html, body {
-    overflow: hidden;
-    height: 100dvh;
-    touch-action: pan-x pan-y;
-  }
-
-  .app-shell {
-    height: 100dvh;
-    min-height: 100dvh;
-    max-height: 100dvh;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* 2. Full-bleed interactive map plane */
+  /* 3. Full-bleed interactive map plane */
   .map-plane {
     position: absolute;
     inset: 0;
@@ -740,6 +716,16 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
     height: 100%;
     width: 100%;
   }
+
+  /* 4. Natural scrolling for standalone pages like partner checkout */
+  .pricing-page {
+    position: relative;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 
   .map-vignette {
     /* Gentle gradient from top bar and bottom card without blocking center map */
