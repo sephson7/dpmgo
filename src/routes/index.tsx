@@ -17,6 +17,7 @@ import {
   Radio,
   Route as RouteIcon,
   Search,
+  Share2, // <-- ADD THIS
   Timer,
   X,
   HelpCircle,
