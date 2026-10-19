@@ -44,6 +44,21 @@ import logo from '@/assets/dpm-go-logo.jpg.asset.json';
 const diningImages = import.meta.glob<{ url: string }>('/src/assets/dining/*.asset.json', { eager: true, import: 'default' });
 const diningImage = (id: string) => diningImages[`/src/assets/dining/${id}.jpg.asset.json`]?.url;
 
+// Auto-resolves authentic brand mark from local asset or domain favicon
+function getVenueLogo(venue: { id: string; url?: string; imageUrl?: string }): string | null {
+  if (venue.imageUrl) return venue.imageUrl;
+  const local = diningImage(venue.id);
+  if (local) return local;
+  if (venue.url) {
+    try {
+      const hostname = new URL(venue.url).hostname.replace(/^www\./, '');
+      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
 type MapProps = {
   peopleMover: boolean;
   qline: boolean;
