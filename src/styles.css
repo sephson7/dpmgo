@@ -689,6 +689,9 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 /* =========================================================
    DPM - GO! MOBILE-FIRST TRANSIT LAYOUT OVERRIDES (<= 768px)
    ========================================================= */
+/* =========================================================
+   DPM - GO! MOBILE-FIRST TRANSIT LAYOUT OVERRIDES (<= 768px)
+   ========================================================= */
 @media (max-width: 768px) {
   /* 1. Lock viewport only for the full-screen interactive transit HUD map */
   html:has(.app-shell),
