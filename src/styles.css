@@ -686,6 +686,38 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 /* =========================================================
    DPM - GO! MOBILE-FIRST TRANSIT LAYOUT OVERRIDES (<= 768px)
    ========================================================= */
+/* =========================================================
+   DPM - GO! MOBILE-FIRST TRANSIT LAYOUT OVERRIDES (<= 768px)
+   ========================================================= */
+@media (max-width: 768px) {
+  /* 1. Lock viewport only for the full-screen interactive transit HUD map */
+  html:has(.app-shell),
+  body:has(.app-shell) {
+    overflow: hidden;
+    height: 100dvh;
+    touch-action: pan-x pan-y;
+  }
+
+  /* 2. Enable natural mobile scrolling for standalone pages like partner checkout */
+  html:has(.pricing-page),
+  body:has(.pricing-page),
+  .pricing-page {
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100% !important;
+    touch-action: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-shell {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    position: relative;
+    overflow: hidden;
+  }
+
 @media (max-width: 768px) {
   /* 1. Prevent bounce and lock viewport to dynamic viewport height */
   html, body {
