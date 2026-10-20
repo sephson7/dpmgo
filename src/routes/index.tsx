@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState, useMemo, type ComponentType } from 'react';
 import {
   Accessibility,
-  AlertCircle,
   ArrowRight,
   Bell,
   BellOff,
@@ -15,9 +14,9 @@ import {
   MapPin,
   Navigation2,
   Radio,
+  RotateCcw,
   Route as RouteIcon,
   Search,
-  Share2, // <-- ADD THIS
   Timer,
   X,
   HelpCircle,
@@ -29,6 +28,7 @@ import {
   Trophy,
   Footprints,
   SquareParking,
+  type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import StationDirectory from '@/components/StationDirectory';
@@ -94,6 +94,23 @@ type MapProps = {
   userPosition?: [number, number] | null;
   followUser?: boolean;
 };
+
+// Icon language shared by the desktop preset pills and the mobile Quick Routes menu.
+const HOW_DO_I_ICONS: Record<HowDoIFlow['id'], LucideIcon> = {
+  hotel: Building,
+  canada: Flag,
+  'campus-martius': Sparkles,
+  riverfront: Waves,
+};
+
+const DESTINATION_ICONS: Record<string, LucideIcon> = {
+  trees: Trees,
+  sparkles: Sparkles,
+  waves: Waves,
+};
+
+const DISCLAIMER_COPY =
+  'DPM - Go! is an open-source project under Motorcity Automated Systems, LLC and is not associated with the DTC or the official Detroit People Mover entity.';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -212,6 +229,20 @@ function Index() {
       handleFlyToTarget(target.name, target.coordinate);
     }
   };
+
+  // Reset the map: drop every marked location (the quick route pin, the
+  // restaurant pin and the selected station) and fly back to the default
+  // downtown overview.
+  const handleResetMap = () => {
+    setRestaurantId(null);
+    setSelectedId(null);
+    setActiveShortcut(null);
+    setActiveHowDoI(null);
+    setQuickNavOpen(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('dpm-map-reset'));
+    }
+  };
   const [isBoarded, setIsBoarded] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [followUser, setFollowUser] = useState(false);
@@ -274,7 +305,7 @@ function Index() {
   };
 
   const [panel, setPanel] = useState<null | 'activities' | string>(null);
-  const [legal, setLegal] = useState<'terms' | 'privacy' | null>(null);
+  const [legal, setLegal] = useState<'terms' | 'privacy' | 'disclaimer' | null>(null);
   const [waking, setWaking] = useState(true);
   const [now, setNow] = useState(() => new Date());
 
@@ -407,6 +438,56 @@ function Index() {
                     <small className="menu-sub">{item.league}</small>
                   </DropdownMenuItem>
                 ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* Quick Routes: the combined "How Do I?" + "I'm Going To" preset menu.
+                It replaces the two preset scroll rows on phones, where there is no
+                room for both rows above the map. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="hudOutline"
+                  size="hud"
+                  className="quick-routes-trigger"
+                  aria-label="Open the Quick Routes menu"
+                >
+                  <Compass size={14} />
+                  <span>QUICK ROUTES!</span>
+                  <ChevronDown size={14} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="quick-routes-menu">
+                <DropdownMenuLabel className="quick-routes-menu-label">HOW DO I?</DropdownMenuLabel>
+                {howDoIFlows.map(flow => {
+                  const Icon = HOW_DO_I_ICONS[flow.id];
+                  return (
+                    <DropdownMenuItem
+                      key={flow.id}
+                      onSelect={() => openHowDoIFlow(flow)}
+                      className={activeHowDoI?.id === flow.id ? 'quick-routes-item is-active' : 'quick-routes-item'}
+                    >
+                      <Icon size={14} />
+                      <span>{flow.title}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="quick-routes-menu-label">I’M GOING TO:</DropdownMenuLabel>
+                {destinationShortcuts.map(dest => {
+                  const Icon = DESTINATION_ICONS[dest.icon] ?? Trophy;
+                  return (
+                    <DropdownMenuItem
+                      key={dest.id}
+                      onSelect={() => openDestinationShortcut(dest)}
+                      className={
+                        activeShortcut?.id === dest.id ? 'quick-routes-item is-active' : 'quick-routes-item'
+                      }
+                    >
+                      <Icon size={14} />
+                      <span>{dest.name}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="hudOutline" size="hud" className="station-list-btn" onClick={() => setStationListOpen(true)}>
@@ -721,11 +802,13 @@ function Index() {
           <Button
             variant="mapControl"
             size="icon"
-            title="Reset map view"
-            aria-label="Reset map view"
-            onClick={() => window.dispatchEvent(new CustomEvent('dpm-map-reset'))}
+            className="map-reset-btn"
+            title="Reset map view and clear marked locations"
+            aria-label="Reset map view and clear marked locations"
+            onClick={handleResetMap}
           >
-            <LocateFixed size={18} />
+            <RotateCcw size={16} />
+            <span className="map-reset-btn-label">RESET MAP VIEW</span>
           </Button>
         </div>
         <div className="map-legend">
@@ -744,7 +827,20 @@ function Index() {
             </span>
           )}
         </div>
-                <div className="status-strip">
+
+        {/* Mobile bottom sheet launcher for the station directory */}
+        <Button
+          variant="mobileStations"
+          size="hud"
+          className="mobile-station-trigger"
+          onClick={() => setStationListOpen(true)}
+        >
+          <Layers3 size={15} />
+          <span>STATIONS</span>
+          <ChevronDown size={15} />
+        </Button>
+
+        <div className="status-strip">
           <div>
             <Radio size={14} />
             <strong>NETWORK VISUALIZATION</strong>
@@ -761,10 +857,6 @@ function Index() {
             <span className="footer-title">MOTORCITY AUTOMATED SYSTEMS</span>
             <span className="footer-sub">Building Targeted Autonomous Civic-Tech Solutions</span>
           </div>
-
-          <p className="footer-disclaimer">
-          DPM - Go! is an open-source project under Motorcity Automated Systems, LLC and is not associated with the DTC or the official Detroit People Mover entity.
-          </p>
 
           <div className="footer-links">
             <a
@@ -790,6 +882,10 @@ function Index() {
             <span className="footer-divider">·</span>
             <button type="button" onClick={() => setLegal('privacy')} className="legal-btn">
               Privacy Policy
+            </button>
+            <span className="footer-divider">·</span>
+            <button type="button" onClick={() => setLegal('disclaimer')} className="legal-btn">
+              Disclaimer
             </button>
             <span className="footer-divider">·</span>
             <a href="/admin" className="legal-btn">
@@ -867,7 +963,9 @@ function Index() {
       <Dialog open={Boolean(legal)} onOpenChange={open => !open && setLegal(null)}>
         <DialogContent className="legal-dialog">
           <DialogHeader>
-            <DialogTitle>{legal === 'terms' ? 'Terms and Conditions' : 'Privacy Policy'}</DialogTitle>
+            <DialogTitle>
+              {legal === 'terms' ? 'Terms and Conditions' : legal === 'privacy' ? 'Privacy Policy' : 'Disclaimer'}
+            </DialogTitle>
             <DialogDescription>
               Software developed by Motorcity Automated Systems, LLC.
             </DialogDescription>
@@ -884,6 +982,17 @@ function Index() {
                 <p>
                   <strong>Third-Party Venues:</strong> Restaurant walking metrics, menus, and external links are provided for convenience.
                   Motorcity Automated Systems, LLC does not operate or endorse third-party establishments.
+                </p>
+              </>
+            ) : legal === 'disclaimer' ? (
+              <>
+                <p>
+                  <strong>Disclaimer:</strong> {DISCLAIMER_COPY}
+                </p>
+                <p>
+                  <strong>Transit Data &amp; Timetables:</strong> All schedules, next-train countdowns and moving vehicle markers represent
+                  published GTFS timetables and visual simulations. Real-time agency telemetry is currently unavailable from DTC, so no
+                  arrival estimate in this app is a live feed.
                 </p>
               </>
             ) : (
@@ -1145,7 +1254,7 @@ function Index() {
               <div className="walkthrough-step-content">
                 <div className="walkthrough-step-title">1. Interactive 3D Transit Map</div>
                 <p className="walkthrough-step-desc">
-                  Tap any station node on the map or tap <strong>STATIONS DIRECTORY</strong> to view scheduled departures, elevator accessibility status, and walking wayfinding.
+                  Tap any station node on the map or tap <strong>STATIONS</strong> to view scheduled departures, elevator accessibility status, and walking wayfinding.
                 </p>
               </div>
             </div>

@@ -2061,3 +2061,220 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   QUICK ROUTES MENU & MAP RESET CONTROL
+   The desktop preset pills stay untouched; on a phone the same presets are
+   served from one combined dropdown in the header.
+   ========================================================================== */
+.quick-routes-trigger {
+  display: none;
+}
+
+.quick-routes-menu {
+  min-width: 236px;
+  max-width: min(80vw, 290px);
+  background: var(--popover);
+  border-color: var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 6px;
+}
+
+.quick-routes-menu-label {
+  font: 600 9px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  padding: 8px 8px 5px;
+}
+
+.quick-routes-item {
+  font: 500 11px var(--font-mono);
+  gap: 9px;
+  padding: 8px;
+  border-radius: 3px;
+  color: var(--foreground);
+}
+
+.quick-routes-item svg {
+  color: var(--primary);
+}
+
+.quick-routes-item.is-active {
+  background: oklch(0.88 0.15 195 / 16%);
+  color: var(--primary);
+}
+
+/* The reset control clears the marked locations as well as the camera. */
+.map-reset-btn {
+  width: auto !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  border-radius: 999px !important;
+  font: 700 9px var(--font-mono) !important;
+  letter-spacing: 0.08em !important;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   MOBILE HUD RECTIFICATION (<= 768px)
+   Nothing is removed on a phone: the preset pills collapse into the Quick
+   Routes dropdown, the station directory gets a bottom sheet launcher and the
+   footer dock is compacted so the map is no longer buried under chrome.
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* 1. Presets: the two scroll rows cannot fit above the map on a phone, so
+        they move into the combined Quick Routes dropdown in the header. */
+  .dpm-quick-nav-bar {
+    display: none !important;
+  }
+
+  .quick-routes-trigger {
+    display: inline-flex !important;
+  }
+
+  .station-list-btn {
+    display: none !important;
+  }
+
+  /* The floating HUD takes over from the desktop side panel, so the side
+     directory is hidden here as well and is served by the station drawer. */
+  .network-panel {
+    display: none !important;
+  }
+
+  /* The arrival countdown is part of the mobile HUD at every phone width. */
+  .mobile-countdown-pill {
+    display: inline-flex !important;
+  }
+
+  /* 2. Header actions stay on a single line on narrow phones. */
+  .topbar {
+    gap: 8px;
+  }
+
+  .topbar-right {
+    gap: 6px !important;
+    min-width: 0;
+  }
+
+  .topbar-right button {
+    flex: none;
+    max-width: 46vw;
+  }
+
+  .quick-routes-trigger {
+    font-size: 9px !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  /* 3. Bottom dock: station directory launcher, status strip, legal footer. */
+  .mobile-station-trigger {
+    display: flex !important;
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    order: 1;
+    margin: 0 14px 8px !important;
+    width: calc(100% - 28px) !important;
+    height: 46px !important;
+    flex: none !important;
+    justify-content: flex-start !important;
+    gap: 9px !important;
+    padding: 0 14px !important;
+    border-radius: 12px !important;
+    background: oklch(0.16 0.028 258 / 95%) !important;
+    border: 1px solid var(--primary) !important;
+    box-shadow: 0 10px 30px oklch(0 0 0 / 60%), 0 0 20px oklch(0.88 0.15 195 / 20%) !important;
+    font: 700 11px var(--font-mono) !important;
+    letter-spacing: 0.08em !important;
+    z-index: 30 !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-station-trigger svg:last-child {
+    margin-left: auto;
+  }
+
+  .status-strip {
+    order: 2;
+    margin-top: 0 !important;
+  }
+
+  .compliance-footer {
+    order: 3;
+  }
+
+  /* 4. The footer keeps the attribution, but the always-on disclaimer
+        paragraph now lives behind the Disclaimer button, which saves the
+        vertical space the paragraph used to take on every phone. */
+  .compliance-footer {
+    padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 4px !important;
+  }
+
+  .compliance-footer .footer-links {
+    gap: 1px 7px !important;
+    margin-top: 0 !important;
+  }
+
+  .compliance-footer .footer-links a,
+  .compliance-footer .footer-links button,
+  .footer-external,
+  .legal-btn {
+    min-height: 14px !important;
+    padding: 1px 3px !important;
+  }
+
+  /* 5. The reset control and the map legend become flow items of the bottom
+        dock instead of absolutely positioned overlays, so they can never
+        overlap the footer no matter how the legal links wrap. */
+  .map-controls {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    order: 0;
+    align-self: flex-end;
+    margin: auto 14px 6px !important;
+    z-index: 28;
+  }
+
+  .map-legend {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    order: 0;
+    align-self: flex-start;
+    margin: 0 14px 8px !important;
+    max-width: calc(100% - 28px) !important;
+  }
+
+  .map-controls .map-reset-btn {
+    width: auto !important;
+    height: 34px !important;
+    border-radius: 999px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 0 12px !important;
+    font-size: 8.5px !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  /* 6. The stop alarm banner drops below the floating HUD controls. */
+  .active-alarm-banner {
+    top: calc(168px + env(safe-area-inset-top, 0px));
+    max-width: calc(100% - 28px);
+  }
+}
+

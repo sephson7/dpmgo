@@ -35,6 +35,9 @@ The core mission of DPM - Go! is to encourage visitors, commuters, and residents
 ### 1. UI & Visual Architecture
 - **Theme & Aesthetic:** High-contrast urban transport HUD with deep charcoal/navy backgrounds (`#070B14`), glowing neon-cyan transit lines (`#00F0FF`), and frosted glassmorphism containers (`backdrop-blur-xl bg-slate-900/80 border border-cyan-500/30`).
 - **Header & Navigation:** Pill-style live toggle switches for **"PEOPLE MOVER"** and **"QLINE"**, alongside a top dropdown menu for activity calendars, sports schedules, and event feeds.
+- **Quick Routes Presets:** The **"HOW DO I?"** and **"I'M GOING TO:"** presets are one row of pills on a desktop and a single **"QUICK ROUTES!"** dropdown in the header on a phone, where the two rows of pills cannot fit above the map.
+- **Phone Layout (`<= 768px`):** The floating HUD keeps the countdown, the boarded/follow toggles and the line switches over the map; the station directory moves to a **STATIONS** bottom-sheet launcher; the reset control, the map legend and the legal footer stack into one bottom dock that never overlaps the map.
+- **Reset Map View:** The map control returns the camera to the downtown overview and clears every marked location (the quick route pin, the restaurant pin and the selected station).
 
 ### 2. 3D Satellite Map Canvas & Telemetry
 - **Mapbox Integration:** Initialized using `mapbox://styles/mapbox/satellite-streets-v12`. Centered on downtown Detroit (`[-83.0458, 42.3314]`) with a zoom of `15.5`, a pitch of `50` degrees, and a bearing of `-20` degrees for 3D isometric building extrusions.
@@ -107,7 +110,12 @@ npm run dev
 
 Fixed bottom compliance footer stamp:
 
-`MOTORCITY AUTOMATED SYSTEMS · DPM - Go! Building Targeted Autonomous Solutions for Detroit`
+`MOTORCITY AUTOMATED SYSTEMS · Building Targeted Autonomous Civic-Tech Solutions`
+
+The footer links out to the agency site, the rider guide, the Terms & Conditions,
+the Privacy Policy, the **Disclaimer** (the non-affiliation notice) and the Partner
+Admin portal. The disclaimer paragraph is served by the Disclaimer dialog so the
+footer stays a short dock on a phone.
 
 *Project built with [Lovable](https://lovable.dev).*
 

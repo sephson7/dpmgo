@@ -330,7 +330,19 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
       }
     });
 
-    const resetView = () => map.flyTo({ center: [-83.0458, 42.3314], zoom: 15.5, pitch: 50, bearing: -20, duration: 900 });
+    // A reset drops every marked location (the quick route pin and the
+    // restaurant pin) before the camera returns to the default overview.
+    const clearMarkedLocations = () => {
+      for (const id of ['destination-pin', 'restaurant-pin']) {
+        const source = map.getSource(id) as mapboxgl.GeoJSONSource | undefined;
+        source?.setData({ type: 'FeatureCollection', features: [] });
+      }
+    };
+
+    const resetView = () => {
+      clearMarkedLocations();
+      map.flyTo({ center: [-83.0458, 42.3314], zoom: 15.5, pitch: 50, bearing: -20, duration: 900 });
+    };
     window.addEventListener('dpm-map-reset', resetView);
 
     const handleFlyTo = (e: Event) => {
