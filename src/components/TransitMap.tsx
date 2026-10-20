@@ -222,6 +222,19 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
       map.addSource('restaurant-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'restaurant-pin-glow', type: 'circle', source: 'restaurant-pin', paint: { 'circle-radius': 22, 'circle-color': '#ff4fd8', 'circle-opacity': 0.25, 'circle-blur': 0.6 } });
       map.addLayer({ id: 'restaurant-pin', type: 'circle', source: 'restaurant-pin', paint: { 'circle-radius': 9, 'circle-color': '#ff4fd8', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2.5 } });
+      
+      // 3D Quick Navigation Destination Pin & Halo
+      map.addSource('destination-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addLayer({ id: 'destination-halo', type: 'circle', source: 'destination-pin', paint: { 'circle-radius': 26, 'circle-color': '#f59e0b', 'circle-opacity': 0.35, 'circle-blur': 0.6 } });
+      map.addLayer({ id: 'destination-pin', type: 'circle', source: 'destination-pin', paint: { 'circle-radius': 10, 'circle-color': '#f59e0b', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 } });
+      map.addLayer({
+        id: 'destination-label',
+        type: 'symbol',
+        source: 'destination-pin',
+        layout: { 'text-field': ['get', 'name'], 'text-size': 13, 'text-offset': [0, -1.8], 'text-anchor': 'bottom' },
+        paint: { 'text-color': '#ffffff', 'text-halo-color': '#07131b', 'text-halo-width': 2.5 },
+      });
+
       map.addLayer({
         id: 'restaurant-label',
         type: 'symbol',
@@ -283,11 +296,45 @@ export default function TransitMap({ peopleMover, qline, selectedId, onSelect, o
 
     const resetView = () => map.flyTo({ center: [-83.0458, 42.3314], zoom: 15.5, pitch: 50, bearing: -20, duration: 900 });
     window.addEventListener('dpm-map-reset', resetView);
+
+    const handleFlyTo = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        center: [number, number];
+        zoom?: number;
+        pitch?: number;
+        bearing?: number;
+        targetName?: string;
+      }>;
+      const detail = customEvent.detail;
+      if (!detail?.center || !map) return;
+      const venueSource = map.getSource('destination-pin') as mapboxgl.GeoJSONSource | undefined;
+      venueSource?.setData({
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature',
+          properties: { name: detail.targetName || '' },
+          geometry: { type: 'Point', coordinates: detail.center },
+        }],
+      });
+
+      map.flyTo({
+        center: detail.center,
+        zoom: detail.zoom ?? 17.2,
+        pitch: detail.pitch ?? 58,
+        bearing: detail.bearing ?? -15,
+        duration: 1400,
+        essential: true,
+        padding: { top: 0, bottom: Math.min(window.innerHeight * 0.45, 360), left: 0, right: 0 },
+      });
+    };
+    window.addEventListener('dpm-map-flyto', handleFlyTo);
+
     map.on('error', e => console.warn('Mapbox error:', e.error));
 
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('dpm-map-reset', resetView);
+      window.removeEventListener('dpm-map-flyto', handleFlyTo);
       map.remove();
       mapRef.current = null;
     };

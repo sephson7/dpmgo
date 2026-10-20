@@ -21,6 +21,13 @@ import {
   Timer,
   X,
   HelpCircle,
+  Building,
+  Flag,
+  Sparkles,
+  Waves,
+  Trees,
+  Trophy,
+  Footprints,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -34,7 +41,15 @@ import {
   sportsTeams,
   activities,
   milesBetween,
+  popularHotels,
+  canadaTransitGuide,
+  destinationShortcuts,
+  howDoIFlows,
+  calculateFlexibleRoute,
   type Station,
+  type HotelGuide,
+  type DestinationShortcut,
+  type HowDoIFlow,
 } from '@/data/transit';
 import { getNextTrainForStation } from '@/data/trainSimulation';
 import { stationSchedule } from '@/data/schedule';
@@ -113,6 +128,77 @@ function Index() {
   const [search, setSearch] = useState('');
   const [stationListOpen, setStationListOpen] = useState(false);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
+
+  // Quick Navigation & Flexible Boarding state
+  const [quickNavOpen, setQuickNavOpen] = useState(false);
+  const [activeShortcut, setActiveShortcut] = useState<DestinationShortcut | null>(null);
+  const [activeHowDoI, setActiveHowDoI] = useState<HowDoIFlow | null>(null);
+  const [selectedHotel, setSelectedHotel] = useState<HotelGuide>(popularHotels[0]!);
+  const [manualOriginId, setManualOriginId] = useState<string | null>(null);
+
+  // Compute target destination object for flexible routing
+  const activeTargetDestination = useMemo(() => {
+    if (activeShortcut) return activeShortcut;
+    if (activeHowDoI?.id === 'hotel') return selectedHotel;
+    if (activeHowDoI?.id === 'canada') return canadaTransitGuide;
+    if (activeHowDoI?.id === 'campus-martius') {
+      return destinationShortcuts.find(d => d.id === 'campus-martius') || destinationShortcuts[4]!;
+    }
+    if (activeHowDoI?.id === 'riverfront') {
+      return destinationShortcuts.find(d => d.id === 'hart-plaza') || destinationShortcuts[5]!;
+    }
+    return destinationShortcuts[0]!;
+  }, [activeShortcut, activeHowDoI, selectedHotel]);
+
+  // Compute calculated flexible route
+  const flexibleRoute = useMemo(() => {
+    return calculateFlexibleRoute({
+      userCoordinate: userPos,
+      manualOriginStationId: manualOriginId,
+      targetDestination: activeTargetDestination,
+    });
+  }, [userPos, manualOriginId, activeTargetDestination]);
+
+  // Handler to trigger 3D map fly-to
+  const handleFlyToTarget = (targetName: string, coord: [number, number]) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dpm-map-flyto', {
+          detail: {
+            center: coord,
+            zoom: 17.2,
+            pitch: 58,
+            bearing: -15,
+            targetName,
+          },
+        })
+      );
+    }
+  };
+
+  const openDestinationShortcut = (shortcut: DestinationShortcut) => {
+    setActiveShortcut(shortcut);
+    setActiveHowDoI(null);
+    setQuickNavOpen(true);
+    handleFlyToTarget(shortcut.name, shortcut.coordinate);
+  };
+
+  const openHowDoIFlow = (flow: HowDoIFlow) => {
+    setActiveHowDoI(flow);
+    setActiveShortcut(null);
+    setQuickNavOpen(true);
+    if (flow.id === 'hotel') {
+      handleFlyToTarget(selectedHotel.name, selectedHotel.coordinate);
+    } else if (flow.id === 'canada') {
+      handleFlyToTarget(canadaTransitGuide.terminalName, canadaTransitGuide.terminalCoordinate);
+    } else if (flow.id === 'campus-martius') {
+      const target = destinationShortcuts.find(d => d.id === 'campus-martius')!;
+      handleFlyToTarget(target.name, target.coordinate);
+    } else if (flow.id === 'riverfront') {
+      const target = destinationShortcuts.find(d => d.id === 'hart-plaza')!;
+      handleFlyToTarget(target.name, target.coordinate);
+    }
+  };
   const [isBoarded, setIsBoarded] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
@@ -288,6 +374,68 @@ function Index() {
             </Button>
           </div>
         </header>
+
+        {/* QUICK NAVIGATION & "HOW DO I?" SHORTCUTS HUD */}
+        <div className="dpm-quick-nav-bar">
+          <div className="dpm-quick-nav-group">
+            <span className="dpm-quick-nav-title">
+              <Compass size={11} /> HOW DO I?
+            </span>
+            <div className="dpm-quick-nav-scroll">
+              <button
+                type="button"
+                className={`dpm-nav-pill ${activeHowDoI?.id === 'hotel' ? 'active' : ''}`}
+                onClick={() => openHowDoIFlow(howDoIFlows[0]!)}
+              >
+                <Building size={12} />
+                <span>Hotel</span>
+              </button>
+              <button
+                type="button"
+                className={`dpm-nav-pill ${activeHowDoI?.id === 'canada' ? 'active' : ''}`}
+                onClick={() => openHowDoIFlow(howDoIFlows[1]!)}
+              >
+                <Flag size={12} />
+                <span>Canada</span>
+              </button>
+              <button
+                type="button"
+                className={`dpm-nav-pill ${activeHowDoI?.id === 'campus-martius' ? 'active' : ''}`}
+                onClick={() => openHowDoIFlow(howDoIFlows[2]!)}
+              >
+                <Sparkles size={12} />
+                <span>Campus Martius</span>
+              </button>
+              <button
+                type="button"
+                className={`dpm-nav-pill ${activeHowDoI?.id === 'riverfront' ? 'active' : ''}`}
+                onClick={() => openHowDoIFlow(howDoIFlows[3]!)}
+              >
+                <Waves size={12} />
+                <span>Riverfront</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="dpm-quick-nav-group destination-group">
+            <span className="dpm-quick-nav-title">
+              <Navigation2 size={11} /> I’M GOING TO:
+            </span>
+            <div className="dpm-quick-nav-scroll">
+              {destinationShortcuts.map(dest => (
+                <button
+                  key={dest.id}
+                  type="button"
+                  className={`dpm-nav-pill dest-pill ${activeShortcut?.id === dest.id ? 'active' : ''}`}
+                  onClick={() => openDestinationShortcut(dest)}
+                >
+                  <Trophy size={12} />
+                  <span>{dest.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {alertSystem.targetStation && (
           <div className={`active-alarm-banner ${alertSystem.hasAlerted ? 'alarm-triggered' : ''}`}>
@@ -656,6 +804,212 @@ function Index() {
                 <p>All map telemetry is loaded client-side via Mapbox GL.</p>
               </>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+      {/* QUICK NAVIGATION & FLEXIBLE BOARDING DIALOG */}
+      <Dialog open={quickNavOpen} onOpenChange={setQuickNavOpen}>
+        <DialogContent className="quick-nav-dialog">
+          <div className="quick-nav-header">
+            <div className="quick-nav-badge">
+              <Compass size={12} />
+              <span>
+                {activeHowDoI ? activeHowDoI.badge : activeShortcut?.category?.toUpperCase()}
+              </span>
+            </div>
+            <DialogTitle className="quick-nav-title">
+              {flexibleRoute.destinationHubName}
+            </DialogTitle>
+            <DialogDescription className="quick-nav-subtitle">
+              {activeShortcut?.description ||
+                (activeHowDoI?.id === 'hotel'
+                  ? 'Guided transit & walking directions back to your downtown hotel room.'
+                  : activeHowDoI?.id === 'canada'
+                  ? 'Official cross-border tunnel bus connection between Detroit and Windsor, Ontario.'
+                  : activeHowDoI?.shortDesc)}
+            </DialogDescription>
+          </div>
+
+          {/* Hotel Selector if Hotel Flow */}
+          {activeHowDoI?.id === 'hotel' && (
+            <div className="quick-nav-hotel-selector">
+              <label htmlFor="hotel-select" className="quick-nav-field-label">
+                SELECT YOUR HOTEL:
+              </label>
+              <select
+                id="hotel-select"
+                value={selectedHotel.id}
+                onChange={e => {
+                  const hotel = popularHotels.find(h => h.id === e.target.value);
+                  if (hotel) {
+                    setSelectedHotel(hotel);
+                    handleFlyToTarget(hotel.name, hotel.coordinate);
+                  }
+                }}
+                className="quick-nav-dropdown"
+              >
+                {popularHotels.map(h => (
+                  <option key={h.id} value={h.id}>
+                    {h.name} ({h.address})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Canada Cross-Border Transit Notice */}
+          {activeHowDoI?.id === 'canada' && (
+            <div className="canada-travel-banner">
+              <div className="canada-banner-header">
+                <Flag size={14} className="text-red-400" />
+                <strong>INTERNATIONAL CROSS-BORDER TRANSIT</strong>
+              </div>
+              <p className="canada-banner-desc">
+                The <strong>Transit Windsor Tunnel Bus</strong> departs from the Mariners’ Church Tunnel Plaza (170 E Jefferson Ave), just 1 block from Financial District / Millender Center Stations.
+              </p>
+              <div className="canada-requirements-grid">
+                <div>
+                  <span className="req-label">REQUIRED DOCUMENTS:</span>
+                  <ul className="req-list">
+                    {canadaTransitGuide.documentRequirements.map((req, idx) => (
+                      <li key={idx}>✓ {req}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <span className="req-label">FARES &amp; PAYMENT:</span>
+                  <p className="req-text">
+                    {canadaTransitGuide.fareCAD} · {canadaTransitGuide.paymentMethod}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FLEXIBLE BOARDING LOGIC SELECTOR */}
+          <div className="quick-nav-boarding-box">
+            <div className="quick-nav-boarding-header">
+              <span className="boarding-label">BOARDING STATION (STARTING POINT):</span>
+              <span className="boarding-mode-tag">
+                {userPos && !manualOriginId ? '📍 AUTO-DETECTED (GPS)' : 'MANUAL'}
+              </span>
+            </div>
+            <select
+              value={flexibleRoute.originStation.id}
+              onChange={e => setManualOriginId(e.target.value)}
+              className="quick-nav-dropdown"
+            >
+              <optgroup label="People Mover Loop Stations">
+                {peopleMoverStations.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} {userPos && milesBetween(userPos, s.coordinate) < 0.25 ? '(Near You)' : ''}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="QLINE Woodward Streetcar">
+                {qlineStations.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} (Woodward Ave)
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </div>
+
+          {/* STEP-BY-STEP ROUTE ITINERARY */}
+          <div className="quick-nav-steps">
+            {/* Step 1: Boarding */}
+            <div className="route-step">
+              <div className="route-step-indicator">1</div>
+              <div className="route-step-content">
+                <div className="route-step-title">
+                  Board at <strong>{flexibleRoute.originStation.name}</strong>
+                </div>
+                <div className="route-step-note">
+                  {flexibleRoute.line === 'mover' ? (
+                    <span className="line-chip mover">Detroit People Mover (Elevated Loop)</span>
+                  ) : (
+                    <span className="line-chip qline">QLINE Woodward Streetcar</span>
+                  )}
+                  <span className="free-fare-badge">100% FREE FARE</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Transit Ride */}
+            <div className="route-step">
+              <div className="route-step-indicator">2</div>
+              <div className="route-step-content">
+                <div className="route-step-title">
+                  Ride <strong>{flexibleRoute.stopsCount} stop{flexibleRoute.stopsCount === 1 ? '' : 's'}</strong> (~{flexibleRoute.estimatedRideMinutes} mins)
+                </div>
+                {flexibleRoute.intermediateStations.length > 0 && (
+                  <div className="intermediate-stops">
+                    Passing: {flexibleRoute.intermediateStations.join(' → ')}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Step 3: Exit Station */}
+            <div className="route-step">
+              <div className="route-step-indicator">3</div>
+              <div className="route-step-content">
+                <div className="route-step-title">
+                  Exit at <strong>{flexibleRoute.destinationStation.name}</strong>
+                </div>
+                <div className="route-step-note">
+                  {flexibleRoute.destinationStation.entranceNotes ||
+                    'Take elevator or platform stairs down to street level.'}
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Walking */}
+            <div className="route-step">
+              <div className="route-step-indicator">4</div>
+              <div className="route-step-content">
+                <div className="route-step-title">
+                  <Footprints size={14} className="inline mr-1 text-cyan-400" />
+                  Walk {flexibleRoute.walkingDistanceMiles} mi (~{flexibleRoute.walkingMinutes} min) to {flexibleRoute.destinationHubName}
+                </div>
+                <div className="route-step-note">
+                  {flexibleRoute.walkingDirections}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ACTIONS: 3D MAP FLYTO & ALARM */}
+          <div className="quick-nav-actions">
+            <Button
+              variant="hudOutline"
+              className="quick-nav-action-btn map-btn"
+              onClick={() => {
+                handleFlyToTarget(
+                  flexibleRoute.destinationHubName,
+                  flexibleRoute.targetCoordinate
+                );
+                setQuickNavOpen(false);
+              }}
+            >
+              <Compass size={14} />
+              <span>FLY TO 3D MAP</span>
+            </Button>
+
+            <Button
+              variant="default"
+              className="quick-nav-action-btn alarm-btn"
+              onClick={() => {
+                alertSystem.armAlert(flexibleRoute.destinationStation);
+                setQuickNavOpen(false);
+              }}
+            >
+              <Bell size={14} />
+              <span>NOTIFY ON ARRIVAL</span>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -458,7 +458,7 @@ export function milesBetween(a: Coordinate, b: Coordinate): number {
 export function nearbyRestaurants(station: Station) {
   return restaurants
     .map(p => ({ ...p, walkMiles: milesBetween(station.entrance, p.coordinate) * 1.25 }))
-    .filter(p => p.walkMiles <= 0.6)
+    .filter(p => p.walkMiles <= 0.4)
     .sort((a, b) => a.walkMiles - b.walkMiles);
 }
 
@@ -477,3 +477,482 @@ export const activities = [
   { name: 'Detroit Institute of Arts (DIA)', area: 'Midtown Cultural Center', note: 'World-class museum free to MI residents', station: 'Warren Avenue (QLINE)', href: 'https://dia.org/', downtown: true },
   { name: 'Capitol Park', area: 'Downtown', note: 'Public green plaza with pop-up events', station: 'Times Square Station', href: 'https://downtowndetroit.org/', downtown: true },
 ].filter(a => a.downtown);
+
+
+
+
+// ==========================================
+// QUICK NAVIGATION & "HOW DO I?" DATA MODELS
+// ==========================================
+
+export type HotelGuide = {
+  id: string;
+  name: string;
+  address: string;
+  coordinate: Coordinate;
+  nearestStationId: string;
+  nearestStationName: string;
+  nearestLine: 'mover' | 'qline';
+  walkingDistanceMiles: number;
+  walkingMinutes: number;
+  walkingDirections: string;
+};
+
+export const popularHotels: HotelGuide[] = [
+  {
+    id: 'foundation-hotel',
+    name: 'Detroit Foundation Hotel',
+    address: '250 W Larned St',
+    coordinate: [-83.0487, 42.3289],
+    nearestStationId: 'fort-cass',
+    nearestStationName: 'Fort / Cass Station',
+    nearestLine: 'mover',
+    walkingDistanceMiles: 0.15,
+    walkingMinutes: 3,
+    walkingDirections: 'Exit station north onto Cass Ave, head half a block south to Larned St. Entrance is across from Huntington Place.',
+  },
+  {
+    id: 'westin-book-cadillac',
+    name: 'The Westin Book Cadillac Detroit',
+    address: '1114 Washington Blvd',
+    coordinate: [-83.0504, 42.3323],
+    nearestStationId: 'michigan',
+    nearestStationName: 'Michigan Station',
+    nearestLine: 'mover',
+    walkingDistanceMiles: 0.1,
+    walkingMinutes: 2,
+    walkingDirections: 'Exit Michigan Station east towards Washington Blvd. The historic hotel tower entrance is 1 block south on Washington Blvd.',
+  },
+  {
+    id: 'courtyard-marriott',
+    name: 'Courtyard by Marriott Downtown',
+    address: '333 E Jefferson Ave',
+    coordinate: [-83.0418, 42.3305],
+    nearestStationId: 'millender',
+    nearestStationName: 'Millender Center Station',
+    nearestLine: 'mover',
+    walkingDistanceMiles: 0.05,
+    walkingMinutes: 1,
+    walkingDirections: 'Direct indoor climate-controlled skywalk connection from the Millender Center Station platform directly into the hotel lobby.',
+  },
+  {
+    id: 'shinola-hotel',
+    name: 'Shinola Hotel',
+    address: '1400 Woodward Ave',
+    coordinate: [-83.0483, 42.3347],
+    nearestStationId: 'broadway',
+    nearestStationName: 'Broadway Station',
+    nearestLine: 'mover',
+    walkingDistanceMiles: 0.12,
+    walkingMinutes: 2,
+    walkingDirections: 'Exit Broadway Station west along John R St toward Woodward Ave. Turn left into Parker’s Alley or Woodward entrance.',
+  },
+  {
+    id: 'fort-pontchartrain',
+    name: 'Hotel Fort Pontchartrain (Wyndham)',
+    address: '2 Washington Blvd',
+    coordinate: [-83.0471, 42.3276],
+    nearestStationId: 'financial',
+    nearestStationName: 'Financial District Station',
+    nearestLine: 'mover',
+    walkingDistanceMiles: 0.1,
+    walkingMinutes: 2,
+    walkingDirections: 'Exit Financial District onto Jefferson Ave and head 1 block south on Washington Blvd toward the river.',
+  },
+  {
+    id: 'hollywood-greektown',
+    name: 'Hollywood Casino at Greektown Hotel',
+    address: '1200 St Antoine St',
+    coordinate: [-83.0425, 42.3352],
+    nearestStationId: 'greektown',
+    nearestStationName: 'Greektown Station',
+    nearestLine: 'mover',
+    walkingDistanceMiles: 0.05,
+    walkingMinutes: 1,
+    walkingDirections: 'Direct 3rd floor enclosed pedestrian skybridge directly connecting the People Mover station to the casino & hotel atrium.',
+  },
+  {
+    id: 'david-whitney',
+    name: 'Hotel David Whitney (Autograph Collection)',
+    address: '1 Park Ave',
+    coordinate: [-83.0506, 42.3361],
+    nearestStationId: 'grand-circus',
+    nearestStationName: 'Grand Circus Park Station',
+    nearestLine: 'mover',
+    walkingDistanceMiles: 0.05,
+    walkingMinutes: 1,
+    walkingDirections: 'The station entrance sits directly on the Park Ave sidewalk next to the iconic neo-renaissance David Whitney building lobby.',
+  },
+];
+
+export type CanadaGuide = {
+  title: string;
+  operator: string;
+  terminalName: string;
+  terminalAddress: string;
+  terminalCoordinate: Coordinate;
+  nearestStationId: string;
+  nearestStationName: string;
+  walkingFromStation: string;
+  fareCAD: string;
+  fareUSD: string;
+  paymentMethod: string;
+  documentRequirements: string[];
+  scheduleNotes: string;
+  serviceHours: string;
+  officialWebsite: string;
+};
+
+export const canadaTransitGuide: CanadaGuide = {
+  title: 'Transit Windsor Tunnel Bus to Canada',
+  operator: 'Transit Windsor',
+  terminalName: 'Detroit-Windsor Tunnel Bus Terminal (Mariners’ Church Plaza)',
+  terminalAddress: '170 E Jefferson Ave & Randolph St, Detroit, MI 48226',
+  terminalCoordinate: [-83.0426, 42.3292],
+  nearestStationId: 'financial',
+  nearestStationName: 'Financial District / Millender Center Stations',
+  walkingFromStation: 'Walk 1 block south on Randolph St or Larned St to the Mariners’ Church tunnel plaza boarding platform.',
+  fareCAD: '$15.00 – $17.50 CAD one-way',
+  fareUSD: 'Credit or debit card accepted on bus (converts automatically)',
+  paymentMethod: 'Contactless debit / credit card on bus boarding (no cash needed)',
+  documentRequirements: [
+    'Valid U.S. or Canadian Passport (or Passport Card)',
+    'Enhanced Driver’s License (EDL)',
+    'NEXUS / FAST Trusted Traveler Card',
+  ],
+  scheduleNotes: 'Runs every 60–120 minutes daily directly under the Detroit River to Windsor Transit Terminal (Downtown Windsor).',
+  serviceHours: 'Monday – Saturday: 6:00 AM – 11:54 PM | Sunday: 8:00 AM – 7:54 PM',
+  officialWebsite: 'https://thelinqtunnelbus.ca/',
+};
+
+export type DestinationShortcut = {
+  id: string;
+  name: string;
+  category: 'Sports & Stadium' | 'Entertainment & Arts' | 'Public Park & Civic' | 'Waterfront';
+  description: string;
+  icon: string;
+  coordinate: Coordinate;
+  primaryStationId: string;
+  primaryStationName: string;
+  primaryLine: 'mover' | 'qline';
+  secondaryStationId?: string;
+  secondaryStationName?: string;
+  walkingDistanceMiles: number;
+  walkingMinutes: number;
+  walkingDirections: string;
+  popularEvents: string;
+};
+
+export const destinationShortcuts: DestinationShortcut[] = [
+  {
+    id: 'ford-field',
+    name: 'Ford Field',
+    category: 'Sports & Stadium',
+    description: 'Home of the Detroit Lions & premier stadium concert arena.',
+    icon: 'football',
+    coordinate: [-83.0446, 42.3400],
+    primaryStationId: 'greektown',
+    primaryStationName: 'Greektown Station',
+    primaryLine: 'mover',
+    secondaryStationId: 'broadway',
+    secondaryStationName: 'Broadway Station',
+    walkingDistanceMiles: 0.28,
+    walkingMinutes: 5,
+    walkingDirections: 'Exit Greektown Station, walk northeast along Beaubien St or St. Antoine St towards E Adams Ave. Gate G entrance is on Adams.',
+    popularEvents: 'Detroit Lions NFL, major stadium world tours, Monster Jam',
+  },
+  {
+    id: 'little-caesars-arena',
+    name: 'Little Caesars Arena',
+    category: 'Sports & Stadium',
+    description: 'Home of the Detroit Red Wings & Detroit Pistons at The District Detroit.',
+    icon: 'hockey',
+    coordinate: [-83.0552, 42.3411],
+    primaryStationId: 'ql-adelaide',
+    primaryStationName: 'Sproat / Adelaide Station (QLINE)',
+    primaryLine: 'qline',
+    secondaryStationId: 'grand-circus',
+    secondaryStationName: 'Grand Circus Park Station (DPM Transfer)',
+    walkingDistanceMiles: 0.1,
+    walkingMinutes: 2,
+    walkingDirections: 'The QLINE streetcar stops directly in front of the arena doors along Woodward Ave. Step off directly onto the arena plaza.',
+    popularEvents: 'Red Wings NHL, Pistons NBA, arena concerts, UFC',
+  },
+  {
+    id: 'comerica-park',
+    name: 'Comerica Park',
+    category: 'Sports & Stadium',
+    description: 'Home of the Detroit Tigers & open-air downtown ballpark.',
+    icon: 'baseball',
+    coordinate: [-83.0485, 42.3390],
+    primaryStationId: 'broadway',
+    primaryStationName: 'Broadway Station',
+    primaryLine: 'mover',
+    secondaryStationId: 'grand-circus',
+    secondaryStationName: 'Grand Circus Park Station',
+    walkingDistanceMiles: 0.2,
+    walkingMinutes: 4,
+    walkingDirections: 'Exit Broadway Station north onto John R St, continue 2 short blocks past Grand Circus Park directly into the Comerica Park outfield gates.',
+    popularEvents: 'Detroit Tigers MLB baseball, summer ballpark concert festivals',
+  },
+  {
+    id: 'grand-circus-park',
+    name: 'Grand Circus Park',
+    category: 'Public Park & Civic',
+    description: 'Historic semicircular downtown green space & premier dual-transit interchange.',
+    icon: 'trees',
+    coordinate: [-83.0506, 42.3358],
+    primaryStationId: 'grand-circus',
+    primaryStationName: 'Grand Circus Park Station',
+    primaryLine: 'mover',
+    secondaryStationId: 'ql-grand-circus',
+    secondaryStationName: 'Grand Circus (QLINE)',
+    walkingDistanceMiles: 0.05,
+    walkingMinutes: 1,
+    walkingDirections: 'Direct dual-transit hub: step off the People Mover elevated platform and transfer directly to the Woodward QLINE streetcar.',
+    popularEvents: 'Theater District dining, Detroit Opera House, historic fountain plaza',
+  },
+  {
+    id: 'campus-martius',
+    name: 'Campus Martius Park',
+    category: 'Public Park & Civic',
+    description: 'Detroit’s official Point of Origin: year-round ice rink, dining, beach & civic concerts.',
+    icon: 'sparkles',
+    coordinate: [-83.0467, 42.3318],
+    primaryStationId: 'cadillac',
+    primaryStationName: 'Cadillac Center Station',
+    primaryLine: 'mover',
+    secondaryStationId: 'ql-campus-martius',
+    secondaryStationName: 'Campus Martius (QLINE)',
+    walkingDistanceMiles: 0.12,
+    walkingMinutes: 2,
+    walkingDirections: 'Exit Cadillac Center west towards Woodward Ave. Campus Martius Park, the ice rink, Parc restaurant and monument are right in front of you.',
+    popularEvents: 'Winter ice skating rink, summer beach party, Detroit Tree Lighting, live music',
+  },
+  {
+    id: 'hart-plaza',
+    name: 'Hart Plaza',
+    category: 'Waterfront',
+    description: 'Waterfront civic plaza on the Detroit River featuring Dodge Fountain & major music festivals.',
+    icon: 'waves',
+    coordinate: [-83.0441, 42.3274],
+    primaryStationId: 'financial',
+    primaryStationName: 'Financial District Station',
+    primaryLine: 'mover',
+    secondaryStationId: 'renaissance',
+    secondaryStationName: 'Renaissance Center Station',
+    walkingDistanceMiles: 0.15,
+    walkingMinutes: 3,
+    walkingDirections: 'Exit Financial District south along Griswold St toward the Detroit River. Hart Plaza amphitheater entrance is on Jefferson Ave.',
+    popularEvents: 'Movement Electronic Music Festival, Detroit Jazz Festival, ethnic river festivals',
+  },
+];
+
+export type HowDoIFlow = {
+  id: 'hotel' | 'canada' | 'campus-martius' | 'riverfront';
+  title: string;
+  badge: string;
+  shortDesc: string;
+  icon: string;
+};
+
+export const howDoIFlows: HowDoIFlow[] = [
+  {
+    id: 'hotel',
+    title: 'Get back to my hotel',
+    badge: 'HOTEL WAYFINDING',
+    shortDesc: 'Find your downtown hotel & get guided station stops with walking wayfinding.',
+    icon: 'hotel',
+  },
+  {
+    id: 'canada',
+    title: 'Get to Canada',
+    badge: 'BORDER CROSSING',
+    shortDesc: 'Official Transit Windsor Tunnel Bus guide, nearest station, and border credentials.',
+    icon: 'flag',
+  },
+  {
+    id: 'campus-martius',
+    title: 'Get to Campus Martius',
+    badge: 'DOWNTOWN CENTER',
+    shortDesc: 'Reach the ice rink, central civic plaza, and Woodward Avenue hub.',
+    icon: 'park',
+  },
+  {
+    id: 'riverfront',
+    title: 'Get to the Riverfront',
+    badge: 'WATERWALK & VIEWS',
+    shortDesc: 'Access the Detroit RiverWalk, GM RenCen wintergarden, and Cullen Plaza.',
+    icon: 'water',
+  },
+];
+
+export type TransitRoutePlan = {
+  originStation: Station;
+  destinationStation: Station;
+  destinationHubName: string;
+  line: 'mover' | 'qline';
+  stopsCount: number;
+  estimatedRideMinutes: number;
+  intermediateStations: string[];
+  walkingDistanceMiles: number;
+  walkingMinutes: number;
+  walkingDirections: string;
+  targetCoordinate: Coordinate;
+  cameraTilt: {
+    center: Coordinate;
+    zoom: number;
+    pitch: number;
+    bearing: number;
+  };
+};
+
+/**
+ * Flexible Boarding Routing Engine
+ * Automatically determines optimal boarding station using user GPS (if available)
+ * or a chosen starting point, and computes exact transit steps, stops, and walking times.
+ */
+export function calculateFlexibleRoute({
+  userCoordinate,
+  manualOriginStationId,
+  targetDestination,
+}: {
+  userCoordinate?: Coordinate | null;
+  manualOriginStationId?: string | null;
+  targetDestination: DestinationShortcut | HotelGuide | CanadaGuide | Station;
+}): TransitRoutePlan {
+  // Determine target station and coordinates
+  let destinationStationId: string;
+  let targetHubName: string;
+  let walkMiles = 0.15;
+  let walkMin = 3;
+  let walkDirections = 'Proceed to destination exit.';
+  let targetCoord: Coordinate = [-83.0458, 42.3314];
+
+  if ('nearestStationId' in targetDestination) {
+    const guide = targetDestination as HotelGuide | CanadaGuide;
+    destinationStationId = guide.nearestStationId;
+    
+    targetHubName = ('name' in guide && guide.name) 
+      ? guide.name! 
+      : ('title' in guide && guide.title) 
+      ? guide.title! 
+      : 'Destination';
+      
+    walkMiles = ('walkingDistanceMiles' in guide && guide.walkingDistanceMiles !== undefined)
+      ? guide.walkingDistanceMiles! 
+      : 0.15;
+      
+    walkMin = ('walkingMinutes' in guide && guide.walkingMinutes !== undefined) 
+      ? guide.walkingMinutes! 
+      : 3;
+      
+    walkDirections = ('walkingDirections' in guide && guide.walkingDirections) 
+      ? guide.walkingDirections! 
+      : ('walkingFromStation' in guide && guide.walkingFromStation) 
+      ? guide.walkingFromStation! 
+      : 'Proceed to destination exit.';
+      
+    targetCoord = ('coordinate' in guide && guide.coordinate) 
+      ? guide.coordinate! 
+      : ('terminalCoordinate' in guide && guide.terminalCoordinate) 
+      ? guide.terminalCoordinate! 
+      : [-83.0458, 42.3314];
+      
+  } else if ('primaryStationId' in targetDestination) {
+    const shortcut = targetDestination as DestinationShortcut;
+    destinationStationId = shortcut.primaryStationId;
+    targetHubName = shortcut.name;
+    walkMiles = shortcut.walkingDistanceMiles;
+    walkMin = shortcut.walkingMinutes;
+    walkDirections = shortcut.walkingDirections;
+    targetCoord = shortcut.coordinate;
+  } else {
+    const station = targetDestination as Station;
+    destinationStationId = station.id;
+    targetHubName = station.name;
+    targetCoord = station.coordinate;
+    walkMiles = 0.05;
+    walkMin = 1;
+    walkDirections = station.entranceNotes || 'Platform elevator and stairs connect directly to street level.';
+  }
+
+  // Guaranteed fallback default station
+  const defaultStation: Station = (peopleMoverStations[0] || allTransitStations[0])!;
+  const destinationStation: Station =
+    (allTransitStations.find(s => s.id === destinationStationId) || defaultStation)!;
+
+  // Determine Origin Station: Manual override > User GPS nearest > Loop start
+  let originStation: Station;
+  if (manualOriginStationId) {
+    originStation = (allTransitStations.find(s => s.id === manualOriginStationId) || defaultStation)!;
+  } else if (userCoordinate) {
+    const sameLinePool = destinationStation.line === 'qline' ? qlineStations : peopleMoverStations;
+    const poolToUse = sameLinePool.length > 0 ? sameLinePool : allTransitStations;
+    const sorted = [...poolToUse].sort(
+      (a, b) => milesBetween(userCoordinate, a.coordinate) - milesBetween(userCoordinate, b.coordinate)
+    );
+    originStation = (sorted[0] || defaultStation)!;
+  } else {
+    const sameLinePool = destinationStation.line === 'qline' ? qlineStations : peopleMoverStations;
+    originStation = (sameLinePool[0] || defaultStation)!;
+  }
+
+  const isQLine = destinationStation.line === 'qline' || originStation.line === 'qline';
+  let stopsCount = 0;
+  let intermediate: string[] = [];
+
+  if (!isQLine) {
+    // People Mover clockwise loop calculation
+    const fromIdx = peopleMoverStations.findIndex(s => s.id === originStation.id);
+    const toIdx = peopleMoverStations.findIndex(s => s.id === destinationStation.id);
+
+    if (fromIdx !== -1 && toIdx !== -1) {
+      if (toIdx >= fromIdx) {
+        stopsCount = toIdx - fromIdx;
+        intermediate = peopleMoverStations.slice(fromIdx + 1, toIdx).map(s => s.name);
+      } else {
+        stopsCount = peopleMoverStations.length - fromIdx + toIdx;
+        const leg1 = peopleMoverStations.slice(fromIdx + 1).map(s => s.name);
+        const leg2 = peopleMoverStations.slice(0, toIdx).map(s => s.name);
+        intermediate = [...leg1, ...leg2];
+      }
+    }
+  } else {
+    // QLINE corridor calculation
+    const fromIdx = qlineStations.findIndex(s => s.id === originStation.id);
+    const toIdx = qlineStations.findIndex(s => s.id === destinationStation.id);
+    if (fromIdx !== -1 && toIdx !== -1) {
+      stopsCount = Math.abs(toIdx - fromIdx);
+      const step = toIdx > fromIdx ? 1 : -1;
+      for (let i = fromIdx + step; i !== toIdx; i += step) {
+        const qStation = qlineStations[i];
+        if (qStation) intermediate.push(qStation.name);
+      }
+    }
+  }
+
+  const estimatedRideMinutes = Math.max(1, Math.round(stopsCount * (isQLine ? 2.5 : 2.0)));
+
+  const resultPlan: TransitRoutePlan = {
+    originStation,
+    destinationStation,
+    destinationHubName: targetHubName,
+    line: isQLine ? 'qline' : 'mover',
+    stopsCount,
+    estimatedRideMinutes,
+    intermediateStations: intermediate,
+    walkingDistanceMiles: walkMiles,
+    walkingMinutes: walkMin,
+    walkingDirections: walkDirections,
+    targetCoordinate: targetCoord,
+    cameraTilt: {
+      center: targetCoord,
+      zoom: 17.2,
+      pitch: 58,
+      bearing: -15,
+    },
+  };
+
+  return resultPlan;
+}
