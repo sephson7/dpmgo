@@ -1,5 +1,4 @@
 export type Coordinate = [number, number];
-export { peopleMoverShape } from './peopleMoverShape';
 
 export type Restaurant = {
   name: string;
