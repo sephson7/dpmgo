@@ -1,4 +1,5 @@
 export type Coordinate = [number, number];
+export { peopleMoverShape } from './peopleMoverShape';
 
 export type Restaurant = {
   name: string;
@@ -829,72 +830,44 @@ export function calculateFlexibleRoute({
   let targetCoord: Coordinate = [-83.0458, 42.3314];
 
   if ('nearestStationId' in targetDestination) {
-    const guide = targetDestination as HotelGuide | CanadaGuide;
-    destinationStationId = guide.nearestStationId;
-    
-    targetHubName = ('name' in guide && guide.name) 
-      ? guide.name! 
-      : ('title' in guide && guide.title) 
-      ? guide.title! 
-      : 'Destination';
-      
-    walkMiles = ('walkingDistanceMiles' in guide && guide.walkingDistanceMiles !== undefined)
-      ? guide.walkingDistanceMiles! 
-      : 0.15;
-      
-    walkMin = ('walkingMinutes' in guide && guide.walkingMinutes !== undefined) 
-      ? guide.walkingMinutes! 
-      : 3;
-      
-    walkDirections = ('walkingDirections' in guide && guide.walkingDirections) 
-      ? guide.walkingDirections! 
-      : ('walkingFromStation' in guide && guide.walkingFromStation) 
-      ? guide.walkingFromStation! 
-      : 'Proceed to destination exit.';
-      
-    targetCoord = ('coordinate' in guide && guide.coordinate) 
-      ? guide.coordinate! 
-      : ('terminalCoordinate' in guide && guide.terminalCoordinate) 
-      ? guide.terminalCoordinate! 
-      : [-83.0458, 42.3314];
-      
+    destinationStationId = targetDestination.nearestStationId;
+    targetHubName = targetDestination.name || (targetDestination as CanadaGuide).title;
+    walkMiles = (targetDestination as HotelGuide).walkingDistanceMiles ?? 0.15;
+    walkMin = (targetDestination as HotelGuide).walkingMinutes ?? 3;
+    walkDirections = (targetDestination as HotelGuide).walkingDirections ?? (targetDestination as CanadaGuide).walkingFromStation;
+    targetCoord = targetDestination.coordinate ?? (targetDestination as CanadaGuide).terminalCoordinate;
   } else if ('primaryStationId' in targetDestination) {
-    const shortcut = targetDestination as DestinationShortcut;
-    destinationStationId = shortcut.primaryStationId;
-    targetHubName = shortcut.name;
-    walkMiles = shortcut.walkingDistanceMiles;
-    walkMin = shortcut.walkingMinutes;
-    walkDirections = shortcut.walkingDirections;
-    targetCoord = shortcut.coordinate;
+    destinationStationId = targetDestination.primaryStationId;
+    targetHubName = targetDestination.name;
+    walkMiles = targetDestination.walkingDistanceMiles;
+    walkMin = targetDestination.walkingMinutes;
+    walkDirections = targetDestination.walkingDirections;
+    targetCoord = targetDestination.coordinate;
   } else {
-    const station = targetDestination as Station;
-    destinationStationId = station.id;
-    targetHubName = station.name;
-    targetCoord = station.coordinate;
+    destinationStationId = (targetDestination as Station).id;
+    targetHubName = (targetDestination as Station).name;
+    targetCoord = (targetDestination as Station).coordinate;
     walkMiles = 0.05;
     walkMin = 1;
-    walkDirections = station.entranceNotes || 'Platform elevator and stairs connect directly to street level.';
+    walkDirections = (targetDestination as Station).entranceNotes || 'Platform elevator and stairs connect directly to street level.';
   }
 
-  // Guaranteed fallback default station
-  const defaultStation: Station = (peopleMoverStations[0] || allTransitStations[0])!;
-  const destinationStation: Station =
-    (allTransitStations.find(s => s.id === destinationStationId) || defaultStation)!;
+  const destinationStation =
+    allTransitStations.find(s => s.id === destinationStationId) || peopleMoverStations[0];
 
   // Determine Origin Station: Manual override > User GPS nearest > Loop start
   let originStation: Station;
   if (manualOriginStationId) {
-    originStation = (allTransitStations.find(s => s.id === manualOriginStationId) || defaultStation)!;
+    originStation = allTransitStations.find(s => s.id === manualOriginStationId) || peopleMoverStations[0];
   } else if (userCoordinate) {
+    // Find closest station on the same line if possible, or overall closest
     const sameLinePool = destinationStation.line === 'qline' ? qlineStations : peopleMoverStations;
-    const poolToUse = sameLinePool.length > 0 ? sameLinePool : allTransitStations;
-    const sorted = [...poolToUse].sort(
+    const sorted = [...sameLinePool].sort(
       (a, b) => milesBetween(userCoordinate, a.coordinate) - milesBetween(userCoordinate, b.coordinate)
     );
-    originStation = (sorted[0] || defaultStation)!;
+    originStation = sorted[0] || peopleMoverStations[0];
   } else {
-    const sameLinePool = destinationStation.line === 'qline' ? qlineStations : peopleMoverStations;
-    originStation = (sameLinePool[0] || defaultStation)!;
+    originStation = destinationStation.line === 'qline' ? qlineStations[0] : peopleMoverStations[0];
   }
 
   const isQLine = destinationStation.line === 'qline' || originStation.line === 'qline';
@@ -925,15 +898,14 @@ export function calculateFlexibleRoute({
       stopsCount = Math.abs(toIdx - fromIdx);
       const step = toIdx > fromIdx ? 1 : -1;
       for (let i = fromIdx + step; i !== toIdx; i += step) {
-        const qStation = qlineStations[i];
-        if (qStation) intermediate.push(qStation.name);
+        if (qlineStations[i]) intermediate.push(qlineStations[i].name);
       }
     }
   }
 
   const estimatedRideMinutes = Math.max(1, Math.round(stopsCount * (isQLine ? 2.5 : 2.0)));
 
-  const resultPlan: TransitRoutePlan = {
+  return {
     originStation,
     destinationStation,
     destinationHubName: targetHubName,
@@ -952,6 +924,4 @@ export function calculateFlexibleRoute({
       bearing: -15,
     },
   };
-
-  return resultPlan;
 }
