@@ -41,22 +41,51 @@ The core mission of DPM - Go! is to encourage visitors, commuters, and residents
 - **Vehicle Simulation & Tracking:** Interactive tracking dots that pace smoothly along the single-track loop and QLine corridor with station stops and arrival sync.
 
 ### 3. Station Infrastructure & Contextual Drawers
-- **People Mover Loop:** Maps all 13 official Detroit People Mover stations in exact sequential order (from Michigan Station to Times Square Station).
-- **QLine Corridor:** Features fully integrated station drawers and localized dining spots tailored for the streetcar route.
-- **Contextual Drawers & Anchor Slots:** Tapping any station pin or list item slides up a glassmorphism bottom drawer displaying live status, walking metrics, verified local dining options with anchor slots, and the new proximity "Set alarm" notification trigger.
+- **People Mover Loop:** Maps all 13 official Detroit People Mover stations in the agency's counter-clockwise order — Times Square, Michigan, Fort/Cass, Huntington Place, Water Square, Financial District, Millender, Renaissance Center, Bricktown, Greektown, Cadillac Center, Broadway, Grand Circus Park. The loop runs in one direction only, so every route, dwell point and countdown follows that order.
+- **QLine Corridor:** Features fully integrated station drawers and localized dining spots tailored for the streetcar route. Operating hours, per-stop departure times, run times and the street alignment all come from the official QLINE GTFS feed, with the published hours as the fallback when the feed has no service for the date.
+- **Contextual Drawers & Anchor Slots:** Tapping any station pin or list item slides up a glassmorphism bottom drawer displaying live status, walking metrics, verified local dining options with the two-slot anchor architecture (slot 1 annual, slot 2 rotating), nearby park-once garages, and the proximity "Set alarm" notification trigger.
+
+### 4. Partner Program & Admin Portal
+- **Stripe Checkout:** The partner page embeds the Stripe pricing table and can also start a server priced Checkout Session. Slot 1 is sold on the annual plan only, slot 2 on either plan, and the server decides the price.
+- **Anchor Slots:** Slot 1 of Fort / Cass is held by Lafayette Coney Island; every other slot shows a "Claim Slot" call to action.
+- **Partner Admin:** `/admin` (linked from the app footer) signs in, lists every merchant intake submission, and approves or rejects leads. Approving a lead writes the anchor slot assignment, which the station drawer picks up immediately.
 
 ---
 
-## 🛠️ Environment Configuration
+## 🔑 Environment Configuration
 
 To run the Mapbox 3D satellite canvas correctly, configure your environment variables with a secure public token placeholder:
 
 ```env
 VITE_MAPBOX_TOKEN=your_mapbox_public_token_here
+```
 
+Server side secrets live in `.env.local` (gitignored) or the deployment environment:
+
+```env
+STRIPE_SECRET_KEY=your_stripe_restricted_or_secret_key
+STRIPE_PRICING_TABLE_ID=prctbl_xxxxxxxxxxxx
+STRIPE_PRICE_ANNUAL=price_xxxxxxxxxxxx
+STRIPE_PRICE_MONTHLY=price_xxxxxxxxxxxx
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=choose-a-strong-password
 ```
 
 Ensure `mapbox-gl/dist/mapbox-gl.css` is properly imported in your project entry file.
+
+### Transit data refresh
+
+```bash
+npm run build:transit   # rebuild the People Mover and QLINE schedules from the agency GTFS feeds
+```
+
+This regenerates `src/data/dpmSchedule.json`, `src/data/peopleMoverShape.ts`,
+`src/data/qlineSchedule.json` and `src/data/qlineShape.ts`. A scheduled GitHub
+Actions workflow (`.github/workflows/refresh-transit-data.yml`) runs it daily and
+commits the result, so the bundled calendars keep up with the agencies. The
+feeds publish finite calendars — the People Mover calendar currently ends
+2026-12-31 — so the refresh is what keeps the app from falling back to
+"service closed".
 
 ---
 

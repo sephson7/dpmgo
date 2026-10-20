@@ -28,8 +28,10 @@ import {
   Trees,
   Trophy,
   Footprints,
+  SquareParking,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import StationDirectory from '@/components/StationDirectory';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -38,6 +40,7 @@ import {
   qlineStations,
   allTransitStations,
   nearbyRestaurants,
+  restaurants,
   sportsTeams,
   activities,
   milesBetween,
@@ -46,11 +49,16 @@ import {
   destinationShortcuts,
   howDoIFlows,
   calculateFlexibleRoute,
+  stationSlotAssignments,
   type Station,
+  type Place,
+  type StationSlot,
   type HotelGuide,
   type DestinationShortcut,
   type HowDoIFlow,
 } from '@/data/transit';
+import { qlineStatus, qlineStationSchedule, QLINE_HEADWAY_MINUTES } from '@/data/qlineSchedule';
+import { nearbyParking, parkingGarages } from '@/data/parking';
 import { getNextTrainForStation } from '@/data/trainSimulation';
 import { stationSchedule } from '@/data/schedule';
 import { useStationAlert } from '@/hooks/useStationAlert';
@@ -77,12 +85,14 @@ function getVenueLogo(venue: { id: string; url?: string; imageUrl?: string }): s
 type MapProps = {
   peopleMover: boolean;
   qline: boolean;
+  parking: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onReady?: (ready: boolean) => void;
   restaurantId?: string | null;
   isBoarded?: boolean;
   userPosition?: [number, number] | null;
+  followUser?: boolean;
 };
 
 export const Route = createFileRoute('/')({
@@ -124,10 +134,13 @@ function Index() {
   const [mapReady, setMapReady] = useState(false);
   const [peopleMover, setPeopleMover] = useState(true);
   const [qline, setQline] = useState(true);
+  const [parking, setParking] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [stationListOpen, setStationListOpen] = useState(false);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  // Declared before the route memo below reads it during render.
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
   // Quick Navigation & Flexible Boarding state
   const [quickNavOpen, setQuickNavOpen] = useState(false);
@@ -200,18 +213,32 @@ function Index() {
     }
   };
   const [isBoarded, setIsBoarded] = useState(false);
-  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [followUser, setFollowUser] = useState(false);
 
-  // GPS watcher when rider is boarded
+  // GPS watcher: the rider position is tracked the whole time so the boarding
+  // station can be detected automatically and the map can lock onto the rider.
   useEffect(() => {
-    if (!isBoarded || typeof navigator === 'undefined' || !('geolocation' in navigator)) return;
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) return;
+    let cancelled = false;
     const watchId = navigator.geolocation.watchPosition(
-      pos => setUserPos([pos.coords.longitude, pos.coords.latitude]),
-      err => console.warn('Boarded GPS error:', err),
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+      pos => {
+        if (cancelled) return;
+        setUserPos([pos.coords.longitude, pos.coords.latitude]);
+        setGpsError(null);
+      },
+      err => {
+        if (cancelled) return;
+        // A denied or unavailable GPS must never break the map.
+        setGpsError(err.code === err.PERMISSION_DENIED ? 'Location permission denied' : 'Location unavailable');
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [isBoarded]);
+    return () => {
+      cancelled = true;
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
 
   const toggleRestaurant = (id: string) => {
     setRestaurantId(prev => (prev === id ? null : id));
@@ -266,6 +293,17 @@ function Index() {
   }, [peopleMover, qline]);
 
   const selected = allTransitStations.find(station => station.id === selectedId) ?? null;
+
+  // Announce the selected stop for screen reader users. The map pins are
+  // drawn on a canvas, so the station directory is the accessible route.
+  const announcement = useMemo(() => {
+    if (!selected) return '';
+    const line = selected.line === 'qline' ? 'QLINE streetcar' : 'People Mover';
+    const lineStations = selected.line === 'qline' ? qlineStations : peopleMoverStations;
+    const index = lineStations.findIndex(station => station.id === selected.id);
+    const next = lineStations[(index + 1) % lineStations.length];
+    return `${selected.name} selected on the ${line}. Next stop ${next?.name ?? 'unknown'}.`;
+  }, [selected]);
   const filtered = activeStations.filter(station => station.name.toLowerCase().includes(search.toLowerCase()));
 
   // Active station for hero countdown ticker
@@ -278,6 +316,7 @@ function Index() {
   const tickerStation = selected ?? nearestStation;
   const isQLineTicker = tickerStation.line === 'qline';
   const tickerSchedule = useMemo(() => stationSchedule(tickerStation.id, now), [tickerStation.id, now]);
+  const qlineLive = useMemo(() => qlineStatus(now), [now]);
   const nextDeparture = tickerSchedule.trains[0] ?? null;
 
   const [liveArrival, setLiveArrival] = useState(() => getNextTrainForStation(tickerStation.id));
@@ -319,27 +358,29 @@ function Index() {
           <MapComponent
             peopleMover={peopleMover}
             qline={qline}
+            parking={parking}
             selectedId={selectedId}
             onSelect={openStation}
             onReady={setMapReady}
             restaurantId={restaurantId}
             isBoarded={isBoarded}
             userPosition={userPos}
+            followUser={followUser}
           />
         )}
         <div className="map-vignette" />
       </div>
 
       <div className="interface-shell">
+        <a className="skip-link" href="#station-directory">
+          Skip to the station directory
+        </a>
+        <p className="sr-only" role="status" aria-live="polite">
+          {announcement}
+        </p>
         <header className="topbar">
           <div className="brand-block">
-            <img src={logo.url} alt="DPM - Go! logo" className="brand-logo" />
-            <div>
-              <div className="brand-name">
-                DPM <span>–</span> Go<span className="brand-bang">!</span>
-              </div>
-              <div className="brand-caption">MOTORCITY AUTOMATED SYSTEMS</div>
-            </div>
+            <img src={logo.url} alt="DPM - Go!" className="brand-logo" />
           </div>
           <div className="topbar-right">
             <div className="city-tag">
@@ -468,7 +509,13 @@ function Index() {
               {isBoarded ? 'NEXT STOP' : 'SCHEDULED CADENCE'} · {tickerStation.name.toUpperCase()}:
             </span>
             <strong className="mobile-countdown-val">
-              {isQLineTicker ? 'EVERY 10-15 MIN' : tickerSchedule.running ? liveArrival.formatted : 'OFFLINE'}
+              {isQLineTicker
+                ? qlineLive.running
+                  ? qlineLive.nextDepartureLabel
+                  : 'OFFLINE'
+                : tickerSchedule.running
+                  ? liveArrival.formatted
+                  : 'OFFLINE'}
             </strong>
           </div>
 
@@ -482,6 +529,18 @@ function Index() {
             >
               <Navigation2 size={13} className={isBoarded ? 'animate-pulse text-emerald-400' : ''} />
               <span>{isBoarded ? 'ON BOARD · FOLLOWING RIDE' : 'BOARDED THE TRAIN?'}</span>
+            </Button>
+            <Button
+              type="button"
+              variant={followUser ? 'default' : 'outline'}
+              size="sm"
+              className={`boarded-mode-btn ${followUser ? 'is-boarded' : ''}`}
+              disabled={!userPos}
+              onClick={() => setFollowUser(v => !v)}
+              title={gpsError ?? 'Lock the map onto your device location'}
+            >
+              <LocateFixed size={13} className={followUser ? 'animate-pulse text-cyan-300' : ''} />
+              <span>{gpsError ? 'GPS UNAVAILABLE' : followUser ? 'FOLLOWING YOU' : 'LOCK MAP TO ME'}</span>
             </Button>
           </div>
 
@@ -519,6 +578,14 @@ function Index() {
             >
               <span className="route-pill-dot" /> QLINE <span className="route-pill-state">{qline ? 'ON' : 'OFF'}</span>
             </Button>
+            <Button
+              variant={parking ? 'hudWarm' : 'hudInactive'}
+              size="route"
+              aria-pressed={parking}
+              onClick={() => setParking(v => !v)}
+            >
+              <SquareParking size={12} /> PARKING <span className="route-pill-state">{parking ? 'ON' : 'OFF'}</span>
+            </Button>
           </div>
         </section>
 
@@ -552,9 +619,15 @@ function Index() {
                   <span className="ticker-hud-countdown">
 
                     {isQLineTicker ? (
-                      <>
-                        HEADWAY: <strong>10–15</strong> MIN <small>(Mon-Sat 8A-10P)</small>
-                      </>
+                      qlineLive.running ? (
+                        <>
+                          HEADWAY: <strong>{QLINE_HEADWAY_MINUTES}</strong> MIN <small>({qlineLive.nextDepartureLabel})</small>
+                        </>
+                      ) : (
+                        <>
+                          <span className="ticker-off-hours">SERVICE SUSPENDED</span> <small>({qlineLive.nextDepartureLabel})</small>
+                        </>
+                      )
                     ) : tickerSchedule.running ? (
                       nextDeparture ? (
                         nextDeparture.minutes <= 0 ? (
@@ -581,43 +654,60 @@ function Index() {
           <div className="panel-section-title">
             <span>STATION DIRECTORY</span>
             <span>01 — {String(activeStations.length).padStart(2, '0')}</span>
-          </div>
-          <label className="station-search">
+          </div>          <label className="station-search">
             <Search size={15} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a station..." aria-label="Find a station" />
             <kbd>⌕</kbd>
           </label>
-          <div className="station-scroll">
-            {filtered.length ? (
-              filtered.map(station => (
-                <Button
-                  key={station.id}
-                  variant="station"
-                  size="station"
-                  onClick={() => openStation(station.id)}
-                  className={selectedId === station.id ? 'station-selected' : ''}
-                >
-                  <span className="station-number">
-                    {station.line === 'qline' ? 'QL' : 'DPM'}
-                    {String(activeStations.indexOf(station) + 1).padStart(2, '0')}
-                  </span>
-                  <span className="station-track">
-                    <span className="station-node" />
-                  </span>
-                  <span className="station-name">{station.name}</span>
-                  <ArrowRight size={14} className="station-arrow" />
-                </Button>
-              ))
-            ) : (
-              <div className="empty-search">No stations found.</div>
-            )}
+          <div className="station-scroll" id="station-directory">
+            <StationDirectory
+              stations={filtered}
+              numbering={activeStations}
+              selectedId={selectedId}
+              onSelect={openStation}
+              label="Transit stations"
+            />
           </div>
-          <div className="panel-bottom">
-            <span>
-              <span className="tiny-diamond" /> INTERACTIVE PLATFORMS
-            </span>
-            <span>SIMULATED VEHICLES</span>
-          </div>
+          {parking && (
+            <>
+              <div className="panel-rule" />
+              <div className="panel-section-title">
+                <span>PARK ONCE DIRECTORY</span>
+                <span>02 — {String(parkingGarages.length).padStart(2, '0')}</span>
+              </div>
+              <div className="station-scroll">
+                {parkingGarages.map(garage => (
+                  <Button
+                    key={garage.id}
+                    variant="station"
+                    size="station"
+                    onClick={() => handleFlyToTarget(garage.name, garage.coordinate)}
+                  >
+                    <span className="station-number">{garage.parkOnce ? 'P1' : 'P0'}</span>
+                    <span className="station-track">
+                      <span className="station-node" />
+                    </span>
+                    <span className="station-name">{garage.name}</span>
+                    <ArrowRight size={14} className="station-arrow" />
+                  </Button>
+                ))}
+              </div>
+              <div className="panel-bottom">
+                <span>
+                  <span className="tiny-diamond" /> RATES CONFIRM ON ARRIVAL
+                </span>
+                <span>{parkingGarages.filter(g => g.parkOnce).length} PARK ONCE</span>
+              </div>
+            </>
+          )}
+          {!parking && (
+            <div className="panel-bottom">
+              <span>
+                <span className="tiny-diamond" /> INTERACTIVE PLATFORMS
+              </span>
+              <span>SIMULATED VEHICLES</span>
+            </div>
+          )}
         </aside>
 
         <div className="map-overlay-info">
@@ -648,6 +738,11 @@ function Index() {
           <span>
             <i className="legend-vehicle" /> SIMULATED VEHICLE
           </span>
+          {parking && (
+            <span>
+              <i className="legend-line warm-line" /> PARKING GARAGE
+            </span>
+          )}
         </div>
                 <div className="status-strip">
           <div>
@@ -696,6 +791,10 @@ function Index() {
             <button type="button" onClick={() => setLegal('privacy')} className="legal-btn">
               Privacy Policy
             </button>
+            <span className="footer-divider">·</span>
+            <a href="/admin" className="legal-btn">
+              Partner Admin
+            </a>
           </div>
         </footer>
       </div>
@@ -747,22 +846,14 @@ function Index() {
             </label>
           </div>
           <div className="station-drawer-list">
-            {filtered.length ? (
-              filtered.map(station => (
-                <Button key={station.id} variant="station" size="station" onClick={() => openStation(station.id)}>
-                  <span className="station-number">{String(activeStations.indexOf(station) + 1).padStart(2, '0')}</span>
-                  <span className="station-track">
-                    <span className="station-node" />
-                  </span>
-                  <span className="station-name">
-                    {station.name} <small className="text-muted-foreground ml-1">({station.line === 'qline' ? 'QLINE' : 'DPM'})</small>
-                  </span>
-                  <ArrowRight size={14} className="station-arrow" />
-                </Button>
-              ))
-            ) : (
-              <div className="empty-search">No stations match "{search}".</div>
-            )}
+            <StationDirectory
+              stations={filtered}
+              numbering={activeStations}
+              selectedId={selectedId}
+              onSelect={openStation}
+              label="Transit stations"
+              showLine
+            />
           </div>
         </DrawerContent>
       </Drawer>
@@ -897,10 +988,13 @@ function Index() {
               </span>
             </div>
             <select
-              value={flexibleRoute.originStation.id}
-              onChange={e => setManualOriginId(e.target.value)}
+              value={manualOriginId ?? '__auto__'}
+              onChange={e => setManualOriginId(e.target.value === '__auto__' ? null : e.target.value)}
               className="quick-nav-dropdown"
             >
+              <option value="__auto__">
+                {userPos ? '📍 Nearest to me' : 'Auto'} — {flexibleRoute.originStation.name}
+              </option>
               <optgroup label="People Mover Loop Stations">
                 {peopleMoverStations.map(s => (
                   <option key={s.id} value={s.id}>
@@ -942,12 +1036,27 @@ function Index() {
             <div className="route-step">
               <div className="route-step-indicator">2</div>
               <div className="route-step-content">
-                <div className="route-step-title">
-                  Ride <strong>{flexibleRoute.stopsCount} stop{flexibleRoute.stopsCount === 1 ? '' : 's'}</strong> (~{flexibleRoute.estimatedRideMinutes} mins)
-                </div>
-                {flexibleRoute.intermediateStations.length > 0 && (
-                  <div className="intermediate-stops">
-                    Passing: {flexibleRoute.intermediateStations.join(' → ')}
+                {flexibleRoute.stopsCount === 0 ? (
+                  <div className="route-step-title">
+                    Already at <strong>{flexibleRoute.destinationStation.name}</strong>
+                  </div>
+                ) : (
+                  <div className="route-step-title">
+                    Ride <strong>{flexibleRoute.stopsCount} stop{flexibleRoute.stopsCount === 1 ? '' : 's'}</strong> (~{flexibleRoute.estimatedRideMinutes} mins)
+                  </div>
+                )}
+                {flexibleRoute.legs.map(leg => (
+                  <div className="intermediate-stops" key={`leg-${leg.line}-${leg.toStation.id}`}>
+                    {leg.line === 'mover' ? 'People Mover' : 'QLINE'}
+                    {leg.intermediateStations.length > 0
+                      ? ` passing ${leg.intermediateStations.join(' → ')}`
+                      : ` direct to ${leg.toStation.name}`}
+                  </div>
+                ))}
+                {flexibleRoute.transferStation && (
+                  <div className="route-step-note">
+                    Transfer at <strong>{flexibleRoute.transferStation.name}</strong> — walk ~{flexibleRoute.transferWalkMinutes} min to the{' '}
+                    {flexibleRoute.legs[1]?.line === 'qline' ? 'QLINE' : 'People Mover'} platform.
                   </div>
                 )}
               </div>
@@ -1213,6 +1322,100 @@ function InfoPanel({ panel }: { panel: string | null }) {
   );
 }
 
+function SponsorSlotCard({
+  slot,
+  place,
+  walkMinutes,
+  onRestaurant,
+  isPinned,
+}: {
+  slot: StationSlot;
+  place: Place;
+  walkMinutes: number;
+  onRestaurant: (id: string) => void;
+  isPinned: boolean;
+}) {
+  const thumb = getVenueLogo(place);
+  return (
+    <div className="anchor-spot-wrapper">
+      <div className="anchor-spot-eyebrow">
+        <span className="anchor-spot-dot" /> SLOT {slot.slot} ·{' '}
+        {slot.kind === 'annual' ? 'ANNUAL PARTNER' : `ROTATING PARTNER${slot.rotation ? ` · ${slot.rotation}` : ''}`}
+      </div>
+      <div className="anchor-spot-box">
+        <div className="anchor-spot-top">
+          <div className="anchor-spot-thumb">
+            {thumb ? <img src={thumb} alt={place.name} loading="lazy" /> : <MapPin size={22} />}
+          </div>
+          <div className="anchor-spot-info">
+            <div className="anchor-spot-name-row">
+              <h3 className="anchor-spot-name">{place.name}</h3>
+              <span className="anchor-spot-price">{place.price}</span>
+            </div>
+            <div className="anchor-spot-meta">
+              {place.category} · ~{walkMinutes} min walk
+            </div>
+            <div className="anchor-spot-partner-tag">{slot.tagline}</div>
+          </div>
+        </div>
+
+        {slot.perk && (
+          <div className="anchor-perk-container">
+            <div className="anchor-perk-label">RIDER PERK:</div>
+            <div className="anchor-perk-body">{slot.perk}</div>
+          </div>
+        )}
+
+        <div className="anchor-btn-grid">
+          <button
+            type="button"
+            className={`anchor-action-btn ${isPinned ? 'active' : ''}`}
+            onClick={() => onRestaurant(place.id)}
+          >
+            <MapPin size={14} />
+            <span>{isPinned ? 'UNTOGGLE 3D PIN' : 'SHOW ON 3D MAP'}</span>
+          </button>
+          {place.url && (
+            <a
+              href={place.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="anchor-action-btn anchor-action-visit"
+            >
+              <span>MENU &amp; VISIT</span>
+              <ExternalLink size={14} />
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OpenSlotCard({ slot, stationName, stationId }: { slot: 1 | 2; stationName: string; stationId: string }) {
+  const annual = slot === 1;
+  return (
+    <div className="unclaimed-anchor-banner">
+      <div>
+        <div className="unclaimed-title">
+          ★ {annual ? 'CLAIM THE ANNUAL SLOT' : 'CLAIM THE ROTATING SLOT'}
+        </div>
+        <p className="unclaimed-text">
+          {annual
+            ? `Lock in the exclusive top spot at ${stationName} for a full year.`
+            : `Feature at ${stationName} for one rotation window, then pass it on.`}
+        </p>
+      </div>
+      <a
+        href={`/pricing?slot=${slot}&station=${stationId}&name=${encodeURIComponent(stationName)}`}
+        className="unclaimed-btn"
+      >
+        CLAIM SLOT {slot} <ExternalLink size={12} />
+      </a>
+    </div>
+  );
+}
+
 function StationDetails({
   station,
   restaurantId,
@@ -1241,15 +1444,58 @@ function StationDetails({
     }));
   }, [station]);
 
-  // Primary Anchor Sponsor strictly matched to this station
-  const primarySponsor = useMemo(() => {
-    return allNearby.find(r => r.sponsored && r.sponsorStationId === station.id) ?? null;
-  }, [allNearby, station.id]);
+  // Slot architecture: slot 1 is the annual partner, slot 2 rotates.
+  // Admin assignments from the partner portal override the built-in slots.
+  const [assignedSlots, setAssignedSlots] = useState<StationSlot[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/anchor-slots')
+      .then(response => (response.ok ? response.json() : { assignments: [] }))
+      .then((result: { assignments?: StationSlot[] }) => {
+        if (!cancelled) setAssignedSlots(result.assignments ?? []);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  // Filtered standard listings
+  const slots = useMemo(() => {
+    const builtIn = stationSlotAssignments(station.id);
+    const override = (slot: 1 | 2): StationSlot | null =>
+      assignedSlots.find(item => item.stationId === station.id && item.slot === slot) ?? null;
+    return {
+      slot1: override(1) ?? builtIn.slot1,
+      slot2: override(2) ?? builtIn.slot2,
+    };
+  }, [station.id, assignedSlots]);
+
+  const slotPlace = (slot: StationSlot | null): Place | null => {
+    if (!slot) return null;
+    const place = restaurants.find(r => r.id === slot.placeId);
+    if (place) return place;
+    // Slots assigned from the partner portal can point at a new business.
+    return {
+      id: slot.placeId,
+      name: slot.businessName ?? slot.placeId,
+      category: 'Station partner',
+      price: '',
+      url: '',
+      coordinate: station.entrance,
+    };
+  };
+  const slot1Place = slotPlace(slots.slot1);
+  const slot2Place = slotPlace(slots.slot2);
+  const slotWalkMinutes = (place: Place | null): number => {
+    if (!place) return 0;
+    return Math.max(1, Math.round(milesBetween(station.entrance, place.coordinate) * 1.25 * 20));
+  };
+
+  // Filtered standard listings (slot holders are never listed twice)
   const standardSpots = useMemo(() => {
+    const slotIds = new Set([slots.slot1?.placeId, slots.slot2?.placeId].filter(Boolean));
     return allNearby
-      .filter(r => r.id !== primarySponsor?.id)
+      .filter(r => !slotIds.has(r.id))
       .filter(r => {
         if (priceFilter === '$' && r.price !== '$') return false;
         if (priceFilter === '$$' && r.price !== '$$') return false;
@@ -1258,12 +1504,22 @@ function StationDetails({
         if (lateNightOnly && !r.lateNight) return false;
         return true;
       });
-  }, [allNearby, primarySponsor?.id, priceFilter, maxMinutes, lateNightOnly]);
+  }, [allNearby, slots, priceFilter, maxMinutes, lateNightOnly]);
 
   const stationsInLine = isQLine ? qlineStations : peopleMoverStations;
   const number = stationsInLine.findIndex(s => s.id === station.id) + 1;
   const next = stationsInLine[number % stationsInLine.length] ?? station;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${station.entrance[1]},${station.entrance[0]}`;
+
+  // Garages that connect to this station for a park-once trip.
+  const stationParking = useMemo(
+    () =>
+      nearbyParking(station).map(garage => ({
+        ...garage,
+        walkMinutes: Math.max(1, Math.round(garage.walkMiles * 20)),
+      })),
+    [station]
+  );
 
   // Walk estimate from downtown center (Campus Martius [-83.0466, 42.3316])
   const walkingMiles = milesBetween([-83.0466, 42.3316], station.entrance) * 1.3;
@@ -1276,6 +1532,11 @@ function StationDetails({
   }, []);
 
   const sched = stationSchedule(station.id, now);
+  const qline = useMemo(() => qlineStatus(now), [now]);
+  const qlineDepartures = useMemo(
+    () => (isQLine ? qlineStationSchedule(station.id, now) : []),
+    [isQLine, station.id, now]
+  );
 
   return (
     <div className="detail-content station-drawer-v2">
@@ -1322,8 +1583,16 @@ function StationDetails({
         </div>
         <div className="stat-tri-cell">
           <span className="stat-tri-label">SERVICE NOW</span>
-          <div className={`stat-tri-status ${sched.running || isQLine ? 'is-running' : 'not-running'}`}>
-            {isQLine ? 'Active' : sched.running ? 'Running' : 'Not running'}
+          <div
+            className={`stat-tri-status ${(isQLine ? qline.running : sched.running) ? 'is-running' : 'not-running'}`}
+          >
+            {isQLine
+              ? qline.running
+                ? 'Running'
+                : 'Not running'
+              : sched.running
+                ? 'Running'
+                : 'Not running'}
           </div>
         </div>
       </div>
@@ -1363,18 +1632,64 @@ function StationDetails({
         </div>
 
         {isQLine ? (
-          <div className="timetable-rows">
-            <div className="timetable-row">
-              <div className="timetable-clock-box">
-                <Clock3 size={18} />
-              </div>
-              <div className="timetable-time-col">
-                <div className="timetable-primary-time">Every 10–15 Min</div>
-                <div className="timetable-day-note">Regular streetcar frequency</div>
-              </div>
-              <div className="timetable-status-tag">ACTIVE</div>
+          qlineDepartures.length > 0 ? (
+            <div className="timetable-rows">
+              {qlineDepartures.map((departure, index) => (
+                <div key={`${departure.seconds}-${index}`} className="timetable-row">
+                  <div className="timetable-clock-box">
+                    <Clock3 size={18} />
+                  </div>
+                  <div className="timetable-time-col">
+                    <div className="timetable-primary-time">{departure.time}</div>
+                    <div className="timetable-day-note">
+                      {departure.minutes <= 0
+                        ? 'Due at platform'
+                        : departure.minutes <= 15
+                          ? `In ~${departure.minutes} min \u00b7 ${departure.label}`
+                          : departure.label}
+                    </div>
+                  </div>
+                  {departure.minutes > 0 && departure.minutes <= 10 && (
+                    <span className="timetable-pill-due">APPROACHING</span>
+                  )}
+                </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="timetable-rows">
+              <div className="timetable-row">
+                <div className="timetable-clock-box">
+                  <Clock3 size={18} />
+                </div>
+                <div className="timetable-time-col">
+                  <div className="timetable-primary-time">
+                    {qline.running ? `Every ${QLINE_HEADWAY_MINUTES} Min` : 'Service Closed'}
+                  </div>
+                  <div className="timetable-day-note">
+                    {qline.running
+                      ? qline.nextDepartureLabel
+                      : `${qline.nextDepartureLabel} \u00b7 ${qline.window.opensAt} to ${qline.window.closesAt}`}
+                  </div>
+                </div>
+                <div className="timetable-status-tag">{qline.running ? 'ACTIVE' : 'CLOSED'}</div>
+              </div>
+              <div className="timetable-row">
+                <div className="timetable-clock-box">
+                  <Clock3 size={18} />
+                </div>
+                <div className="timetable-time-col">
+                  <div className="timetable-primary-time">
+                    {qline.window.opensAt} to {qline.window.closesAt}
+                  </div>
+                  <div className="timetable-day-note">
+                    {qline.window.isSunday ? 'Sunday service hours' : 'Monday to Saturday service hours'}
+                    {qline.window.fromFeed ? ' \u00b7 agency GTFS' : ' \u00b7 published hours'}
+                  </div>
+                </div>
+                <div className="timetable-status-tag">FREE</div>
+              </div>
+            </div>
+          )
         ) : sched.trains.length > 0 ? (
           <div className="timetable-rows">
             {sched.trains.slice(0, 3).map((train, i) => (
@@ -1408,73 +1723,30 @@ function StationDetails({
           </a>
         </div>
 
-        {/* Exclusive Anchor Partner Spot */}
-        {primarySponsor ? (
-          <div className="anchor-spot-wrapper">
-            <div className="anchor-spot-eyebrow">
-              <span className="anchor-spot-dot" /> OFFICIAL STATION PARTNER SPOT
-            </div>
-            <div className="anchor-spot-box">
-              <div className="anchor-spot-top">
-                <div className="anchor-spot-thumb">
-                  {diningImage(primarySponsor.id) ? (
-                    <img src={diningImage(primarySponsor.id)} alt={primarySponsor.name} loading="lazy" />
-                  ) : (
-                    <MapPin size={22} />
-                  )}
-                </div>
-                <div className="anchor-spot-info">
-                  <div className="anchor-spot-name-row">
-                    <h3 className="anchor-spot-name">{primarySponsor.name}</h3>
-                    <span className="anchor-spot-price">{primarySponsor.price}</span>
-                  </div>
-                  <div className="anchor-spot-meta">
-                    {primarySponsor.category} · {primarySponsor.walkMiles.toFixed(2)} mi (~{primarySponsor.walkMinutes} min walk)
-                  </div>
-                  <div className="anchor-spot-partner-tag">
-                    {primarySponsor.sponsorTagline ?? 'Official Downtown Anchor Partner'}
-                  </div>
-                </div>
-              </div>
-
-              {primarySponsor.sponsorPerk && (
-                <div className="anchor-perk-container">
-                  <div className="anchor-perk-label">EXCLUSIVE RIDER PERK:</div>
-                  <div className="anchor-perk-body">{primarySponsor.sponsorPerk}</div>
-                </div>
-              )}
-
-              <div className="anchor-btn-grid">
-                <button
-                  type="button"
-                  className={`anchor-action-btn ${restaurantId === primarySponsor.id ? 'active' : ''}`}
-                  onClick={() => onRestaurant(primarySponsor.id)}
-                >
-                  <MapPin size={14} />
-                  <span>{restaurantId === primarySponsor.id ? 'UNTOGGLE 3D PIN' : 'SHOW ON 3D MAP'}</span>
-                </button>
-                <a
-                  href={primarySponsor.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="anchor-action-btn anchor-action-visit"
-                >
-                  <span>MENU &amp; VISIT</span>
-                  <ExternalLink size={14} />
-                </a>
-              </div>
-            </div>
-          </div>
+        {/* Slot 1 — annual partner */}
+        {slot1Place && slots.slot1 ? (
+          <SponsorSlotCard
+            slot={slots.slot1}
+            place={slot1Place}
+            walkMinutes={slotWalkMinutes(slot1Place)}
+            onRestaurant={onRestaurant}
+            isPinned={restaurantId === slot1Place.id}
+          />
         ) : (
-          <div className="unclaimed-anchor-banner">
-            <div>
-              <div className="unclaimed-title">★ CLAIM THIS STATION ANCHOR</div>
-              <p className="unclaimed-text">Lock in the exclusive top spot for {station.name}.</p>
-            </div>
-            <a href="/pricing" className="unclaimed-btn">
-              CLAIM SLOT <ExternalLink size={12} />
-            </a>
-          </div>
+          <OpenSlotCard slot={1} stationName={station.name} stationId={station.id} />
+        )}
+
+        {/* Slot 2 — rotating partner */}
+        {slot2Place && slots.slot2 ? (
+          <SponsorSlotCard
+            slot={slots.slot2}
+            place={slot2Place}
+            walkMinutes={slotWalkMinutes(slot2Place)}
+            onRestaurant={onRestaurant}
+            isPinned={restaurantId === slot2Place.id}
+          />
+        ) : (
+          <OpenSlotCard slot={2} stationName={station.name} stationId={station.id} />
         )}
 
         {/* Filter Bar */}
@@ -1525,8 +1797,8 @@ function StationDetails({
                 onClick={() => onRestaurant(r.id)}
               >
                 <div className="restaurant-thumb-box">
-                  {diningImage(r.id) ? (
-                    <img src={diningImage(r.id)} alt={r.name} loading="lazy" />
+                  {getVenueLogo(r) ? (
+                    <img src={getVenueLogo(r) ?? ''} alt={r.name} loading="lazy" />
                   ) : (
                     <MapPin size={18} />
                   )}
@@ -1558,6 +1830,47 @@ function StationDetails({
           </div>
         ) : (
           <div className="empty-search">No spots match the selected filters.</div>
+        )}
+
+        {/* Park once garages connected to this station */}
+        {stationParking.length > 0 && (
+          <div className="dining-block">
+            <div className="dining-section-header">
+              <span className="dining-section-title">PARK ONCE · NEARBY GARAGES</span>
+            </div>
+            <div className="restaurants-scroll-list">
+              {stationParking.map(garage => (
+                <div key={garage.id} className="restaurant-row-card">
+                  <div className="restaurant-thumb-box">
+                    <SquareParking size={18} />
+                  </div>
+                  <div className="restaurant-info-box">
+                    <div className="restaurant-name-header">
+                      <span className="restaurant-name">{garage.name}</span>
+                    </div>
+                    <div className="restaurant-meta-line">
+                      {garage.address} · ~{garage.walkMinutes} min walk · {garage.line === 'mover' ? 'DPM' : 'QLINE'}
+                    </div>
+                    <div className="restaurant-meta-line">{garage.hours}</div>
+                  </div>
+                  <div className="restaurant-actions-box">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${garage.coordinate[1]},${garage.coordinate[0]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="restaurant-external-link"
+                      aria-label={`Open ${garage.name} in maps`}
+                    >
+                      <ExternalLink size={16} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="restaurant-meta-line" style={{ marginTop: '0.5rem' }}>
+              Rates and hours vary — confirm with the garage on arrival.
+            </div>
+          </div>
         )}
 
         {/* Directions & Footer */}

@@ -10,11 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as ApiAnchorSlotsRouteImport } from './routes/api.anchor-slots'
+import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
+import { Route as ApiMerchantIntakeRouteImport } from './routes/api.merchant-intake'
+import { Route as ApiAdminLeadsRouteImport } from './routes/api.admin.leads'
+import { Route as ApiAdminLoginRouteImport } from './routes/api.admin.login'
+import { Route as ApiAdminLogoutRouteImport } from './routes/api.admin.logout'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -22,31 +34,117 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAnchorSlotsRoute = ApiAnchorSlotsRouteImport.update({
+  id: '/api/anchor-slots',
+  path: '/api/anchor-slots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
+  id: '/api/checkout',
+  path: '/api/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMerchantIntakeRoute = ApiMerchantIntakeRouteImport.update({
+  id: '/api/merchant-intake',
+  path: '/api/merchant-intake',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminLeadsRoute = ApiAdminLeadsRouteImport.update({
+  id: '/api/admin/leads',
+  path: '/api/admin/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminLoginRoute = ApiAdminLoginRouteImport.update({
+  id: '/api/admin/login',
+  path: '/api/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminLogoutRoute = ApiAdminLogoutRouteImport.update({
+  id: '/api/admin/logout',
+  path: '/api/admin/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/pricing': typeof PricingRoute
+  '/api/anchor-slots': typeof ApiAnchorSlotsRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/merchant-intake': typeof ApiMerchantIntakeRoute
+  '/api/admin/leads': typeof ApiAdminLeadsRoute
+  '/api/admin/login': typeof ApiAdminLoginRoute
+  '/api/admin/logout': typeof ApiAdminLogoutRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/pricing': typeof PricingRoute
+  '/api/anchor-slots': typeof ApiAnchorSlotsRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/merchant-intake': typeof ApiMerchantIntakeRoute
+  '/api/admin/leads': typeof ApiAdminLeadsRoute
+  '/api/admin/login': typeof ApiAdminLoginRoute
+  '/api/admin/logout': typeof ApiAdminLogoutRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/pricing': typeof PricingRoute
+  '/api/anchor-slots': typeof ApiAnchorSlotsRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/merchant-intake': typeof ApiMerchantIntakeRoute
+  '/api/admin/leads': typeof ApiAdminLeadsRoute
+  '/api/admin/login': typeof ApiAdminLoginRoute
+  '/api/admin/logout': typeof ApiAdminLogoutRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pricing'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/pricing'
+    | '/api/anchor-slots'
+    | '/api/checkout'
+    | '/api/merchant-intake'
+    | '/api/admin/leads'
+    | '/api/admin/login'
+    | '/api/admin/logout'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pricing'
-  id: '__root__' | '/' | '/pricing'
+  to:
+    | '/'
+    | '/admin'
+    | '/pricing'
+    | '/api/anchor-slots'
+    | '/api/checkout'
+    | '/api/merchant-intake'
+    | '/api/admin/leads'
+    | '/api/admin/login'
+    | '/api/admin/logout'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/pricing'
+    | '/api/anchor-slots'
+    | '/api/checkout'
+    | '/api/merchant-intake'
+    | '/api/admin/leads'
+    | '/api/admin/login'
+    | '/api/admin/logout'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   PricingRoute: typeof PricingRoute
+  ApiAnchorSlotsRoute: typeof ApiAnchorSlotsRoute
+  ApiCheckoutRoute: typeof ApiCheckoutRoute
+  ApiMerchantIntakeRoute: typeof ApiMerchantIntakeRoute
+  ApiAdminLeadsRoute: typeof ApiAdminLeadsRoute
+  ApiAdminLoginRoute: typeof ApiAdminLoginRoute
+  ApiAdminLogoutRoute: typeof ApiAdminLogoutRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -65,12 +170,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/anchor-slots': {
+      id: '/api/anchor-slots'
+      path: '/api/anchor-slots'
+      fullPath: '/api/anchor-slots'
+      preLoaderRoute: typeof ApiAnchorSlotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/checkout': {
+      id: '/api/checkout'
+      path: '/api/checkout'
+      fullPath: '/api/checkout'
+      preLoaderRoute: typeof ApiCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/merchant-intake': {
+      id: '/api/merchant-intake'
+      path: '/api/merchant-intake'
+      fullPath: '/api/merchant-intake'
+      preLoaderRoute: typeof ApiMerchantIntakeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/leads': {
+      id: '/api/admin/leads'
+      path: '/api/admin/leads'
+      fullPath: '/api/admin/leads'
+      preLoaderRoute: typeof ApiAdminLeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/login': {
+      id: '/api/admin/login'
+      path: '/api/admin/login'
+      fullPath: '/api/admin/login'
+      preLoaderRoute: typeof ApiAdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/logout': {
+      id: '/api/admin/logout'
+      path: '/api/admin/logout'
+      fullPath: '/api/admin/logout'
+      preLoaderRoute: typeof ApiAdminLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   PricingRoute: PricingRoute,
+  ApiAnchorSlotsRoute: ApiAnchorSlotsRoute,
+  ApiCheckoutRoute: ApiCheckoutRoute,
+  ApiMerchantIntakeRoute: ApiMerchantIntakeRoute,
+  ApiAdminLeadsRoute: ApiAdminLeadsRoute,
+  ApiAdminLoginRoute: ApiAdminLoginRoute,
+  ApiAdminLogoutRoute: ApiAdminLogoutRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

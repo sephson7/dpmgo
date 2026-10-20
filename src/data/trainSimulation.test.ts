@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { peopleMoverServiceRunning } from './schedule';
-import { MOVER_DWELL_MS, MOVER_HEADWAY_MS, MOVER_LOOP_MS, simulatedMoverPosition, simulatedMoverPositions, simulatedMoverTrain } from './trainSimulation';
+import {
+  MOVER_DWELL_MS,
+  MOVER_HEADWAY_MS,
+  MOVER_LOOP_MS,
+  getNextTrainForStation,
+  moverArrivalOffsetMs,
+  simulatedMoverPosition,
+  simulatedMoverPositions,
+  simulatedMoverTrain,
+} from './trainSimulation';
+import { findStation } from './transit';
 
 describe('two-train simulation', () => {
   it('models a 14.5 minute loop and 7.25 minute headway', () => {
@@ -51,5 +61,33 @@ describe('official service-hours gate (Detroit time)', () => {
   });
   it('does not imply operation beyond the bundled calendar', () => {
     expect(peopleMoverServiceRunning(new Date('2027-01-02T17:00:00Z'))).toBe(false);
+  });
+});
+
+describe('arrival telemetry matches the drawn train', () => {
+  it('dwells on the platform coordinate of each station', () => {
+    for (const id of ['times-square', 'financial', 'grand-circus']) {
+      const station = findStation(id);
+      const arrival = moverArrivalOffsetMs(id);
+      expect(station).toBeDefined();
+      expect(arrival).not.toBeNull();
+      const position = simulatedMoverPosition(arrival!);
+      expect(Math.abs(position[0] - station!.coordinate[0])).toBeLessThan(1e-9);
+      expect(Math.abs(position[1] - station!.coordinate[1])).toBeLessThan(1e-9);
+    }
+  });
+
+  it('counts the countdown down to the moment the train reaches the platform', () => {
+    const arrival = moverArrivalOffsetMs('financial')!;
+    const next = getNextTrainForStation('financial', arrival + 60000);
+    // A train is already standing at the platform and the next one is a
+    // half-loop (7.25 minutes) behind.
+    expect(next.totalSeconds).toBeGreaterThan(0);
+    expect(next.totalSeconds).toBeLessThanOrEqual(Math.ceil(MOVER_HEADWAY_MS / 1000));
+  });
+
+  it('reports DUE NOW while the train is on the platform', () => {
+    const arrival = moverArrivalOffsetMs('financial')!;
+    expect(getNextTrainForStation('financial', arrival).formatted).toBe('DUE NOW');
   });
 });

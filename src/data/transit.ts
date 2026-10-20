@@ -1,6 +1,8 @@
 export type Coordinate = [number, number];
 export { peopleMoverShape } from './peopleMoverShape';
 
+export type TransitLine = 'mover' | 'qline';
+
 export type Restaurant = {
   name: string;
   category: string;
@@ -17,6 +19,10 @@ export type Place = Restaurant & {
   sponsorTagline?: string;
   sponsorPerk?: string;
   sponsorStationId?: string;
+  /** Slot the place holds in the station drawer. */
+  sponsorSlot?: 1 | 2;
+  /** Rotation window for slot 2 placements. */
+  sponsorRotation?: string;
 };
 
 export type Station = {
@@ -30,14 +36,34 @@ export type Station = {
   adaCompliant: boolean;
   entranceNotes: string;
   restaurants: Restaurant[];
-  line?: 'mover' | 'qline';
+  line: TransitLine;
 };
 
 // ==========================================
 // DETROIT PEOPLE MOVER (13 Loop Stations)
 // Verified against official DTC GTFS stops & shape
 // ==========================================
-export const peopleMoverStations: Station[] = [
+// Non-empty tuple types keep the first station addressable without an
+// undefined check while staying assignable to Station[] for consumers.
+// The loop runs in a single counter-clockwise direction. Station order follows
+// the agency GTFS shape (qo5n), which starts at Times Square:
+// Times Square -> Michigan -> Fort/Cass -> Huntington -> Water Square ->
+// Financial -> Millender -> Renaissance -> Bricktown -> Greektown ->
+// Cadillac Center -> Broadway -> Grand Circus Park -> back to Times Square.
+export const peopleMoverStations: [Station, ...Station[]] = [
+  {
+    id: 'times-square',
+    name: 'Times Square Station',
+    coordinate: [-83.052159, 42.333579],
+    entrance: [-83.051904, 42.333594],
+    neighborhood: 'West Downtown',
+    crossStreets: 'Times Square & Grand River Ave',
+    elevator: true,
+    adaCompliant: true,
+    entranceNotes: 'Elevator and dual stairwell entrance next to DTE Energy headquarters.',
+    restaurants: [],
+    line: 'mover',
+  },
   {
     id: 'michigan',
     name: 'Michigan Station',
@@ -194,26 +220,13 @@ export const peopleMoverStations: Station[] = [
     restaurants: [],
     line: 'mover',
   },
-  {
-    id: 'times-square',
-    name: 'Times Square Station',
-    coordinate: [-83.052159, 42.333579],
-    entrance: [-83.051904, 42.333594],
-    neighborhood: 'West Downtown',
-    crossStreets: 'Times Square & Grand River Ave',
-    elevator: true,
-    adaCompliant: true,
-    entranceNotes: 'Elevator and dual stairwell entrance next to DTE Energy headquarters.',
-    restaurants: [],
-    line: 'mover',
-  },
 ];
 
 // ==========================================
 // QLINE STREETCAR (12 Woodward Ave Stations)
 // Verified along Woodward Avenue corridor centerline
 // ==========================================
-export const qlineStations: Station[] = [
+export const qlineStations: [Station, ...Station[]] = [
   {
     id: 'ql-congress',
     name: 'Congress Street',
@@ -375,22 +388,81 @@ export const qlineStations: Station[] = [
 export const qlineStops = qlineStations.map(s => ({ name: s.name, coordinate: s.coordinate }));
 export const allTransitStations: Station[] = [...peopleMoverStations, ...qlineStations];
 
-const anchorSponsorRegistry: Record<string, { tier: 'anchor'; tagline: string; perk: string; stationId: string }> = {
-  lafayette: {
-    tier: 'anchor',
-    tagline: 'Official Downtown Anchor Partner',
-    perk: 'Show DPM - Go! for 10% off dine-in orders',
-    stationId: 'fort-cass',
-  },
-  'brushpark-brunch': {
-    tier: 'anchor',
-    tagline: 'Official Brush Park Anchor Partner',
-    perk: 'Show DPM - Go! for 10% off weekday brunch entrees',
-    stationId: 'ql-adelaide',
-  },
+const stationsById = new Map<string, Station>(allTransitStations.map(station => [station.id, station]));
+
+/** Look up any People Mover or QLINE station by id. */
+export function findStation(id: string | null | undefined): Station | undefined {
+  return id ? stationsById.get(id) : undefined;
+}
+
+/**
+ * Station slot architecture. Every station drawer has exactly two sponsor
+ * slots: slot 1 is an annual partnership and slot 2 rotates between
+ * featured partners. A place can only occupy one slot at a time.
+ */
+export type StationSlotKind = 'annual' | 'rotating';
+
+export type StationSlot = {
+  stationId: string;
+  slot: 1 | 2;
+  kind: StationSlotKind;
+  /** Restaurant id that occupies the slot. */
+  placeId: string;
+  /** Display name, used when the slot is assigned from the partner portal. */
+  businessName?: string;
+  tagline: string;
+  perk: string;
+  /** Rotation window for slot 2, e.g. "Q4 2026". */
+  rotation?: string;
 };
 
-export const restaurants: Place[] = [
+// Slot 1 of Fort / Cass is held by Lafayette Coney Island. Every other slot is
+// open and shows the "Claim Slot" call to action until an admin assigns it.
+const ANNUAL_SLOTS: StationSlot[] = [
+  {
+    stationId: 'fort-cass',
+    slot: 1,
+    kind: 'annual',
+    placeId: 'lafayette',
+    tagline: 'Official Downtown Anchor Partner',
+    perk: 'Show DPM - Go! for 10% off dine-in orders',
+  },
+];
+
+// Slot 2 rotates between featured partners. Slots that are not listed here are
+// open and show the "Claim Slot" call to action in the station drawer.
+const ROTATING_SLOTS: StationSlot[] = [];
+
+export const stationSlots: StationSlot[] = [...ANNUAL_SLOTS, ...ROTATING_SLOTS];
+
+const slotByPlaceId = new Map<string, StationSlot>(stationSlots.map(slot => [slot.placeId, slot]));
+
+/** The two sponsor slots of a station drawer. */
+export function stationSlotAssignments(stationId: string): { slot1: StationSlot | null; slot2: StationSlot | null } {
+  return {
+    slot1: stationSlots.find(s => s.stationId === stationId && s.slot === 1) ?? null,
+    slot2: stationSlots.find(s => s.stationId === stationId && s.slot === 2) ?? null,
+  };
+}
+
+/** Slot and rotation label for a sponsored place, if it holds one. */
+export function sponsorSlotForPlace(placeId: string): StationSlot | undefined {
+  return slotByPlaceId.get(placeId);
+}
+
+const LATE_NIGHT_PLACE_IDS = new Set(['lafayette', 'american', 'checker', 'shillelagh', 'sweetwater', 'grey-ghost']);
+
+type RestaurantSeed = readonly [
+  id: string,
+  name: string,
+  category: string,
+  price: string,
+  url: string,
+  lng: number,
+  lat: number,
+];
+
+const restaurantSeeds: RestaurantSeed[] = [
   ['lafayette', 'Lafayette Coney Island', 'Detroit coney dogs', '$', 'https://www.lafayetteconeyisland.com/', -83.0478, 42.3317],
   ['american', 'American Coney Island', 'Detroit coney dogs', '$', 'https://www.americanconeyisland.com/', -83.0480, 42.3318],
   ['parc', 'Parc', 'New American', '$$$', 'https://www.parcdetroit.com/', -83.0467, 42.3318],
@@ -423,25 +495,29 @@ export const restaurants: Place[] = [
   ['whitney', 'The Whitney', 'Historic American', '$$$$', 'https://thewhitney.com/', -83.0628, 42.3533],
   ['baobab-fare', 'Baobab Fare', 'East African', '$$', 'https://baobabfare.com/', -83.0746, 42.3720],
   ['marrow', 'Marrow Detroit Provisions', 'Gastropub & Butcher', '$$$', 'https://www.marrowdetroit.com/', -83.0735, 42.3715],
-].map(([id, name, category, price, url, lng, lat]) => {
-  const isLate = ['lafayette', 'american', 'checker', 'shillelagh', 'sweetwater', 'grey-ghost'].includes(id as string);
-  const sponsor = anchorSponsorRegistry[id as string];
+];
+
+export const restaurants: Place[] = restaurantSeeds.map(([id, name, category, price, url, lng, lat]) => {
+  // A place is a partner only while it holds a station slot.
+  const slot = slotByPlaceId.get(id);
 
   return {
-    id: id as string,
-    name: name as string,
-    category: category as string,
-    price: price as string,
-    url: url as string,
-    coordinate: [lng as number, lat as number] as Coordinate,
-    lateNight: isLate,
-    sponsored: Boolean(sponsor),
-    ...(sponsor
+    id,
+    name,
+    category,
+    price,
+    url,
+    coordinate: [lng, lat],
+    lateNight: LATE_NIGHT_PLACE_IDS.has(id),
+    sponsored: Boolean(slot),
+    ...(slot
       ? {
-          sponsorTier: sponsor.tier,
-          sponsorTagline: sponsor.tagline,
-          sponsorPerk: sponsor.perk,
-          sponsorStationId: sponsor.stationId,
+          sponsorTier: slot.slot === 1 ? ('anchor' as const) : ('featured' as const),
+          sponsorTagline: slot.tagline,
+          sponsorPerk: slot.perk,
+          sponsorStationId: slot.stationId,
+          sponsorSlot: slot.slot,
+          ...(slot.rotation ? { sponsorRotation: slot.rotation } : {}),
         }
       : {}),
   };
@@ -455,7 +531,9 @@ export function milesBetween(a: Coordinate, b: Coordinate): number {
   return 3958.8 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-export function nearbyRestaurants(station: Station) {
+export type NearbyPlace = Place & { walkMiles: number };
+
+export function nearbyRestaurants(station: Station): NearbyPlace[] {
   return restaurants
     .map(p => ({ ...p, walkMiles: milesBetween(station.entrance, p.coordinate) * 1.25 }))
     .filter(p => p.walkMiles <= 0.4)
@@ -787,11 +865,20 @@ export const howDoIFlows: HowDoIFlow[] = [
   },
 ];
 
+export type TransitRouteLeg = {
+  line: TransitLine;
+  fromStation: Station;
+  toStation: Station;
+  stopsCount: number;
+  estimatedRideMinutes: number;
+  intermediateStations: string[];
+};
+
 export type TransitRoutePlan = {
   originStation: Station;
   destinationStation: Station;
   destinationHubName: string;
-  line: 'mover' | 'qline';
+  line: TransitLine;
   stopsCount: number;
   estimatedRideMinutes: number;
   intermediateStations: string[];
@@ -805,7 +892,107 @@ export type TransitRoutePlan = {
     pitch: number;
     bearing: number;
   };
+  /** One leg for a same-line trip, two when the rider has to change lines. */
+  legs: [TransitRouteLeg, ...TransitRouteLeg[]];
+  /** Platform where the rider changes lines, when applicable. */
+  transferStation: Station | null;
+  /** Minutes spent walking between the two transfer platforms. */
+  transferWalkMinutes: number;
 };
+
+/** The People Mover and the QLINE only meet at Grand Circus Park. */
+export const lineTransfers: {
+  id: string;
+  label: string;
+  lines: TransitLine[];
+  stations: Record<TransitLine, string>;
+}[] = [
+  {
+    id: 'grand-circus-park',
+    label: 'Grand Circus Park',
+    lines: ['mover', 'qline'],
+    stations: { mover: 'grand-circus', qline: 'ql-grand-circus' },
+  },
+];
+
+const MOVER_MINUTES_PER_STOP = 2;
+const QLINE_MINUTES_PER_STOP = 2.5;
+const WALK_MILES_PER_MINUTE = 1 / 20;
+
+type LegStops = { stopsCount: number; intermediateStations: string[] };
+
+/**
+ * People Mover loop leg. The loop is a single counter-clockwise circuit that
+ * runs in one direction only, so the ride always follows the station order
+ * starting at Times Square.
+ */
+function moverLegStops(from: Station, to: Station): LegStops {
+  const fromIdx = peopleMoverStations.findIndex(s => s.id === from.id);
+  const toIdx = peopleMoverStations.findIndex(s => s.id === to.id);
+  if (fromIdx === -1 || toIdx === -1) return { stopsCount: 0, intermediateStations: [] };
+
+  const total = peopleMoverStations.length;
+  const stopsCount = (toIdx - fromIdx + total) % total;
+  const intermediateStations: string[] = [];
+  for (let hop = 1; hop < stopsCount; hop += 1) {
+    const station = peopleMoverStations[(fromIdx + hop) % total];
+    if (station) intermediateStations.push(station.name);
+  }
+  return { stopsCount, intermediateStations };
+}
+
+/** QLINE corridor leg. The streetcar runs in both directions along Woodward. */
+function qlineLegStops(from: Station, to: Station): LegStops {
+  const fromIdx = qlineStations.findIndex(s => s.id === from.id);
+  const toIdx = qlineStations.findIndex(s => s.id === to.id);
+  if (fromIdx === -1 || toIdx === -1) return { stopsCount: 0, intermediateStations: [] };
+
+  const step = toIdx > fromIdx ? 1 : -1;
+  const intermediateStations: string[] = [];
+  for (let index = fromIdx + step; index !== toIdx; index += step) {
+    const station = qlineStations[index];
+    if (station) intermediateStations.push(station.name);
+  }
+  return { stopsCount: Math.abs(toIdx - fromIdx), intermediateStations };
+}
+
+function buildLeg(line: TransitLine, from: Station, to: Station): TransitRouteLeg {
+  const { stopsCount, intermediateStations } = line === 'qline' ? qlineLegStops(from, to) : moverLegStops(from, to);
+  const minutesPerStop = line === 'qline' ? QLINE_MINUTES_PER_STOP : MOVER_MINUTES_PER_STOP;
+  return {
+    line,
+    fromStation: from,
+    toStation: to,
+    stopsCount,
+    estimatedRideMinutes: stopsCount === 0 ? 0 : Math.max(1, Math.round(stopsCount * minutesPerStop)),
+    intermediateStations,
+  };
+}
+
+/**
+ * Builds the ride legs for a trip. Same-line trips ride directly; trips that
+ * cross between the People Mover and the QLINE transfer at Grand Circus Park
+ * instead of reporting an impossible single-line ride.
+ */
+function buildLegs(origin: Station, destination: Station): [TransitRouteLeg, ...TransitRouteLeg[]] {
+  if (origin.line === destination.line) {
+    return [buildLeg(origin.line, origin, destination)];
+  }
+
+  const transfer = lineTransfers.find(
+    t => t.lines.includes(origin.line) && t.lines.includes(destination.line)
+  );
+  const originTransfer = transfer ? findStation(transfer.stations[origin.line]) : undefined;
+  const destinationTransfer = transfer ? findStation(transfer.stations[destination.line]) : undefined;
+  if (!originTransfer || !destinationTransfer) {
+    return [buildLeg(origin.line, origin, destination)];
+  }
+
+  return [
+    buildLeg(origin.line, origin, originTransfer),
+    buildLeg(destination.line, destinationTransfer, destination),
+  ];
+}
 
 /**
  * Flexible Boarding Routing Engine
@@ -830,13 +1017,23 @@ export function calculateFlexibleRoute({
   let targetCoord: Coordinate = [-83.0458, 42.3314];
 
   if ('nearestStationId' in targetDestination) {
+    // HotelGuide | CanadaGuide
     destinationStationId = targetDestination.nearestStationId;
-    targetHubName = targetDestination.name || (targetDestination as CanadaGuide).title;
-    walkMiles = (targetDestination as HotelGuide).walkingDistanceMiles ?? 0.15;
-    walkMin = (targetDestination as HotelGuide).walkingMinutes ?? 3;
-    walkDirections = (targetDestination as HotelGuide).walkingDirections ?? (targetDestination as CanadaGuide).walkingFromStation;
-    targetCoord = targetDestination.coordinate ?? (targetDestination as CanadaGuide).terminalCoordinate;
+    if ('title' in targetDestination) {
+      // CanadaGuide: the border terminal is walked from the station, not a hotel.
+      targetHubName = targetDestination.title;
+      walkDirections = targetDestination.walkingFromStation;
+      targetCoord = targetDestination.terminalCoordinate;
+    } else {
+      // HotelGuide
+      targetHubName = targetDestination.name;
+      walkMiles = targetDestination.walkingDistanceMiles;
+      walkMin = targetDestination.walkingMinutes;
+      walkDirections = targetDestination.walkingDirections;
+      targetCoord = targetDestination.coordinate;
+    }
   } else if ('primaryStationId' in targetDestination) {
+    // DestinationShortcut
     destinationStationId = targetDestination.primaryStationId;
     targetHubName = targetDestination.name;
     walkMiles = targetDestination.walkingDistanceMiles;
@@ -844,75 +1041,59 @@ export function calculateFlexibleRoute({
     walkDirections = targetDestination.walkingDirections;
     targetCoord = targetDestination.coordinate;
   } else {
-    destinationStationId = (targetDestination as Station).id;
-    targetHubName = (targetDestination as Station).name;
-    targetCoord = (targetDestination as Station).coordinate;
+    // Station
+    destinationStationId = targetDestination.id;
+    targetHubName = targetDestination.name;
+    targetCoord = targetDestination.coordinate;
     walkMiles = 0.05;
     walkMin = 1;
-    walkDirections = (targetDestination as Station).entranceNotes || 'Platform elevator and stairs connect directly to street level.';
+    walkDirections = targetDestination.entranceNotes || 'Platform elevator and stairs connect directly to street level.';
   }
 
-  const destinationStation =
-    allTransitStations.find(s => s.id === destinationStationId) || peopleMoverStations[0];
+  const destinationStation = findStation(destinationStationId) ?? peopleMoverStations[0];
 
   // Determine Origin Station: Manual override > User GPS nearest > Loop start
   let originStation: Station;
   if (manualOriginStationId) {
-    originStation = allTransitStations.find(s => s.id === manualOriginStationId) || peopleMoverStations[0];
+    originStation = findStation(manualOriginStationId) ?? peopleMoverStations[0];
   } else if (userCoordinate) {
-    // Find closest station on the same line if possible, or overall closest
+    // Board the closest station that serves the destination's line.
     const sameLinePool = destinationStation.line === 'qline' ? qlineStations : peopleMoverStations;
-    const sorted = [...sameLinePool].sort(
-      (a, b) => milesBetween(userCoordinate, a.coordinate) - milesBetween(userCoordinate, b.coordinate)
-    );
-    originStation = sorted[0] || peopleMoverStations[0];
+    let nearest: Station | undefined;
+    let nearestDistance = Infinity;
+    for (const station of sameLinePool) {
+      const distance = milesBetween(userCoordinate, station.coordinate);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = station;
+      }
+    }
+    originStation = nearest ?? peopleMoverStations[0];
   } else {
     originStation = destinationStation.line === 'qline' ? qlineStations[0] : peopleMoverStations[0];
   }
 
-  const isQLine = destinationStation.line === 'qline' || originStation.line === 'qline';
-  let stopsCount = 0;
-  let intermediate: string[] = [];
-
-  if (!isQLine) {
-    // People Mover clockwise loop calculation
-    const fromIdx = peopleMoverStations.findIndex(s => s.id === originStation.id);
-    const toIdx = peopleMoverStations.findIndex(s => s.id === destinationStation.id);
-
-    if (fromIdx !== -1 && toIdx !== -1) {
-      if (toIdx >= fromIdx) {
-        stopsCount = toIdx - fromIdx;
-        intermediate = peopleMoverStations.slice(fromIdx + 1, toIdx).map(s => s.name);
-      } else {
-        stopsCount = peopleMoverStations.length - fromIdx + toIdx;
-        const leg1 = peopleMoverStations.slice(fromIdx + 1).map(s => s.name);
-        const leg2 = peopleMoverStations.slice(0, toIdx).map(s => s.name);
-        intermediate = [...leg1, ...leg2];
-      }
-    }
-  } else {
-    // QLINE corridor calculation
-    const fromIdx = qlineStations.findIndex(s => s.id === originStation.id);
-    const toIdx = qlineStations.findIndex(s => s.id === destinationStation.id);
-    if (fromIdx !== -1 && toIdx !== -1) {
-      stopsCount = Math.abs(toIdx - fromIdx);
-      const step = toIdx > fromIdx ? 1 : -1;
-      for (let i = fromIdx + step; i !== toIdx; i += step) {
-        if (qlineStations[i]) intermediate.push(qlineStations[i].name);
-      }
-    }
-  }
-
-  const estimatedRideMinutes = Math.max(1, Math.round(stopsCount * (isQLine ? 2.5 : 2.0)));
+  const legs = buildLegs(originStation, destinationStation);
+  const [primaryLeg, secondLeg] = legs;
+  const stopsCount = legs.reduce((sum, leg) => sum + leg.stopsCount, 0);
+  const estimatedRideMinutes = legs.reduce((sum, leg) => sum + leg.estimatedRideMinutes, 0);
+  const intermediateStations = legs.flatMap(leg => leg.intermediateStations);
+  const transferStation = secondLeg ? primaryLeg.toStation : null;
+  const transferWalkMinutes = secondLeg
+    ? Math.max(
+        1,
+        Math.round(milesBetween(primaryLeg.toStation.entrance, secondLeg.fromStation.entrance) * 1.3 / WALK_MILES_PER_MINUTE)
+      )
+    : 0;
 
   return {
     originStation,
     destinationStation,
     destinationHubName: targetHubName,
-    line: isQLine ? 'qline' : 'mover',
+    line: primaryLeg.line,
     stopsCount,
     estimatedRideMinutes,
-    intermediateStations: intermediate,
+    intermediateStations,
     walkingDistanceMiles: walkMiles,
     walkingMinutes: walkMin,
     walkingDirections: walkDirections,
@@ -923,5 +1104,8 @@ export function calculateFlexibleRoute({
       pitch: 58,
       bearing: -15,
     },
+    legs,
+    transferStation,
+    transferWalkMinutes,
   };
 }

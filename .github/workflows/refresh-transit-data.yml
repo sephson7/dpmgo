@@ -1,0 +1,75 @@
+name: Refresh transit data
+
+# Keeps the bundled People Mover and QLINE schedules in step with the agency
+# GTFS feeds. The feeds publish finite calendars, so they have to be pulled
+# again for the app to keep showing scheduled service.
+on:
+  schedule:
+    # Every day at 05:17 UTC. The feeds are published irregularly, so a daily
+    # pull keeps the gap between a new calendar and the app at most a day.
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Commit even when the feeds have not changed'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-transit-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Rebuild the People Mover schedule and shape
+        run: node scripts/build-dpm-schedule.mjs
+
+      - name: Rebuild the QLINE schedule and shape
+        run: node scripts/build-qline-schedule.mjs
+
+      - name: Type check
+        run: npm ci --no-audit --no-fund && npx tsc --noEmit -p tsconfig.json
+
+      - name: Contrast audit
+        run: npm run audit:contrast
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Commit the refreshed data
+        id: commit
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [ "${{ inputs.force }}" != "true" ] && git diff --quiet -- src/data; then
+            echo "The transit feeds have not changed."
+            exit 0
+          fi
+          git add src/data/dpmSchedule.json src/data/peopleMoverShape.ts \
+                  src/data/qlineSchedule.json src/data/qlineShape.ts
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git commit -m 'chore(data): refresh People Mover and QLINE GTFS feeds'
+          git push
