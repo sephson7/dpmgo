@@ -74,6 +74,25 @@ consist is standing on the platform.
 - **QLine Corridor:** Features fully integrated station drawers and localized dining spots tailored for the streetcar route. Operating hours, per-stop departure times, run times and the street alignment all come from the official QLINE GTFS feed, with the published hours as the fallback when the feed has no service for the date.
 - **Contextual Drawers & Anchor Slots:** Tapping any station pin or list item slides up a glassmorphism bottom drawer displaying live status, walking metrics, verified local dining options with the two-slot anchor architecture (slot 1 annual, slot 2 rotating), nearby park-once garages, and the proximity "Set alarm" notification trigger.
 
+### 3a. Front end structure
+`src/routes/index.tsx` is only the route definition. The HUD lives in
+`src/components/`, split by responsibility:
+
+| Area | Files |
+| --- | --- |
+| The HUD shell and its state | `src/components/HomeHud.tsx` |
+| Header, presets and the map chrome | `src/components/hud/` — `TopBar`, `QuickRoutesMenu`, `QuickRoutesBar`, `HeadlineArea`, `TickerHud`, `StationDirectoryPanel`, `MapStage`, `MapChrome`, `StationLauncher`, `StatusStrip`, `ComplianceFooter`, `AlarmBanner`, `WakeScreen` |
+| Drawers | `src/components/drawers/` — `StationDrawer`, `StationDirectoryDrawer`, `InfoPanel` |
+| Dialogs | `src/components/dialogs/` — `QuickNavDialog`, `LegalDialog`, `WalkthroughDialog` |
+
+**Two layouts, not one hidden one.** The phone and the desktop render
+different trees from the same state: the phone gets the Quick Routes dropdown,
+the bottom dock and the station directory drawer, the desktop gets the preset
+pills, the side directory panel and the map chrome. The 25 station buttons of
+the desktop panel are never in the phone DOM, so a phone does not download or
+hydrate the desktop layout. The breakpoint lives in `src/hooks/use-mobile.tsx`
+and matches the `768px` breakpoint of the stylesheet.
+
 ### 4. Partner Program & Admin Portal
 - **Stripe Checkout:** The partner page embeds the Stripe pricing table and can also start a server priced Checkout Session. Slot 1 is sold on the annual plan only, slot 2 on either plan, and the server decides the price.
 - **Anchor Slots:** Slot 1 of Fort / Cass is held by Lafayette Coney Island; every other slot shows a "Claim Slot" call to action.
@@ -96,9 +115,16 @@ STRIPE_SECRET_KEY=your_stripe_restricted_or_secret_key
 STRIPE_PRICING_TABLE_ID=prctbl_xxxxxxxxxxxx
 STRIPE_PRICE_ANNUAL=price_xxxxxxxxxxxx
 STRIPE_PRICE_MONTHLY=price_xxxxxxxxxxxx
-ADMIN_USERNAME=admin
+ADMIN_USERNAME=choose-an-admin-user
 ADMIN_PASSWORD=choose-a-strong-password
+ADMIN_SESSION_SECRET=64_random_hex_characters
 ```
+
+The partner portal has **no default credentials**. If `ADMIN_USERNAME`,
+`ADMIN_PASSWORD` or `ADMIN_SESSION_SECRET` is missing, `/admin` and the
+`/api/admin/*` routes answer `503` and the portal stays closed. The session
+signing key is never derived from the password, so a leaked password cannot be
+turned into a forged session cookie.
 
 Ensure `mapbox-gl/dist/mapbox-gl.css` is properly imported in your project entry file.
 

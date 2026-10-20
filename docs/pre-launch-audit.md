@@ -122,8 +122,8 @@ every station drawer is open and shows the "CLAIM SLOT" call to action.
 
 ### Admin portal
 
-`/admin` (linked from the app footer) signs in with `admin` / `mcautomated` and
-lets an operator:
+`/admin` (linked from the app footer) signs in with the deployment's
+`ADMIN_USERNAME` / `ADMIN_PASSWORD` and lets an operator:
 
 - read every merchant intake submission (point of contact, business, email, deal,
   requested station and slot, plan),
@@ -135,9 +135,17 @@ Assignments are published to the public app through `/api/anchor-slots` and take
 priority over the built-in slot registry, so an approved purchase shows up in the
 station drawer without a redeploy.
 
+**The portal fails closed.** There are no default credentials: if
+`ADMIN_USERNAME`, `ADMIN_PASSWORD` or `ADMIN_SESSION_SECRET` is missing from the
+deployment, `/admin` and the `/api/admin/*` routes answer `503` and the portal
+cannot be reached. The session cookie is signed with `ADMIN_SESSION_SECRET`
+only, never with a value derived from the password, so a leaked password cannot
+be turned into a forged session.
+
 **Still open:** there is no refund path, no receipt email and no renewal handling
-for the rotating slot. The admin credentials are shared and should be replaced by
-per-operator accounts before the portal carries real customers.
+for the rotating slot. The credentials are still one shared operator account and
+should be replaced by per-operator accounts before the portal carries real
+customers.
 
 ---
 
@@ -153,8 +161,14 @@ per-operator accounts before the portal carries real customers.
 | Parking | `src/data/parking.test.ts` | every garage anchored to a station, walk order, park-once filtering |
 | Merchant intake | `src/data/merchantIntake.test.ts` | required fields, slot values, receipt id |
 | Stripe | `src/lib/stripe.test.ts` | slot/plan rules, published prices, price discovery, session creation, paid-session verification, plan mismatch flagging, Stripe failure handling |
+| Partner portal auth | `src/lib/adminAuth.test.ts` | the portal fails closed without secrets, credential checks, signed session round trip, forged and tampered tokens |
+| Homepage layout | `src/routes/index.test.tsx` | the phone renders the Quick Routes menu and the bottom dock, the desktop renders the preset pills and the side directory, and the phone never mounts the desktop directory |
 
-`npx tsc --noEmit` is clean, `npx vitest run` is green (26 tests) and
+Rows for `transit.test.ts`, `qlineSchedule.test.ts`, `qlineSimulation.test.ts`,
+`parking.test.ts`, `merchantIntake.test.ts` and `stripe.test.ts` describe suites
+that are **not in the repository yet** — the coverage is planned, not shipped.
+
+`npx tsc --noEmit` is clean, `npx vitest run` is green (35 tests) and
 `npx vite build` succeeds.
 
 ---
@@ -175,9 +189,10 @@ per-operator accounts before the portal carries real customers.
 3. **Slot enforcement lives in code, not in the admin UI.** The admin portal can
    assign a slot, but there is no expiry handling for the rotating slot and no
    check that a merchant holds only one slot at a time.
-4. **Shared admin credentials.** `admin` / `mcautomated` is a single shared
-   password over plain HTTP in local development. Serve the portal over HTTPS,
-   and add per-operator accounts before it handles real customers.
+4. **One shared admin account.** The portal now fails closed with no default
+   credentials, but it is still a single operator account over one password.
+   Serve it over HTTPS and add per-operator accounts before it handles real
+   customers.
 
 ### 5.2 Should fix before launch
 
@@ -239,8 +254,8 @@ per-operator accounts before the portal carries real customers.
 | `STRIPE_PRICE_ANNUAL` | `/api/checkout` (slot 1) | recommended |
 | `STRIPE_PRICE_MONTHLY` | `/api/checkout` (slot 2) | recommended |
 | `PUBLIC_APP_URL` | redirect URLs | recommended |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | `/admin` | yes |
-| `ADMIN_SESSION_SECRET` | session cookie signing | recommended |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | `/admin` | yes (the portal is closed without them) |
+| `ADMIN_SESSION_SECRET` | session cookie signing | yes (the portal is closed without it) |
 | `MERCHANT_INTAKE_WEBHOOK_URL` | `/api/merchant-intake` | optional |
 
 ---
@@ -249,6 +264,10 @@ per-operator accounts before the portal carries real customers.
 
 - One station order for the map, the drawer numbering, the routing engine and the
   simulation — `src/data/transit.ts` owns it.
+- The phone and the desktop render different trees from the same state. Do not
+  go back to hiding the desktop layout with `display: none`; the phone must not
+  mount the 25 button directory.
+- The route files stay thin. Presentation lives in `src/components/`.
 - The People Mover runs counter-clockwise only; never route backwards around the loop.
 - Vehicle markers stay labelled as simulations: there is no live People Mover feed.
 - The map and the arrival readout share one fleet clock, so the vehicle on the

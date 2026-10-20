@@ -436,12 +436,26 @@ export function moverFleetElapsed(now: number = Date.now()): number {
   return Math.max(0, now - window.start);
 }
 
+/** The arrival readout for one station, derived from the drawn fleet. */
+export type ArrivalReadout = {
+  minutes: number;
+  seconds: number;
+  totalSeconds: number;
+  /** True while a consist is standing on the platform. */
+  atPlatform: boolean;
+  /** Short label for the HUD, e.g. "4 MIN" or "DUE NOW". */
+  formatted: string;
+};
+
 /**
  * Time until an illustrative train reaches a station platform. The offset is
  * derived from the same loop geometry that draws the train, so the countdown
  * always matches the vehicle on screen.
  */
-export function getNextTrainForStation(stationId: string, elapsed = moverFleetElapsed()) {
+export function getNextTrainForStation(
+  stationId: string,
+  elapsed = moverFleetElapsed()
+): ArrivalReadout {
   const arrivalOffset = moverArrivalOffsetMs(stationId);
   if (arrivalOffset === null) {
     return { minutes: 0, seconds: 0, totalSeconds: 0, formatted: 'OFFLINE', atPlatform: false };

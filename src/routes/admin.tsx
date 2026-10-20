@@ -46,6 +46,7 @@ export const Route = createFileRoute('/admin')({
 function AdminPortal() {
   const [signedIn, setSignedIn] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [notConfigured, setNotConfigured] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +57,12 @@ function AdminPortal() {
   const load = useCallback(async () => {
     const response = await fetch('/api/admin/leads');
     if (response.status === 401) {
+      setSignedIn(false);
+      return;
+    }
+    if (response.status === 503) {
+      // The deployment has no portal secrets, so there is nothing to sign in to.
+      setNotConfigured(true);
       setSignedIn(false);
       return;
     }
@@ -136,6 +143,17 @@ function AdminPortal() {
       <main className="w-full max-w-4xl py-8 flex flex-col items-center">
         {checking ? (
           <p className="text-sm text-slate-400 py-8">Checking session…</p>
+        ) : notConfigured ? (
+          <div className="w-full max-w-md bg-slate-900/60 border border-amber-500/40 rounded-2xl p-6 space-y-3">
+            <h2 className="text-xl font-bold tracking-tight text-white mb-1">Portal not configured</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              This deployment has no partner portal credentials, so the portal is closed. Set{' '}
+              <code className="text-amber-300">ADMIN_USERNAME</code>,{' '}
+              <code className="text-amber-300">ADMIN_PASSWORD</code> and{' '}
+              <code className="text-amber-300">ADMIN_SESSION_SECRET</code> as deployment secrets to
+              open it. There are no default credentials.
+            </p>
+          </div>
         ) : !signedIn ? (
           <form
             onSubmit={signIn}

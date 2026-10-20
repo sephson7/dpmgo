@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { readAdminCookie, verifyAdminToken } from '@/lib/adminAuth';
+import { adminPortalConfigured, readAdminCookie, verifyAdminToken } from '@/lib/adminAuth';
 import {
   addLead,
   assignSlot,
@@ -17,6 +17,12 @@ export const Route = createFileRoute('/api/admin/leads')({
     handlers: {
       // Lists the merchant intake leads and the assigned anchor slots.
       GET: async ({ request, context }) => {
+        if (!(await adminPortalConfigured(context))) {
+          return Response.json(
+            { error: 'The partner portal is not configured on this deployment.' },
+            { status: 503 }
+          );
+        }
         const remaining = await verifyAdminToken(
           readAdminCookie(request),
           context
@@ -30,6 +36,12 @@ export const Route = createFileRoute('/api/admin/leads')({
 
       // Approves or rejects a lead, and assigns the anchor slot it paid for.
       POST: async ({ request, context }) => {
+        if (!(await adminPortalConfigured(context))) {
+          return Response.json(
+            { error: 'The partner portal is not configured on this deployment.' },
+            { status: 503 }
+          );
+        }
         const remaining = await verifyAdminToken(
           readAdminCookie(request),
           context

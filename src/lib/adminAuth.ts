@@ -4,23 +4,47 @@ import { readServerSecret } from './serverEnv';
 export const ADMIN_COOKIE = 'dpm_admin_session';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+/** Compares two strings without leaking their length through the timing. */
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const [left, right] = await Promise.all([sha256(a), sha256(b)]);
   let diff = 0;
-  for (let i = 0; i < a.length; i += 1) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
+  for (let i = 0; i < left.length; i += 1) diff |= left[i]! ^ right[i]!;
   return diff === 0;
+}
+
+async function sha256(value: string): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(value),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value));
+  return new Uint8Array(signature);
 }
 
 export type AdminCredentials = { username: string; password: string };
 
+/**
+ * The portal credentials, or null when they are not configured. There is no
+ * default: a deployment that is missing the secrets must not expose the
+ * partner portal to anybody.
+ */
 export async function adminCredentials(
   context?: unknown
-): Promise<AdminCredentials> {
-  const username = (await readServerSecret('ADMIN_USERNAME', context)) ?? 'admin';
-  const password = (await readServerSecret('ADMIN_PASSWORD', context)) ?? 'mcautomated';
+): Promise<AdminCredentials | null> {
+  const username = await readServerSecret('ADMIN_USERNAME', context);
+  const password = await readServerSecret('ADMIN_PASSWORD', context);
+  if (!username || !password) return null;
   return { username, password };
+}
+
+/** True when the portal has both credentials and a session secret. */
+export async function adminPortalConfigured(context?: unknown): Promise<boolean> {
+  const credentials = await adminCredentials(context);
+  if (!credentials) return false;
+  return Boolean(await sessionSecret(context));
 }
 
 export async function verifyAdminCredentials(
@@ -29,14 +53,18 @@ export async function verifyAdminCredentials(
   context?: unknown
 ): Promise<boolean> {
   const expected = await adminCredentials(context);
-  return timingSafeEqual(username, expected.username) && timingSafeEqual(password, expected.password);
+  if (!expected) return false;
+  const [left, right] = await Promise.all([
+    timingSafeEqual(username, expected.username),
+    timingSafeEqual(password, expected.password),
+  ]);
+  return left && right;
 }
 
-async function sessionSecret(context?: unknown): Promise<string> {
-  const explicit = await readServerSecret('ADMIN_SESSION_SECRET', context);
-  if (explicit) return explicit;
-  const { password } = await adminCredentials(context);
-  return `dpm-admin-${password}`;
+async function sessionSecret(context?: unknown): Promise<string | null> {
+  // The signing key is never derived from the password, so a leaked password
+  // cannot be turned into a forged session cookie.
+  return (await readServerSecret('ADMIN_SESSION_SECRET', context)) ?? null;
 }
 
 async function hmac(value: string, secret: string): Promise<string> {
@@ -53,11 +81,13 @@ async function hmac(value: string, secret: string): Promise<string> {
     .join('');
 }
 
-/** Creates a signed, time limited session token. */
-export async function createAdminToken(context?: unknown): Promise<string> {
+/** Creates a signed, time limited session token, or null when unconfigured. */
+export async function createAdminToken(context?: unknown): Promise<string | null> {
+  const secret = await sessionSecret(context);
+  if (!secret) return null;
   const expires = Date.now() + SESSION_TTL_MS;
   const payload = `admin.${expires}`;
-  const signature = await hmac(payload, await sessionSecret(context));
+  const signature = await hmac(payload, secret);
   return `${payload}.${signature}`;
 }
 
@@ -67,6 +97,8 @@ export async function verifyAdminToken(
   context?: unknown
 ): Promise<number | null> {
   if (!token) return null;
+  const secret = await sessionSecret(context);
+  if (!secret) return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const role = parts[0] ?? '';
@@ -75,8 +107,8 @@ export async function verifyAdminToken(
   if (role !== 'admin') return null;
   const expires = Number(expiresRaw);
   if (!Number.isFinite(expires) || expires < Date.now()) return null;
-  const expected = await hmac(`admin.${expiresRaw}`, await sessionSecret(context));
-  if (!timingSafeEqual(signature, expected)) return null;
+  const expected = await hmac(`admin.${expiresRaw}`, secret);
+  if (!(await timingSafeEqual(signature, expected))) return null;
   return expires - Date.now();
 }
 

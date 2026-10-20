@@ -10,13 +10,13 @@ import { parkingGarages } from '@/data/parking';
 import { qlineNorthboundShape } from '@/data/qlineShape';
 import { peopleMoverShape, peopleMoverStations, qlineStations, allTransitStations, restaurants, type Coordinate } from '@/data/transit';
 
-type Props = {
+export type TransitMapProps = {
   peopleMover: boolean;
   qline: boolean;
   parking?: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onReady?: (ready: boolean) => void;
+  onReady?: ((ready: boolean) => void) | undefined;
   restaurantId?: string | null;
   isBoarded?: boolean;
   userPosition?: Coordinate | null;
@@ -32,7 +32,7 @@ const qPath = qlineNorthboundShape;
 const routeData = (coordinates: Coordinate[]): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: [route(coordinates)] });
 
 
-export default function TransitMap({ peopleMover, qline, parking = false, selectedId, onSelect, onReady, restaurantId, isBoarded, userPosition, followUser }: Props) {
+export default function TransitMap({ peopleMover, qline, parking = false, selectedId, onSelect, onReady, restaurantId, isBoarded, userPosition, followUser }: TransitMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const onSelectRef = useRef(onSelect);

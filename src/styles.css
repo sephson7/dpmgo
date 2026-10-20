@@ -2068,10 +2068,6 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
    The desktop preset pills stay untouched; on a phone the same presets are
    served from one combined dropdown in the header.
    ========================================================================== */
-.quick-routes-trigger {
-  display: none;
-}
-
 .quick-routes-menu {
   min-width: 236px;
   max-width: min(80vw, 290px);
@@ -2123,28 +2119,14 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 
 /* ==========================================================================
    MOBILE HUD RECTIFICATION (<= 768px)
-   Nothing is removed on a phone: the preset pills collapse into the Quick
-   Routes dropdown, the station directory gets a bottom sheet launcher and the
-   footer dock is compacted so the map is no longer buried under chrome.
+   The phone layout is rendered by React, not by hiding the desktop tree, so
+   these rules only tune what the phone layout already contains: the header
+   actions, the bottom dock and the floating map chrome.
    ========================================================================== */
 @media (max-width: 768px) {
-  /* 1. Presets: the two scroll rows cannot fit above the map on a phone, so
-        they move into the combined Quick Routes dropdown in the header. */
-  .dpm-quick-nav-bar {
-    display: none !important;
-  }
-
-  .quick-routes-trigger {
-    display: inline-flex !important;
-  }
-
+  /* 1. The header drops the duplicate directory button, because the bottom
+        dock opens the station directory. */
   .station-list-btn {
-    display: none !important;
-  }
-
-  /* The floating HUD takes over from the desktop side panel, so the side
-     directory is hidden here as well and is served by the station drawer. */
-  .network-panel {
     display: none !important;
   }
 

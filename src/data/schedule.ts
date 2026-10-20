@@ -51,7 +51,17 @@ const fmt = (ymd: string, seconds: number) => {
 const label = (ymd: string) => new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(4, 6) - 1, +ymd.slice(6, 8), 12)).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
 export type NextTrain = { time: string; minutes: number; day: string | null };
-export function stationSchedule(stationId: string, now = new Date()) {
+export type StationSchedule = {
+  /** True while the line is running on the selected date. */
+  running: boolean;
+  /** The next published departures at the station. */
+  trains: NextTrain[];
+  /** True when a special event calendar replaces the regular one today. */
+  specialToday: boolean;
+  /** Labels of the upcoming special event days. */
+  specialDays: string[];
+};
+export function stationSchedule(stationId: string, now = new Date()): StationSchedule {
   const { ymd, seconds } = detroitNow(now);
   const trains: NextTrain[] = [];
   let running = false;
