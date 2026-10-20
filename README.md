@@ -43,6 +43,32 @@ The core mission of DPM - Go! is to encourage visitors, commuters, and residents
 - **Mapbox Integration:** Initialized using `mapbox://styles/mapbox/satellite-streets-v12`. Centered on downtown Detroit (`[-83.0458, 42.3314]`) with a zoom of `15.5`, a pitch of `50` degrees, and a bearing of `-20` degrees for 3D isometric building extrusions.
 - **Vehicle Simulation & Tracking:** Interactive tracking dots that pace smoothly along the single-track loop and QLine corridor with station stops and arrival sync.
 
+### 2a. People Mover Fleet Simulation
+The People Mover vehicles are a **simulation**, never a live feed, and the
+simulation follows the published fleet specification and the agency timetable:
+
+| Rule | Value | Source |
+| --- | --- | --- |
+| Circuit time | 14.5 min (870 s) | agency timetable |
+| Platform dwell | 15 s | agency timetable |
+| Track length | 2.94 mi (the GTFS shape measures 2.87 mi) | fleet specification |
+| Average speed | 11.9 mph over the circuit (11.7 mph published) | fleet specification |
+| Top operating speed | 38 mph limit, 24 mph reached on the straight | fleet specification |
+| Acceleration | 3.5 ft/s² comfort limit | fleet specification |
+| Fleet | 12 cars in two-car consists, 4 cars (2 consists) on the loop, 7:15 apart | fleet specification + timetable |
+| Moving block | ≥ 300 ft safe stopping buffer between consists | fleet specification |
+
+Each station leg is modelled as **accelerate → cruise → brake** with a 15 second
+dwell at the platform, so the train visibly pulls away from a station and
+settles onto the next one instead of teleporting between them.
+
+**One clock, one story.** The map, the "SIMULATED LOOP CADENCE" readout and
+the phone countdown pill all read the same fleet clock, which is anchored to
+the start of the current service window and only advances while the line is in
+service. The vehicle on the map is therefore the vehicle the countdown is
+counting down, and the readout says `DUE AT PLATFORM` at the exact moment the
+consist is standing on the platform.
+
 ### 3. Station Infrastructure & Contextual Drawers
 - **People Mover Loop:** Maps all 13 official Detroit People Mover stations in the agency's counter-clockwise order — Times Square, Michigan, Fort/Cass, Huntington Place, Water Square, Financial District, Millender, Renaissance Center, Bricktown, Greektown, Cadillac Center, Broadway, Grand Circus Park. The loop runs in one direction only, so every route, dwell point and countdown follows that order.
 - **QLine Corridor:** Features fully integrated station drawers and localized dining spots tailored for the streetcar route. Operating hours, per-stop departure times, run times and the street alignment all come from the official QLINE GTFS feed, with the published hours as the fallback when the feed has no service for the date.

@@ -8,20 +8,24 @@ export type DetroitClock = {
   weekday: number;
 };
 
+const DETROIT_ZONE = 'America/Detroit';
+
+const partsFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: DETROIT_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+});
+
 export function detroitNow(now = new Date()): DetroitClock {
   const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Detroit',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hourCycle: 'h23',
-    })
+    partsFormatter
       .formatToParts(now)
-      .map(p => [p.type, p.value]),
+      .map(p => [p.type, p.value])
   );
   const ymd = `${parts['year']}${parts['month']}${parts['day']}`;
   return {
@@ -29,6 +33,37 @@ export function detroitNow(now = new Date()): DetroitClock {
     seconds: Number(parts['hour']) * 3600 + Number(parts['minute']) * 60 + Number(parts['second']),
     weekday: weekdayInDetroit(ymd),
   };
+}
+
+/** Offset of the Detroit time zone from UTC at an instant, in milliseconds. */
+function zoneOffsetMs(date: Date): number {
+  const parts = Object.fromEntries(
+    partsFormatter
+      .formatToParts(date)
+      .map(p => [p.type, p.value])
+  );
+  const asUtc = Date.UTC(
+    Number(parts['year']),
+    Number(parts['month']) - 1,
+    Number(parts['day']),
+    Number(parts['hour']) % 24,
+    Number(parts['minute']),
+    Number(parts['second'])
+  );
+  return asUtc - date.getTime();
+}
+
+/**
+ * The UTC instant of local midnight in Detroit on a YYYYMMDD date. The zone
+ * only changes at 2 AM, so the offset taken at the same calendar morning is
+ * the offset of that local midnight.
+ */
+export function detroitMidnightMs(ymd: string): number {
+  const year = +ymd.slice(0, 4);
+  const month = +ymd.slice(4, 6) - 1;
+  const day = +ymd.slice(6, 8);
+  const guess = Date.UTC(year, month, day, 0, 0, 0);
+  return guess - zoneOffsetMs(new Date(guess));
 }
 
 /** Shifts a YYYYMMDD date by whole days. */

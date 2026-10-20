@@ -115,6 +115,7 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   font: 500 8px var(--font-mono);
   letter-spacing: 0.8px;
   margin-bottom: 4px;

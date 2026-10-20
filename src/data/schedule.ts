@@ -1,5 +1,5 @@
 import raw from './dpmSchedule.json';
-import { detroitNow, shiftDate, weekdayInDetroit } from './detroitTime';
+import { detroitMidnightMs, detroitNow, shiftDate, weekdayInDetroit } from './detroitTime';
 
 // Generated from the Detroit Transportation Corporation's official GTFS feed:
 // https://hosted-gtfs-feeds.s3.amazonaws.com/DPM/gtfs.zip — scheduled times, not live arrivals.
@@ -20,12 +20,28 @@ const serviceWindows = Object.fromEntries(Object.entries(schedule.departures).ma
 }));
 
 export function peopleMoverServiceRunning(now = new Date()): boolean {
+  return peopleMoverServiceWindow(now) !== null;
+}
+
+/**
+ * The service window that contains `now`, as epoch milliseconds. Yesterday's
+ * calendar is included because its trips can run past midnight.
+ */
+export function peopleMoverServiceWindow(now = new Date()): { start: number; end: number } | null {
   const { ymd, seconds } = detroitNow(now);
-  return [-1, 0].some(offset => servicesOn(shiftDate(ymd, offset)).some(id => {
-    const window = serviceWindows[id];
+  for (const offset of [-1, 0]) {
+    const day = shiftDate(ymd, offset);
     const time = seconds - offset * 86400;
-    return window != null && time >= window.start && time < window.end;
-  }));
+    for (const id of servicesOn(day)) {
+      const window = serviceWindows[id];
+      if (!window) continue;
+      if (time >= window.start && time < window.end) {
+        const midnight = detroitMidnightMs(day);
+        return { start: midnight + window.start * 1000, end: midnight + window.end * 1000 };
+      }
+    }
+  }
+  return null;
 }
 
 const fmt = (ymd: string, seconds: number) => {

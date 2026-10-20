@@ -348,8 +348,9 @@ function Index() {
   const isQLineTicker = tickerStation.line === 'qline';
   const tickerSchedule = useMemo(() => stationSchedule(tickerStation.id, now), [tickerStation.id, now]);
   const qlineLive = useMemo(() => qlineStatus(now), [now]);
-  const nextDeparture = tickerSchedule.trains[0] ?? null;
 
+  // The arrival readout shares the fleet clock with the map, so the vehicle
+  // that is drawn on the loop is the vehicle this countdown is counting down.
   const [liveArrival, setLiveArrival] = useState(() => getNextTrainForStation(tickerStation.id));
   useEffect(() => {
     setLiveArrival(getNextTrainForStation(tickerStation.id));
@@ -587,7 +588,12 @@ function Index() {
           <div className="mobile-countdown-pill" role="status" aria-live="polite">
             <span className={`signal-dot ${isQLineTicker || tickerSchedule.running ? 'signal-pulse' : 'signal-idle'}`} />
             <span className="mobile-countdown-label">
-              {isBoarded ? 'NEXT STOP' : 'SCHEDULED CADENCE'} · {tickerStation.name.toUpperCase()}:
+              {isBoarded
+                ? 'NEXT STOP'
+                : isQLineTicker
+                  ? 'SCHEDULED CADENCE'
+                  : 'SIMULATED CADENCE'}{' '}
+              · {tickerStation.name.toUpperCase()}:
             </span>
             <strong className="mobile-countdown-val">
               {isQLineTicker
@@ -710,16 +716,14 @@ function Index() {
                         </>
                       )
                     ) : tickerSchedule.running ? (
-                      nextDeparture ? (
-                        nextDeparture.minutes <= 0 ? (
-                          <strong className="ticker-due-now">DUE AT PLATFORM</strong>
-                        ) : (
-                          <>
-                            IN <strong>{nextDeparture.minutes}</strong> MIN <small>({nextDeparture.time})</small>
-                          </>
-                        )
+                      // The People Mover readout follows the drawn fleet, so the
+                      // countdown and the vehicle on the map always agree.
+                      liveArrival.atPlatform ? (
+                        <strong className="ticker-due-now">DUE AT PLATFORM</strong>
                       ) : (
-                        <span>LOOKING UP NEXT RUN...</span>
+                        <>
+                          IN <strong>{liveArrival.minutes}</strong> MIN <small>(SIMULATED)</small>
+                        </>
                       )
                     ) : (
                       <span className="ticker-off-hours">SERVICE SUSPENDED (OFF-HOURS)</span>

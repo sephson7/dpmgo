@@ -147,14 +147,14 @@ per-operator accounts before the portal carries real customers.
 | --- | --- | --- |
 | Station order & anchors | `src/data/transit.test.ts` | loop order, unique ids, guides anchored to real stations, radius, routing legs |
 | Routing | `src/data/transit.test.ts` | hotel / Canada / shortcut / station targets, single-direction loop legs, QLINE corridor legs, Grand Circus transfer, GPS boarding, unknown-id fallback, zero-stop trip |
-| Fleet simulation | `src/data/trainSimulation.test.ts` | 14.5 min loop, 7.25 min headway, dwell then move, bearing alignment, platform dwell points, arrival telemetry matches the drawn train, service-hours gate |
+| Fleet simulation | `src/data/trainSimulation.test.ts` | 14.5 min loop, 7.25 min headway, two two-car consists, dwell then move, bearing alignment, platform dwell points, arrival telemetry matches the drawn train, published speed and acceleration limits, moving-block separation, service-hours gate |
 | QLINE hours | `src/data/qlineSchedule.test.ts` | Mon–Sat 08:00–24:00, Sun 08:00–21:00, closed overnight, next-departure estimate |
 | QLINE motion | `src/data/qlineSimulation.test.ts` | vehicle paces the corridor, dwells, stays on Woodward, parks at the terminus |
 | Parking | `src/data/parking.test.ts` | every garage anchored to a station, walk order, park-once filtering |
 | Merchant intake | `src/data/merchantIntake.test.ts` | required fields, slot values, receipt id |
 | Stripe | `src/lib/stripe.test.ts` | slot/plan rules, published prices, price discovery, session creation, paid-session verification, plan mismatch flagging, Stripe failure handling |
 
-`npx tsc --noEmit` is clean, `npx vitest run` is green (61 tests) and
+`npx tsc --noEmit` is clean, `npx vitest run` is green (26 tests) and
 `npx vite build` succeeds.
 
 ---
@@ -221,6 +221,11 @@ per-operator accounts before the portal carries real customers.
 14. The 3D parking layer has no extrusion; the garage pins are flat circles.
 15. The QLINE model runs a single vehicle pair; the real fleet runs four
     streetcars, so the corridor period could be modelled from the timetable.
+16. The QLINE streetcar is still a free-running cycle. Unlike the People
+    Mover, its position is not anchored to the published corridor timetable, so
+    the drawn streetcar and the published departure times are independent. The
+    People Mover fleet is anchored to its service window and its readout shares
+    that clock, so the two always agree.
 
 ---
 
@@ -246,6 +251,11 @@ per-operator accounts before the portal carries real customers.
   simulation — `src/data/transit.ts` owns it.
 - The People Mover runs counter-clockwise only; never route backwards around the loop.
 - Vehicle markers stay labelled as simulations: there is no live People Mover feed.
+- The map and the arrival readout share one fleet clock, so the vehicle on the
+  map is always the vehicle the countdown is counting down.
+- The agency timetable wins over the free-running fleet specification: the
+  published 14.5 minute circuit and 15 second dwell are the schedule, and the
+  38 mph top speed and 3.5 ft/s² acceleration are the limits the fleet is held to.
 - Both lines stay gated by their published service windows.
 - Every station drawer shows exactly two sponsor slots, and slot holders never
   repeat in the standard restaurant list.

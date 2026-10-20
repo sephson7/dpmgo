@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import type * as GeoJSON from 'geojson';
 import { peopleMoverServiceRunning } from '@/data/schedule';
 import { qlineServiceRunning } from '@/data/qlineSchedule';
-import { parkedMoverTrains, simulatedMoverTrains } from '@/data/trainSimulation';
+import { parkedMoverTrains, simulatedMoverTrains, moverFleetElapsed } from '@/data/trainSimulation';
 import { parkedQlineTrain, simulatedQlineTrains } from '@/data/qlineSimulation';
 import { parkingGarages } from '@/data/parking';
 import { qlineNorthboundShape } from '@/data/qlineShape';
@@ -291,7 +291,6 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
 
       let lastUpdate = 0;
       let lastTime: number | null = null;
-      let moverElapsed = 0;
       let qlineElapsed = 0;
       let moverRunning = peopleMoverServiceRunning();
       let qlineRunning = qlineServiceRunning();
@@ -305,10 +304,12 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
           qlineRunning = qlineServiceRunning();
           lastServiceCheck = time;
         }
-        // The fleet only paces while the line is in service.
-        if (moverRunning) moverElapsed += delta;
+        // The streetcar only paces while the line is in service. The People
+        // Mover reads the shared fleet clock instead, so the drawn vehicles
+        // and the arrival countdown can never drift apart.
         if (qlineRunning) qlineElapsed += delta;
         if (time - lastUpdate > 50) {
+          const moverElapsed = moverFleetElapsed();
           (map.getSource('mover-vehicle') as mapboxgl.GeoJSONSource)?.setData(moverData(moverElapsed, moverRunning));
           (map.getSource('qline-vehicle') as mapboxgl.GeoJSONSource)?.setData(qlineData(qlineElapsed, qlineRunning));
           lastUpdate = time;
