@@ -190,10 +190,12 @@ npm run build      # binds the namespace into the generated Worker config
 
 `npm run setup:kv` runs `wrangler kv namespace create ANCHOR_STORE` and writes
 the namespace id to the gitignored `.env.local` as
-`CLOUDFLARE_KV_ANCHOR_STORE_ID`. The build copies that id into
-`.output/server/wrangler.json` as the `ANCHOR_STORE` binding, so every deploy
-carries it. It needs a Wrangler login (`npx wrangler login`) or a
-`CLOUDFLARE_API_TOKEN` in the environment.
+`CLOUDFLARE_KV_ANCHOR_STORE_ID`. The build copies that id into the generated
+Worker config as the `ANCHOR_STORE` binding, so every deploy carries it. The
+config sits next to the server bundle: `.output/server/wrangler.json` for a
+local build and `dist/server/wrangler.json` for a Lovable build. It needs a
+Wrangler login (`npx wrangler login`) or a `CLOUDFLARE_API_TOKEN` in the
+environment.
 
 Until the namespace is created the portal still works, but the records live in
 the runtime's memory and are lost on a restart. The local file fallback

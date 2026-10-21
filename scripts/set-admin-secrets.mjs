@@ -13,9 +13,10 @@
  * `/admin` page and the `/api/admin/*` routes answer 503.
  */
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { findWorkerConfigs } from './lib/worker-config.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const NAMES = ['ADMIN_USERNAME', 'ADMIN_PASSWORD', 'ADMIN_SESSION_SECRET'];
@@ -24,8 +25,7 @@ const NAMES = ['ADMIN_USERNAME', 'ADMIN_PASSWORD', 'ADMIN_SESSION_SECRET'];
 function workerName() {
   const flagIndex = process.argv.indexOf('--name');
   if (flagIndex !== -1 && process.argv[flagIndex + 1]) return process.argv[flagIndex + 1];
-  const built = resolve(root, '.output/server/wrangler.json');
-  if (existsSync(built)) {
+  for (const built of findWorkerConfigs(root)) {
     const { name } = JSON.parse(readFileSync(built, 'utf8'));
     if (name) return name;
   }
