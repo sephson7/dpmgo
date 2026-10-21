@@ -164,14 +164,15 @@ export default function StationDrawer({
     () => (isQLine ? qlineStationSchedule(station.id, now) : []),
     [isQLine, station.id, now],
   );
-  // Where the times came from: the agency's dated schedule, the daily pattern
-  // rolled forward past the end of the feed calendar, or the published hours.
+  // Where the departure times came from: the agency's dated schedule, the daily
+  // pattern rolled forward past the end of the feed calendar, or the published
+  // hours alone. The operating window itself is always the published hours.
   const qlineSourceLabel =
     qline.window.source === 'feed'
-      ? 'agency GTFS'
+      ? 'departures from agency GTFS'
       : qline.window.source === 'pattern'
-        ? 'agency GTFS, rolled forward'
-        : 'published hours';
+        ? 'departures from agency GTFS, rolled forward'
+        : 'published hours only';
 
   return (
     <div className="detail-content station-drawer-v2">

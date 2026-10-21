@@ -16,6 +16,8 @@
 - Drive the People Mover simulation along the agency GTFS shape and use platform coordinates as its dwell points.
 - Keep fleet timing in a pure simulation module and gate People Mover movement through the shared GTFS service calendar, including after-midnight trips, so movement cannot imply off-hours service.
 - Gate the QLINE streetcar through the official published hours (Mon-Sat 8:00 AM to midnight, Sun 8:00 AM to 9:00 PM) in `src/data/qlineSchedule.ts`.
+- Measure the QLINE headway per direction, because Congress St is a terminus whose departure list holds both directions; a gap measured on the mixed list reports half the real headway.
+- Treat the QLINE GTFS feed as the source of trip geometry and run times only; its calendar expired on 2025-12-31, so the published operating hours and the per-direction headway are the authority for when the line runs and how often.
 - Drive QLINE times, run times and street geometry from the bundled agency GTFS feed (`npm run build:qline`), and fall back to the published hours whenever the feed has no service for the date instead of showing stale times.
 - Place the QLINE streetcar with the published timetable, not a free running cycle: reconstruct the trips from the feed's per-stop departure times, index them by the canonical station order because the feed lists a service's stops in that service's own order, and roll the published daily pattern forward once the feed calendar expires.
 - Compute vehicle bearings from the current simulation segment and use map-aligned symbols so train icons follow the track through camera rotation and pitch.

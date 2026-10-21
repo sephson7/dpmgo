@@ -74,10 +74,15 @@ export function weekdayInDetroit(ymd: string): number {
   );
 }
 
-/** Formats minutes past midnight as a 12 hour clock label. */
+/**
+ * Formats minutes past midnight as a 12 hour clock label.
+ *
+ * The minutes are shown to the minute: a departure at 12:09 reads 12:09 PM,
+ * because rounding it to the nearest ten would tell a rider the wrong time.
+ */
 export function formatClockMinutes(minutes: number): string {
-  const wrapped = ((minutes % 1440) + 1440) % 1440;
+  const wrapped = ((Math.round(minutes) % 1440) + 1440) % 1440;
   const h = Math.floor(wrapped / 60);
-  const m = Math.floor((wrapped % 60) / 10) * 10;
+  const m = wrapped % 60;
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }

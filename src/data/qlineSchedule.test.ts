@@ -19,12 +19,19 @@ const detroit = (date: string, hour: number, minute = 0) => {
 describe('QLINE operating hours', () => {
   it('runs the agency timetable once the feed calendar has expired', () => {
     // 2026-10-21 is a Wednesday. The feed calendar ends 2025-12-31, so the
-    // published daily pattern is rolled forward and the line runs from its
-    // first departure to the last arrival of the day.
+    // published daily pattern is rolled forward and the line runs from the
+    // published opening to the last arrival of the day.
     expect(qlineServiceRunning(detroit('2026-10-21', 7, 29))).toBe(false);
-    expect(qlineServiceRunning(detroit('2026-10-21', 7, 30))).toBe(true);
     expect(qlineServiceRunning(detroit('2026-10-21', 12, 0))).toBe(true);
     expect(qlineServiceRunning(detroit('2026-10-21', 23, 30))).toBe(true);
+  });
+
+  it('opens at the published hour, not at the first trip in the pattern', () => {
+    // The rolled-forward pattern starts at 7:30 AM, but the agency publishes
+    // an 8:00 AM opening, and the published hours are the gate.
+    expect(qlineServiceRunning(detroit('2026-10-21', 7, 30))).toBe(false);
+    expect(qlineServiceRunning(detroit('2026-10-21', 7, 59))).toBe(false);
+    expect(qlineServiceRunning(detroit('2026-10-21', 8, 0))).toBe(true);
   });
 
   it('is closed between the last arrival and the first departure', () => {
@@ -46,15 +53,15 @@ describe('QLINE operating hours', () => {
     expect(qlineServiceRunning(detroit('2026-10-25', 21, 30))).toBe(false);
   });
 
-  it('reports the service window of the agency timetable', () => {
+  it('reports the published operating window', () => {
     const window = qlineServiceWindow(detroit('2026-10-21', 12, 0));
     expect(window.source).toBe('pattern');
-    expect(window.opensAt).toBe('7:30 AM');
-    expect(window.closesAt).toBe('12:20 AM');
+    expect(window.opensAt).toBe('8:00 AM');
+    expect(window.closesAt).toBe('12:00 AM');
 
     const sunday = qlineServiceWindow(detroit('2026-10-25', 12, 0));
-    expect(sunday.opensAt).toBe('7:30 AM');
-    expect(sunday.closesAt).toBe('9:20 PM');
+    expect(sunday.opensAt).toBe('8:00 AM');
+    expect(sunday.closesAt).toBe('9:00 PM');
   });
 
   it('falls back to the published hours when the agency has no timetable', () => {
@@ -71,10 +78,11 @@ describe('QLINE operating hours', () => {
     const closed = qlineStatus(detroit('2026-10-21', 6, 0));
     expect(closed.running).toBe(false);
     expect(closed.label).toBe('CLOSED');
+    expect(closed.nextDepartureLabel).toBe('OPENS 8:00 AM');
 
     const open = qlineStatus(detroit('2026-10-21', 12, 2));
     expect(open.running).toBe(true);
-    expect(open.label).toBe('EVERY 6–9 MIN');
+    expect(open.label).toBe('EVERY 15 MIN');
     expect(open.minutesToNext).not.toBeNull();
     expect(open.minutesToNext).toBeGreaterThan(0);
     expect(open.minutesToNext).toBeLessThanOrEqual(15);
@@ -87,6 +95,25 @@ describe('QLINE timetable', () => {
     expect(departures.length).toBe(4);
     expect(departures[0]!.time).toBe('12:00 PM');
     expect(departures[0]!.label).toBe('TO GRAND BLVD');
+  });
+
+  it('shows the departure to the minute', () => {
+    // Congress St is a terminus, so the board holds both directions and the
+    // times land on the minute. A rounded label would read 12:00 PM for a
+    // 12:09 PM departure.
+    const departures = qlineStationSchedule('ql-congress', detroit('2026-10-21', 12, 0));
+    const labels = departures.map((departure) => departure.time);
+    expect(labels).toContain('12:09 PM');
+    expect(labels).toContain('12:24 PM');
+  });
+
+  it('keeps the board inside the published operating hours', () => {
+    // The rolled-forward pattern has a 7:54 AM trip, but the published hours
+    // open at 8:00 AM, so the first departure offered is the 8:00 AM one.
+    const board = qlineStationSchedule('ql-congress', detroit('2026-10-21', 6, 0));
+    expect(board.length).toBe(4);
+    expect(board[0]!.time).toBe('8:00 AM');
+    expect(board.every((departure) => departure.seconds >= 8 * 3600)).toBe(true);
   });
 
   it('draws the vehicle where the timetable says it is', () => {

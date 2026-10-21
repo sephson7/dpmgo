@@ -226,13 +226,26 @@ async function main() {
   }
 
   // Headways -------------------------------------------------------------
+  // Congress St is a terminus, so its departure list holds both directions.
+  // Measuring the gaps on the mixed list would report half the real headway,
+  // so the gaps are measured per direction.
   const headwayMinutes = {};
   for (const serviceId of Object.keys(departures)) {
     const congress = departures[serviceId]['ql-congress'] ?? [];
+    const congressDirections = directions[serviceId]['ql-congress'] ?? [];
+    const perDirection = new Map();
+    congress.forEach((seconds, index) => {
+      const direction = congressDirections[index] ?? 0;
+      const list = perDirection.get(direction) ?? [];
+      list.push(seconds);
+      perDirection.set(direction, list);
+    });
     const gaps = [];
-    for (let i = 0; i < congress.length - 1; i += 1) {
-      const gap = Math.round(((congress[i + 1] - congress[i]) / 60) * 10) / 10;
-      if (gap > 0) gaps.push(gap);
+    for (const list of perDirection.values()) {
+      for (let i = 1; i < list.length; i += 1) {
+        const gap = Math.round(((list[i] - list[i - 1]) / 60) * 10) / 10;
+        if (gap > 0) gaps.push(gap);
+      }
     }
     if (gaps.length === 0) continue;
     headwayMinutes[serviceId] = {

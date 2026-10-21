@@ -44,9 +44,23 @@ export type QlineWindow = {
   isSunday: boolean;
   opensAt: string;
   closesAt: string;
-  /** Whether the numbers come from the agency timetable or the published hours. */
+  /**
+   * Where the departure times come from. The window itself is always the
+   * published operating hours, because the feed's calendar has expired and
+   * its rolled-forward pattern is older than the hours the agency publishes.
+   */
   source: QlineScheduleSource;
 };
+
+/**
+ * The published operating window of the line on a date, in seconds since
+ * service-day midnight.
+ */
+function publishedWindow(ymd: string): { start: number; end: number; isSunday: boolean } {
+  const isSunday = weekdayInDetroit(ymd) === 6;
+  const hours = isSunday ? QLINE_HOURS.sunday : QLINE_HOURS.weekday;
+  return { start: hours.startMinutes * 60, end: hours.endMinutes * 60, isSunday };
+}
 
 function servicesOn(ymd: string): string[] {
   const active = new Set(
@@ -63,17 +77,6 @@ function servicesOn(ymd: string): string[] {
     else active.delete(exception.id);
   }
   return [...active];
-}
-
-/** Scheduled seconds for a service, across every station. */
-function serviceSeconds(serviceIds: string[]): number[] {
-  const seconds: number[] = [];
-  for (const serviceId of serviceIds) {
-    const stops = feed.departures[serviceId];
-    if (!stops) continue;
-    for (const times of Object.values(stops)) seconds.push(...times);
-  }
-  return seconds;
 }
 
 /** The last date the bundled feed's calendar covers. */
@@ -97,35 +100,20 @@ function effectiveService(ymd: string): { ids: string[]; source: 'feed' | 'patte
 }
 
 /**
- * The operating window of the line on a date. The agency timetable wins when
- * it has one, so the window always matches the vehicle drawn on the map.
+ * The operating window of the line on a date. The published hours are the
+ * gate, so the window always matches the hours the agency publishes, while
+ * the source reports where the departure times inside it come from.
  */
 function windowFor(ymd: string): QlineWindow {
-  const isSunday = weekdayInDetroit(ymd) === 6;
+  const window = publishedWindow(ymd);
   const service = effectiveService(ymd);
-  const scheduled = service ? serviceSeconds(service.ids) : [];
-
-  if (service && scheduled.length > 0) {
-    const start = Math.min(...scheduled);
-    const end = Math.max(...scheduled);
-    return {
-      startMinutes: start / 60,
-      endMinutes: end / 60,
-      isSunday,
-      opensAt: formatClockMinutes(start / 60),
-      closesAt: formatClockMinutes(end / 60),
-      source: service.source,
-    };
-  }
-
-  const hours = isSunday ? QLINE_HOURS.sunday : QLINE_HOURS.weekday;
   return {
-    startMinutes: hours.startMinutes,
-    endMinutes: hours.endMinutes,
-    isSunday,
-    opensAt: formatClockMinutes(hours.startMinutes),
-    closesAt: formatClockMinutes(hours.endMinutes),
-    source: 'published',
+    startMinutes: window.start / 60,
+    endMinutes: window.end / 60,
+    isSunday: window.isSunday,
+    opensAt: formatClockMinutes(window.start / 60),
+    closesAt: formatClockMinutes(window.end / 60),
+    source: service ? service.source : 'published',
   };
 }
 
@@ -133,21 +121,13 @@ export function qlineServiceWindow(now = new Date()): QlineWindow {
   return windowFor(detroitNow(now).ymd);
 }
 
-/** True while the streetcar is running, using Detroit local time. */
+/**
+ * True while the streetcar is running. The published hours gate the timetable,
+ * so nothing is out before the line opens, and the answer always agrees with
+ * the vehicle drawn on the map.
+ */
 export function qlineServiceRunning(now = new Date()): boolean {
-  const { ymd, seconds } = detroitNow(now);
-  // A service day can run past midnight, so yesterday's service still counts.
-  for (const offset of [-1, 0]) {
-    const service = effectiveService(shiftDate(ymd, offset));
-    if (!service) continue;
-    const scheduled = serviceSeconds(service.ids);
-    if (scheduled.length === 0) continue;
-    const start = Math.min(...scheduled);
-    const end = Math.max(...scheduled);
-    const time = seconds - offset * 86400;
-    if (time >= start && time < end) return true;
-  }
-  return false;
+  return qlineTripsAt(now).trips.length > 0;
 }
 
 /** Scheduled headway for the active service, from the feed. */
@@ -216,7 +196,10 @@ export function qlineStatus(now = new Date()): QlineStatus {
     return {
       running: true,
       minutesToNext,
-      label: `EVERY ${headway.min}–${headway.max} MIN`,
+      label:
+        headway.min === headway.max
+          ? `EVERY ${headway.min} MIN`
+          : `EVERY ${headway.min}–${headway.max} MIN`,
       window,
       nextDepartureLabel:
         minutesToNext === null
@@ -250,21 +233,26 @@ export type QlineDeparture = {
 
 /**
  * The next scheduled departures at a station. Returns an empty list when the
- * agency has no timetable for the date.
+ * agency has no timetable for the date or the line is closed.
  */
 export function qlineStationSchedule(stationId: string, now = new Date()): QlineDeparture[] {
   const { ymd, seconds } = detroitNow(now);
   const service = effectiveService(ymd);
   if (!service) return [];
 
+  const window = publishedWindow(ymd);
   const entries: { seconds: number; direction: number }[] = [];
   for (const serviceId of service.ids) {
     const times = feed.departures[serviceId]?.[stationId];
     const directions = feed.directions[serviceId]?.[stationId];
     if (!times) continue;
     times.forEach((value, index) => {
-      if (value >= seconds - 60)
+      // The published operating hours gate the board, so a rider never sees a
+      // departure the agency does not run.
+      if (value < window.start || value > window.end) return;
+      if (value >= seconds - 60) {
         entries.push({ seconds: value, direction: directions?.[index] ?? 0 });
+      }
     });
   }
   entries.sort((a, b) => a.seconds - b.seconds);
@@ -339,7 +327,7 @@ function patternServiceFor(ymd: string): string | null {
 }
 
 /** The trips of one service, shifted into the current service day. */
-function tripsForService(serviceId: string, shift: number): QlineTrip[] {
+function tripsForService(serviceId: string, shift: number, minStart: number): QlineTrip[] {
   const departures = feed.departures[serviceId];
   const directions = feed.directions[serviceId];
   if (!departures || !directions) return [];
@@ -369,7 +357,7 @@ function tripsForService(serviceId: string, shift: number): QlineTrip[] {
     const northStops = north
       .map((list) => list[index])
       .filter((value): value is number => value !== undefined);
-    if (northStops.length === stationIds.length) {
+    if (northStops.length === stationIds.length && northStops[0]! + shift >= minStart) {
       trips.push({
         direction: 1,
         stationIds,
@@ -385,13 +373,15 @@ function tripsForService(serviceId: string, shift: number): QlineTrip[] {
       // The southbound runs from Grand Boulevard back to Congress Street, so the
       // stops and the times are both in the other order.
       const ordered = [...southStops].reverse();
-      trips.push({
-        direction: 0,
-        stationIds: [...stationIds].reverse(),
-        stops: ordered.map((value) => value + shift),
-        startSeconds: ordered[0]! + shift,
-        endSeconds: ordered[ordered.length - 1]! + shift,
-      });
+      if (ordered[0]! + shift >= minStart) {
+        trips.push({
+          direction: 0,
+          stationIds: [...stationIds].reverse(),
+          stops: ordered.map((value) => value + shift),
+          startSeconds: ordered[0]! + shift,
+          endSeconds: ordered[ordered.length - 1]! + shift,
+        });
+      }
     }
   }
   return trips;
@@ -399,8 +389,9 @@ function tripsForService(serviceId: string, shift: number): QlineTrip[] {
 
 /**
  * The streetcar trips that are running at a wall clock instant. The times come
- * from the agency timetable, so the vehicle on the map is where the schedule
- * says it should be.
+ * from the agency timetable, gated by the published operating hours, so the
+ * vehicle on the map is where the schedule says it should be and nothing runs
+ * while the line is closed.
  */
 export function qlineTripsAt(now = new Date()): QlineTrips {
   const { ymd, seconds } = detroitNow(now);
@@ -411,8 +402,10 @@ export function qlineTripsAt(now = new Date()): QlineTrips {
   if (!today && !yesterday) return { trips: [], source: 'none' };
 
   const trips = [
-    ...(today?.ids ?? []).flatMap((id) => tripsForService(id, 0)),
-    ...(yesterday?.ids ?? []).flatMap((id) => tripsForService(id, -86_400)),
+    ...(today?.ids ?? []).flatMap((id) => tripsForService(id, 0, publishedWindow(ymd).start)),
+    ...(yesterday?.ids ?? []).flatMap((id) =>
+      tripsForService(id, -86_400, publishedWindow(shiftDate(ymd, -1)).start - 86_400),
+    ),
   ];
   const running = trips.filter((trip) => seconds >= trip.startSeconds && seconds < trip.endSeconds);
   return { trips: running, source: today?.source ?? yesterday?.source ?? 'none' };

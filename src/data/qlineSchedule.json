@@ -1,6 +1,6 @@
 {
  "source": "https://data.trilliumtransit.com/gtfs/qline-mi-us/qline-mi-us.zip",
- "generatedAt": "2026-10-21T10:52:20.727Z",
+ "generatedAt": "2026-10-21T12:41:36.751Z",
  "calendar": [
   {
    "id": "c_71254_b_84752_d_8",
@@ -29761,34 +29761,34 @@
  },
  "headwayMinutes": {
   "c_71225_b_84633_d_64": {
-   "min": 6,
-   "max": 9,
-   "median": 6
+   "min": 15,
+   "max": 15,
+   "median": 15
   },
   "c_71225_b_84753_d_64": {
-   "min": 6,
-   "max": 9,
-   "median": 6
+   "min": 15,
+   "max": 15,
+   "median": 15
   },
   "c_71225_b_84754_d_64": {
-   "min": 6,
-   "max": 9,
-   "median": 6
+   "min": 15,
+   "max": 15,
+   "median": 15
   },
   "c_71225_b_84633_d_63": {
-   "min": 6,
-   "max": 9,
-   "median": 6
+   "min": 15,
+   "max": 15,
+   "median": 15
   },
   "c_71225_b_84753_d_63": {
-   "min": 6,
-   "max": 9,
-   "median": 6
+   "min": 15,
+   "max": 15,
+   "median": 15
   },
   "c_71225_b_84754_d_63": {
-   "min": 6,
-   "max": 9,
-   "median": 6
+   "min": 15,
+   "max": 15,
+   "median": 15
   },
   "c_71254_b_84751_d_8": {
    "min": 12,
@@ -29801,14 +29801,14 @@
    "median": 12
   },
   "c_71254_b_84751_d_64": {
-   "min": 6,
+   "min": 12,
    "max": 12,
-   "median": 6
+   "median": 12
   },
   "c_71254_b_84752_d_64": {
-   "min": 6,
+   "min": 12,
    "max": 12,
-   "median": 6
+   "median": 12
   }
  }
 }
