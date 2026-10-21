@@ -28,7 +28,15 @@ const FONT_CACHE = `dpmgo-fonts-${VERSION}`;
 const CACHES = [SHELL_CACHE, ASSET_CACHE, FONT_CACHE];
 
 /** The stable, unhashed files that make up the shell and the icons. */
-const SHELL_FILES = ['/manifest.json', '/favicon.png', '/favicon.ico'];
+const SHELL_FILES = [
+  '/manifest.json',
+  '/favicon.png',
+  '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-512.png',
+  '/apple-touch-icon.png',
+];
 
 /** How long a navigation waits for the network before the cache takes over. */
 const NAVIGATION_TIMEOUT_MS = 8000;

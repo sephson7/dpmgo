@@ -1,18 +1,33 @@
 {
+  "id": "/",
   "short_name": "DPM - Go!",
   "name": "DPM - Go! Detroit Transit Companion",
-  "description": "Detroit People Mover & QLINE Real-Time Timetable, Wayfinding & Downtown Navigation",
+  "description": "Detroit People Mover & QLINE Timetable, Wayfinding & Downtown Navigation",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#070B14",
   "theme_color": "#00F0FF",
+  "categories": ["travel", "navigation", "utilities"],
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ]
 }

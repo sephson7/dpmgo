@@ -58,8 +58,8 @@ What the feed changed:
 
 | | Before | From the feed |
 | --- | --- | --- |
-| Service window | published 8:00 AM – 12:00 AM | **7:30 AM – 12:20 AM** Mon–Sat, 7:30 AM – 9:20 PM Sun |
-| Headway | "every 15 minutes or less" | **every 6–9 minutes** |
+| Service window | published 8:00 AM – 12:00 AM | **the published hours are the gate** — 8:00 AM – 12:00 AM Mon–Sat, 8:00 AM – 9:00 PM Sun |
+| Headway | "every 15 minutes or less" | **every 15 minutes**, measured per direction |
 | Station departures | none | real scheduled times with direction |
 | Run times | invented | the published per-stop times, 1–4 minutes per stop, 24 minutes end to end |
 | Map line | straight hops between stops | the real Woodward alignment |
@@ -73,6 +73,19 @@ readout cannot drift apart. The published operating hours remain the fallback
 for a date the agency has published no timetable for at all. Refresh the feed
 once the agency publishes a 2026 calendar (or run `npm run build:qline` on a
 schedule) and the app switches to real departures automatically.
+
+Two corrections were made to that first reading of the feed, and both matter:
+
+- **The headway is 15 minutes, not 6–9.** Congress St is a terminus, so its
+  departure list holds both directions: the northbound departures at
+  :00/:15/:30/:45 and the southbound arrivals at :09/:24/:39/:54. Measuring
+  the gaps on that mixed list reports half the real headway. The gaps are now
+  measured per direction, which is a clean 15 minutes for every regular
+  service, and that is what the agency's own live schedule shows.
+- **The service window is the published hours, not the pattern's first and
+  last trip.** The rolled-forward pattern starts at 7:30 AM, but the agency
+  publishes an 8:00 AM opening, so the published hours are the gate and
+  nothing is in service before the line opens.
 
 The QLINE feed is a static schedule. There is no GTFS-RT vehicle feed for either
 Detroit line, so the streetcar marker on the map remains a simulation.
