@@ -15,7 +15,6 @@ import {
   type Station,
 } from '@/data/transit';
 import { qlineStatus } from '@/data/qlineSchedule';
-import { getNextTrainForStation } from '@/data/trainSimulation';
 import { stationSchedule } from '@/data/schedule';
 import { useStationAlert } from '@/hooks/useStationAlert';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -263,17 +262,6 @@ export default function HomeHud() {
   );
   const qlineLive = useMemo(() => qlineStatus(now), [now]);
 
-  // The arrival readout shares the fleet clock with the map, so the vehicle
-  // that is drawn on the loop is the vehicle this countdown is counting down.
-  const [liveArrival, setLiveArrival] = useState(() => getNextTrainForStation(tickerStation.id));
-  useEffect(() => {
-    setLiveArrival(getNextTrainForStation(tickerStation.id));
-    const liveTimer = window.setInterval(() => {
-      setLiveArrival(getNextTrainForStation(tickerStation.id));
-    }, 2000);
-    return () => window.clearInterval(liveTimer);
-  }, [tickerStation.id]);
-
   useEffect(() => {
     const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1450;
     const timer = window.setTimeout(() => setWaking(false), delay);
@@ -332,7 +320,6 @@ export default function HomeHud() {
     station: tickerStation,
     isQLine: isQLineTicker,
     schedule: tickerSchedule,
-    arrival: liveArrival,
     qline: qlineLive,
   };
   const layers = { peopleMover, qline, parking };
@@ -413,6 +400,7 @@ export default function HomeHud() {
             onFlyTo={handleFlyToTarget}
             ticker={ticker}
             onOpenStation={openStationFromStrip}
+            stationSelected={Boolean(selected)}
           />
         )}
 

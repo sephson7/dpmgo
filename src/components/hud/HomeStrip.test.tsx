@@ -32,7 +32,7 @@ async function renderStrip(node: React.ReactElement) {
 /** Advances the rotation by one step. */
 async function rotate() {
   await act(async () => {
-    vi.advanceTimersByTime(4600);
+    vi.advanceTimersByTime(5100);
   });
 }
 

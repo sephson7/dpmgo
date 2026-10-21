@@ -5,7 +5,7 @@ import type { StationSchedule } from '@/data/schedule';
 import { slotDisplayName, useAnchorSlots } from '@/hooks/useAnchorSlots';
 
 /** How long a line stays on screen before the next one fades in. */
-const ROTATION_MS = 4500;
+const ROTATION_MS = 5000;
 
 type StripItem = {
   key: string;
@@ -26,6 +26,8 @@ export type HomeStripProps = {
   /** Opens the station drawer, scrolled to the partner card for a partner item. */
   onOpenStation: (stationId: string, focusPartner: boolean) => void;
   variant: 'pill' | 'panel';
+  /** Whether the station was chosen by the rider or found by their location. */
+  selected?: boolean;
 };
 
 /**
@@ -34,9 +36,16 @@ export type HomeStripProps = {
  * when the line is closed, then the partners whose slot is actually filled.
  * Every item opens the station it refers to.
  */
-export default function HomeStrip({ station, schedule, onOpenStation, variant }: HomeStripProps) {
+export default function HomeStrip({
+  station,
+  schedule,
+  onOpenStation,
+  variant,
+  selected = false,
+}: HomeStripProps) {
   const slots = useAnchorSlots(station.id);
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   const items = useMemo<StripItem[]>(() => {
     const name = station.name.toUpperCase();
@@ -86,17 +95,24 @@ export default function HomeStrip({ station, schedule, onOpenStation, variant }:
   }, [station.name, schedule, slots]);
 
   useEffect(() => {
-    if (items.length <= 1) return;
+    // The rotation holds still while the rider is pointing at or reading it.
+    if (items.length <= 1 || paused) return;
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % items.length);
     }, ROTATION_MS);
     return () => window.clearInterval(timer);
-  }, [items.length]);
+  }, [items.length, paused]);
 
   const item = items[index % items.length] ?? items[0]!;
   const live = schedule.running;
   const open = () => onOpenStation(station.id, item.kind === 'partner');
   const label = `${station.name}. ${item.line}. Open the station.`;
+  const hold = {
+    onMouseEnter: () => setPaused(true),
+    onMouseLeave: () => setPaused(false),
+    onFocus: () => setPaused(true),
+    onBlur: () => setPaused(false),
+  };
 
   if (variant === 'pill') {
     return (
@@ -105,6 +121,7 @@ export default function HomeStrip({ station, schedule, onOpenStation, variant }:
         className="mobile-countdown-pill home-strip"
         onClick={open}
         aria-label={label}
+        {...hold}
       >
         <span className={`signal-dot ${live ? 'signal-pulse' : 'signal-idle'}`} />
         <span className="mobile-countdown-label home-strip__line" key={item.key}>
@@ -115,11 +132,11 @@ export default function HomeStrip({ station, schedule, onOpenStation, variant }:
   }
 
   return (
-    <div className="homepage-ticker-hud home-strip">
+    <div className="homepage-ticker-hud home-strip" {...hold}>
       <div className="ticker-hud-header">
         <span className="ticker-hud-kicker">
           <Compass size={11} className={live ? 'text-primary' : 'text-muted-foreground'} />
-          NEAREST STATION
+          {selected ? 'SELECTED STATION' : 'NEAREST STATION'}
         </span>
         <span className="ticker-hud-target">{station.name}</span>
       </div>

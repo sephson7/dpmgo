@@ -36,7 +36,8 @@ The core mission of DPM - Go! is to encourage visitors, commuters, and residents
 - **Theme & Aesthetic:** High-contrast urban transport HUD with deep charcoal/navy backgrounds (`#070B14`), glowing neon-cyan transit lines (`#00F0FF`), and frosted glassmorphism containers (`backdrop-blur-xl bg-slate-900/80 border border-cyan-500/30`).
 - **Header & Navigation:** Pill-style live toggle switches for **"PEOPLE MOVER"** and **"QLINE"**, alongside a top dropdown menu for activity calendars, sports schedules, and event feeds.
 - **Quick Routes Presets:** The **"HOW DO I?"** and **"I'M GOING TO:"** presets are one row of pills on a desktop and a single **"QUICK ROUTES!"** dropdown in the header on a phone, where the two rows of pills cannot fit above the map.
-- **Phone Layout (`<= 768px`):** The floating HUD keeps the countdown, the boarded/follow toggles and the line switches over the map; the station directory moves to a **STATIONS** bottom-sheet launcher; the reset control, the map legend and the legal footer stack into one bottom dock that never overlaps the map.
+- **Home Strip:** The strip in the top-left HUD (phone) and in the side panel (desktop) rotates every 5 seconds through what the rider needs and what the station offers: the **next published departure** from the bundled GTFS timetable, the **service state** when the line is closed, and the **partners whose sponsor slot is actually filled** at that station. It leads with the rider's information, never shows a partner whose slot is empty, and every item opens the station it refers to — a partner item lands straight on the sponsor card.
+- **Phone Layout (`<= 768px`):** The floating HUD keeps the home strip, the boarded/follow toggles and the line switches over the map; the station directory moves to a **STATIONS** bottom-sheet launcher; the reset control, the map legend and the legal footer stack into one bottom dock that never overlaps the map.
 - **Reset Map View:** The map control returns the camera to the downtown overview and clears every marked location (the quick route pin, the restaurant pin and the selected station).
 
 ### 2. 3D Satellite Map Canvas & Telemetry
@@ -81,9 +82,10 @@ consist is standing on the platform.
 | Area | Files |
 | --- | --- |
 | The HUD shell and its state | `src/components/HomeHud.tsx` |
-| Header, presets and the map chrome | `src/components/hud/` — `TopBar`, `QuickRoutesMenu`, `QuickRoutesBar`, `HeadlineArea`, `TickerHud`, `StationDirectoryPanel`, `MapStage`, `MapChrome`, `StationLauncher`, `StatusStrip`, `ComplianceFooter`, `AlarmBanner`, `WakeScreen` |
+| Header, presets and the map chrome | `src/components/hud/` — `TopBar`, `QuickRoutesMenu`, `QuickRoutesBar`, `HomeStrip`, `HeadlineArea`, `StationDirectoryPanel`, `MapStage`, `MapChrome`, `StationLauncher`, `StatusStrip`, `ComplianceFooter`, `AlarmBanner`, `WakeScreen` |
 | Drawers | `src/components/drawers/` — `StationDrawer`, `StationDirectoryDrawer`, `InfoPanel` |
 | Dialogs | `src/components/dialogs/` — `QuickNavDialog`, `LegalDialog`, `WalkthroughDialog` |
+| Shared hooks | `src/hooks/` — `useAnchorSlots` (the partner slots, one request for the strip and the drawer), `use-mobile` (the layout breakpoint) |
 
 **Two layouts, not one hidden one.** The phone and the desktop render
 different trees from the same state: the phone gets the Quick Routes dropdown,

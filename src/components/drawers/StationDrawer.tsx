@@ -69,23 +69,32 @@ export default function StationDrawer({
   const anchorRef = useRef<HTMLDivElement>(null);
 
   // The home strip opens the drawer straight onto the sponsor card. The
-  // drawer slides in first, so the scroll waits until the content is laid out.
+  // drawer slides in first, so the scroll waits until the card is laid out
+  // and then sticks.
   useEffect(() => {
     if (!focusPartner) return;
-    let timer = 0;
+    let frame = 0;
     let attempts = 0;
-    const scroll = () => {
+
+    const tick = () => {
       const anchor = anchorRef.current;
       const container = anchor?.closest('.detail-content') as HTMLElement | null;
-      if (anchor && container && container.scrollHeight > container.clientHeight) {
-        container.scrollTop = Math.max(0, anchor.offsetTop - 8);
-        return;
+      if (anchor && container) {
+        const offset =
+          anchor.getBoundingClientRect().top -
+          container.getBoundingClientRect().top +
+          container.scrollTop;
+        if (offset > 8) {
+          container.scrollTo({ top: Math.max(0, offset - 8), behavior: 'instant' });
+          if (container.scrollTop > 0) return;
+        }
       }
       attempts += 1;
-      if (attempts < 20) timer = window.setTimeout(scroll, 50);
+      if (attempts < 90) frame = window.requestAnimationFrame(tick);
     };
-    timer = window.setTimeout(scroll, 60);
-    return () => window.clearTimeout(timer);
+
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
   }, [focusPartner, slots.slot1, slots.slot2]);
 
   const slotPlace = (slot: StationSlot | null): Place | null => {

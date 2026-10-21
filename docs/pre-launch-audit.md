@@ -163,12 +163,13 @@ customers.
 | Stripe | `src/lib/stripe.test.ts` | slot/plan rules, published prices, price discovery, session creation, paid-session verification, plan mismatch flagging, Stripe failure handling |
 | Partner portal auth | `src/lib/adminAuth.test.ts` | the portal fails closed without secrets, credential checks, signed session round trip, forged and tampered tokens |
 | Homepage layout | `src/routes/index.test.tsx` | the phone renders the Quick Routes menu and the bottom dock, the desktop renders the preset pills and the side directory, and the phone never mounts the desktop directory |
+| Home strip | `src/components/hud/HomeStrip.test.tsx` | the departure leads, the service state is reported when the line is closed, a partner only appears when its slot is filled, every item opens its station, and the strip rotates |
 
 Rows for `transit.test.ts`, `qlineSchedule.test.ts`, `qlineSimulation.test.ts`,
 `parking.test.ts`, `merchantIntake.test.ts` and `stripe.test.ts` describe suites
 that are **not in the repository yet** — the coverage is planned, not shipped.
 
-`npx tsc --noEmit` is clean, `npx vitest run` is green (35 tests) and
+`npx tsc --noEmit` is clean, `npx vitest run` is green (53 tests) and
 `npx vite build` succeeds.
 
 ### Continuous integration

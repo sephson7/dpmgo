@@ -1,6 +1,5 @@
 import type { DestinationShortcut, HowDoIFlow, Station } from '@/data/transit';
 import type { StationSchedule } from '@/data/schedule';
-import type { ArrivalReadout } from '@/data/trainSimulation';
 import type { QlineStatus } from '@/data/qlineSchedule';
 
 /** Which transit layers the map is drawing. */
@@ -11,14 +10,13 @@ export type MapLayers = {
 };
 
 /**
- * Everything the cadence readouts need. The People Mover arrival comes from
- * the fleet clock that draws the vehicles, so the two always agree.
+ * Everything the home strip needs: the station it is about, its published
+ * timetable and the state of the two lines.
  */
 export type TickerState = {
   station: Station;
   isQLine: boolean;
   schedule: StationSchedule;
-  arrival: ArrivalReadout;
   qline: QlineStatus;
 };
 

@@ -20,6 +20,8 @@ export type StationDirectoryPanelProps = {
   ticker: TickerState;
   /** Opens the station drawer from the home strip. */
   onOpenStation: (stationId: string, focusPartner: boolean) => void;
+  /** True when the rider has a station open. */
+  stationSelected: boolean;
 };
 
 /**
@@ -38,6 +40,7 @@ export default function StationDirectoryPanel({
   onFlyTo,
   ticker,
   onOpenStation,
+  stationSelected,
 }: StationDirectoryPanelProps) {
   const onlyQline = !layers.peopleMover && layers.qline;
   const onlyMover = layers.peopleMover && !layers.qline;
@@ -68,6 +71,7 @@ export default function StationDirectoryPanel({
             station={ticker.station}
             schedule={ticker.schedule}
             onOpenStation={onOpenStation}
+            selected={stationSelected}
           />
         </div>
         <RouteIcon size={20} className="panel-route-icon" />
