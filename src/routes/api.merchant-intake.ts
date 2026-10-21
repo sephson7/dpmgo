@@ -6,7 +6,7 @@ import { readServerSecret } from '@/lib/serverEnv';
 export const Route = createFileRoute('/api/merchant-intake')({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request, context }) => {
         const origin = request.headers.get('origin');
         const host = request.headers.get('host');
         if (origin && host) {
@@ -58,7 +58,7 @@ export const Route = createFileRoute('/api/merchant-intake')({
           status: 'pending',
           createdAt: new Date().toISOString(),
         };
-        await addLead(lead);
+        await addLead(lead, context);
 
         // Forward the lead to the CRM webhook when one is configured.
         const webhook = await readServerSecret('MERCHANT_INTAKE_WEBHOOK_URL');

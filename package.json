@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && node scripts/inject-kv-binding.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -16,7 +16,8 @@
     "build:dpm": "node scripts/build-dpm-schedule.mjs",
     "build:transit": "npm run build:dpm && npm run build:qline",
     "audit:contrast": "node scripts/audit-contrast.mjs",
-    "secrets:admin": "node scripts/set-admin-secrets.mjs"
+    "secrets:admin": "node scripts/set-admin-secrets.mjs",
+    "setup:kv": "node scripts/setup-kv.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

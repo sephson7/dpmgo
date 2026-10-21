@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { QLINE_HOURS, qlineServiceRunning, qlineServiceWindow, qlineStatus } from './qlineSchedule';
-import { QLINE_CYCLE_MS, simulatedQlineTrain } from './qlineSimulation';
+import { QLINE_CYCLE_MS } from './qlineSimulation';
 
 /** A Detroit local time on a given date. */
 const detroit = (date: string, hour: number, minute = 0) => {
@@ -54,14 +54,7 @@ describe('QLINE operating hours', () => {
   });
 });
 
-describe('QLINE streetcar simulation', () => {
-  it('moves the vehicle while the line is in service', () => {
-    const before = simulatedQlineTrain(0).coordinate;
-    const after = simulatedQlineTrain(60_000).coordinate;
-    const moved = Math.hypot(after[0] - before[0], after[1] - before[1]);
-    expect(moved).toBeGreaterThan(0.0001);
-  });
-
+describe('QLINE corridor cycle', () => {
   it('runs a corridor cycle of a realistic length', () => {
     expect(QLINE_CYCLE_MS / 60000).toBeGreaterThan(20);
     expect(QLINE_CYCLE_MS / 60000).toBeLessThan(90);

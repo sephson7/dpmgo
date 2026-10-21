@@ -3,9 +3,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type * as GeoJSON from 'geojson';
 import { peopleMoverServiceRunning } from '@/data/schedule';
-import { qlineServiceRunning } from '@/data/qlineSchedule';
 import { parkedMoverTrains, simulatedMoverTrains, moverFleetElapsed } from '@/data/trainSimulation';
-import { parkedQlineTrain, simulatedQlineTrains } from '@/data/qlineSimulation';
+import { parkedQlineTrain, scheduledQlineTrains } from '@/data/qlineSimulation';
 import { parkingGarages } from '@/data/parking';
 import { qlineNorthboundShape } from '@/data/qlineShape';
 import {
@@ -263,13 +262,18 @@ export default function TransitMap({
           }),
         ),
       });
-      const qlineData = (elapsed: number, running: boolean): GeoJSON.FeatureCollection => ({
-        type: 'FeatureCollection',
-        features: (running ? simulatedQlineTrains(elapsed) : [parkedQlineTrain()]).map((train) => ({
-          ...point(train.coordinate),
-          properties: { rotation: train.bearing - 90 },
-        })),
-      });
+      // The streetcar follows the published timetable, so its position is read
+      // from the wall clock rather than from a free running cycle.
+      const qlineData = (now: Date): GeoJSON.FeatureCollection => {
+        const trains = scheduledQlineTrains(now);
+        return {
+          type: 'FeatureCollection',
+          features: (trains.length ? trains : [parkedQlineTrain()]).map((train) => ({
+            ...point(train.coordinate),
+            properties: { rotation: train.bearing - 90 },
+          })),
+        };
+      };
       map.addSource('mover-vehicle', { type: 'geojson', data: moverData(0, true) });
 
       const pixels = new Uint8Array(20 * 10 * 4);
@@ -298,7 +302,7 @@ export default function TransitMap({
         return `rgb(${r}, ${g}, ${b})`;
       };
 
-      map.addSource('qline-vehicle', { type: 'geojson', data: qlineData(0, true) });
+      map.addSource('qline-vehicle', { type: 'geojson', data: qlineData(new Date()) });
       for (const [id, color] of [
         ['mover-vehicle', tokenColor('--primary')],
         ['qline-vehicle', tokenColor('--warm')],
@@ -509,31 +513,24 @@ export default function TransitMap({
       onReadyRef.current?.(true);
 
       let lastUpdate = 0;
-      let lastTime: number | null = null;
-      let qlineElapsed = 0;
       let moverRunning = peopleMoverServiceRunning();
-      let qlineRunning = qlineServiceRunning();
       let lastServiceCheck = 0;
 
       const animate = (time: number) => {
-        const delta = lastTime === null ? 0 : Math.min(time - lastTime, 1000);
-        lastTime = time;
         if (time - lastServiceCheck >= 1000) {
           moverRunning = peopleMoverServiceRunning();
-          qlineRunning = qlineServiceRunning();
           lastServiceCheck = time;
         }
-        // The streetcar only paces while the line is in service. The People
-        // Mover reads the shared fleet clock instead, so the drawn vehicles
-        // and the arrival countdown can never drift apart.
-        if (qlineRunning) qlineElapsed += delta;
+        // The People Mover reads the shared fleet clock, so the drawn vehicles
+        // and the arrival countdown can never drift apart. The streetcar reads
+        // the wall clock and is placed by the published timetable.
         if (time - lastUpdate > 50) {
           const moverElapsed = moverFleetElapsed();
           (map.getSource('mover-vehicle') as mapboxgl.GeoJSONSource)?.setData(
             moverData(moverElapsed, moverRunning),
           );
           (map.getSource('qline-vehicle') as mapboxgl.GeoJSONSource)?.setData(
-            qlineData(qlineElapsed, qlineRunning),
+            qlineData(new Date()),
           );
           lastUpdate = time;
         }

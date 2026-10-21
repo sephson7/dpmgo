@@ -1,5 +1,6 @@
 import raw from './qlineSchedule.json';
 import { detroitNow, formatClockMinutes, shiftDate, weekdayInDetroit } from './detroitTime';
+import { qlineStations } from './transit';
 
 /**
  * QLINE schedule data generated from the official GTFS feed.
@@ -267,4 +268,139 @@ export function qlineSegmentSeconds(direction: number, from: string, to: string)
     (entry) => entry.direction === direction && entry.from === from && entry.to === to,
   );
   return segment ? segment.seconds : null;
+}
+
+/* ------------------------------------------------------------------ trips */
+
+/** One scheduled run of the streetcar along the corridor. */
+export type QlineTrip = {
+  /** 1 = northbound to Grand Boulevard, 0 = southbound to Congress Street. */
+  direction: 1 | 0;
+  /** The station ids in the order the vehicle travels them. */
+  stationIds: string[];
+  /** The scheduled seconds at each station, in travel order. */
+  stops: number[];
+  /** The departure from the first stop. */
+  startSeconds: number;
+  /** The arrival at the last stop. */
+  endSeconds: number;
+};
+
+/**
+ * Where the times come from. The feed publishes a finite calendar, so once it
+ * expires the published daily pattern is rolled forward instead.
+ */
+export type QlineTripSource = 'feed' | 'pattern' | 'none';
+
+export type QlineTrips = {
+  /** The trips that are running at the instant. */
+  trips: QlineTrip[];
+  source: QlineTripSource;
+};
+
+/** The number of days a calendar entry covers. */
+function calendarSpan(entry: { start: string; end: string }): number {
+  const start = Date.UTC(
+    +entry.start.slice(0, 4),
+    +entry.start.slice(4, 6) - 1,
+    +entry.start.slice(6, 8),
+  );
+  const end = Date.UTC(+entry.end.slice(0, 4), +entry.end.slice(4, 6) - 1, +entry.end.slice(6, 8));
+  return Math.round((end - start) / 86_400_000);
+}
+
+/**
+ * The published daily pattern for a weekday. Used once the feed's calendar
+ * stops covering the date, so the streetcar still runs the timetable the
+ * agency publishes rather than standing at the terminus.
+ */
+function patternServiceFor(ymd: string): string | null {
+  const weekday = weekdayInDetroit(ymd);
+  const candidates = feed.calendar.filter(
+    (entry) => entry.days.includes(weekday) && calendarSpan(entry) > 7,
+  );
+  if (!candidates.length) return null;
+  // The most recent pattern wins.
+  return [...candidates].sort((a, b) => a.end.localeCompare(b.end))[candidates.length - 1]!.id;
+}
+
+/** The trips of one service, shifted into the current service day. */
+function tripsForService(serviceId: string, shift: number): QlineTrip[] {
+  const departures = feed.departures[serviceId];
+  const directions = feed.directions[serviceId];
+  if (!departures || !directions) return [];
+
+  // The feed lists the stops of a service in whatever order that service
+  // runs, so the canonical station order is used to line the times up.
+  const stationIds = qlineStations.map((station) => station.id);
+  const north: number[][] = [];
+  const south: number[][] = [];
+  for (const stationId of stationIds) {
+    const times = departures[stationId] ?? [];
+    const dirs = directions[stationId] ?? [];
+    const northbound: number[] = [];
+    const southbound: number[] = [];
+    times.forEach((value, index) => (dirs[index] === 1 ? northbound : southbound).push(value));
+    north.push(northbound);
+    south.push(southbound);
+  }
+
+  const trips: QlineTrip[] = [];
+  const count = Math.max(
+    0,
+    ...north.map((list) => list.length),
+    ...south.map((list) => list.length),
+  );
+  for (let index = 0; index < count; index += 1) {
+    const northStops = north
+      .map((list) => list[index])
+      .filter((value): value is number => value !== undefined);
+    if (northStops.length === stationIds.length) {
+      trips.push({
+        direction: 1,
+        stationIds,
+        stops: northStops.map((value) => value + shift),
+        startSeconds: northStops[0]! + shift,
+        endSeconds: northStops[northStops.length - 1]! + shift,
+      });
+    }
+    const southStops = south
+      .map((list) => list[index])
+      .filter((value): value is number => value !== undefined);
+    if (southStops.length === stationIds.length) {
+      // The southbound runs from Grand Boulevard back to Congress Street, so the
+      // stops and the times are both in the other order.
+      const ordered = [...southStops].reverse();
+      trips.push({
+        direction: 0,
+        stationIds: [...stationIds].reverse(),
+        stops: ordered.map((value) => value + shift),
+        startSeconds: ordered[0]! + shift,
+        endSeconds: ordered[ordered.length - 1]! + shift,
+      });
+    }
+  }
+  return trips;
+}
+
+/**
+ * The streetcar trips that are running at a wall clock instant. The times come
+ * from the agency timetable, so the vehicle on the map is where the schedule
+ * says it should be.
+ */
+export function qlineTripsAt(now = new Date()): QlineTrips {
+  const { ymd, seconds } = detroitNow(now);
+  const scheduled = servicesOn(ymd);
+  const serviceIds = scheduled.length
+    ? scheduled
+    : [patternServiceFor(ymd)].filter((id): id is string => Boolean(id));
+  if (!serviceIds.length) return { trips: [], source: 'none' };
+
+  const trips = [
+    ...serviceIds.flatMap((id) => tripsForService(id, 0)),
+    // Yesterday's service can run past midnight.
+    ...serviceIds.flatMap((id) => tripsForService(id, -86_400)),
+  ];
+  const running = trips.filter((trip) => seconds >= trip.startSeconds && seconds < trip.endSeconds);
+  return { trips: running, source: scheduled.length ? 'feed' : 'pattern' };
 }

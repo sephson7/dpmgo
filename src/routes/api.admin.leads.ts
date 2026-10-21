@@ -27,7 +27,10 @@ export const Route = createFileRoute('/api/admin/leads')({
         if (remaining === null) {
           return Response.json({ error: 'Not signed in.' }, { status: 401 });
         }
-        const [leads, assignments] = await Promise.all([listLeads(), listAssignments()]);
+        const [leads, assignments] = await Promise.all([
+          listLeads(context),
+          listAssignments(context),
+        ]);
         return Response.json({ leads, assignments });
       },
 
@@ -63,7 +66,7 @@ export const Route = createFileRoute('/api/admin/leads')({
         if (!leadId) {
           return Response.json({ error: 'A lead id is required.' }, { status: 400 });
         }
-        const leads = await listLeads();
+        const leads = await listLeads(context);
         const lead = leads.find((item) => item.id === leadId);
         if (!lead) {
           return Response.json({ error: 'Unknown lead.' }, { status: 404 });
@@ -71,7 +74,7 @@ export const Route = createFileRoute('/api/admin/leads')({
 
         const action = payload.action ?? 'approve';
         if (action === 'reject') {
-          const updated = await setLeadStatus(leadId, 'rejected');
+          const updated = await setLeadStatus(leadId, 'rejected', context);
           return Response.json({ ok: true, lead: updated });
         }
 
@@ -100,8 +103,8 @@ export const Route = createFileRoute('/api/admin/leads')({
           leadId,
           assignedAt: new Date().toISOString(),
         };
-        const saved = await assignSlot(assignment);
-        const updated = await setLeadStatus(leadId, 'approved');
+        const saved = await assignSlot(assignment, context);
+        const updated = await setLeadStatus(leadId, 'approved', context);
         return Response.json({ ok: true, lead: updated, assignment: saved });
       },
     },

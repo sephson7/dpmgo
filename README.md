@@ -73,6 +73,7 @@ consist is standing on the platform.
 ### 3. Station Infrastructure & Contextual Drawers
 - **People Mover Loop:** Maps all 13 official Detroit People Mover stations in the agency's counter-clockwise order — Times Square, Michigan, Fort/Cass, Huntington Place, Water Square, Financial District, Millender, Renaissance Center, Bricktown, Greektown, Cadillac Center, Broadway, Grand Circus Park. The loop runs in one direction only, so every route, dwell point and countdown follows that order.
 - **QLine Corridor:** Features fully integrated station drawers and localized dining spots tailored for the streetcar route. Operating hours, per-stop departure times, run times and the street alignment all come from the official QLINE GTFS feed, with the published hours as the fallback when the feed has no service for the date.
+- **The streetcar runs the published timetable.** The vehicle on the map is not a free running loop: its position comes from the agency's own schedule, so it leaves Congress Street on a published departure, calls at each stop at the published time and stands on the platform at Grand Boulevard on the published arrival. Every trip of the day is reconstructed from the feed's per-stop departure times, paired by direction, and the wall clock decides which trip is running. Because the feed publishes a finite calendar, the daily pattern is rolled forward once the calendar expires, so the streetcar keeps running the timetable the agency publishes rather than standing at the terminus.
 - **Contextual Drawers & Anchor Slots:** Tapping any station pin or list item slides up a glassmorphism bottom drawer displaying live status, walking metrics, verified local dining options with the two-slot anchor architecture (slot 1 annual, slot 2 rotating), nearby park-once garages, and the proximity "Set alarm" notification trigger.
 
 ### 3a. Front end structure
@@ -117,6 +118,7 @@ excluded from Prettier on purpose.
 - **Stripe Checkout:** The partner page embeds the Stripe pricing table and can also start a server priced Checkout Session. Slot 1 is sold on the annual plan only, slot 2 on either plan, and the server decides the price.
 - **Anchor Slots:** Slot 1 of Fort / Cass is held by Lafayette Coney Island; every other slot shows a "Claim Slot" call to action.
 - **Partner Admin:** `/admin` (linked from the app footer) signs in, lists every merchant intake submission, and approves or rejects leads. Approving a lead writes the anchor slot assignment, which the station drawer picks up immediately.
+- **The store is Cloudflare KV.** The leads and the slot assignments live in a KV namespace (`ANCHOR_STORE`), so an approval survives a restart and every isolate sees the same records. Each lead and each slot is a separate key, so two approvals never overwrite each other. Locally, and on a runtime without the binding, the store falls back to a JSON file and then to memory.
 
 ---
 
@@ -175,6 +177,27 @@ The credentials live in the secret store, never in the repository:
 After that, `/admin` signs in with the configured username and password and
 lists every merchant intake lead for approval. Approving a lead writes the
 anchor slot assignment, which the station drawer picks up immediately.
+
+#### Setting up the store
+
+The leads and the slot assignments live in a Cloudflare KV namespace. One time
+setup:
+
+```bash
+npm run setup:kv   # creates the namespace and records its id in .env.local
+npm run build      # binds the namespace into the generated Worker config
+```
+
+`npm run setup:kv` runs `wrangler kv namespace create ANCHOR_STORE` and writes
+the namespace id to the gitignored `.env.local` as
+`CLOUDFLARE_KV_ANCHOR_STORE_ID`. The build copies that id into
+`.output/server/wrangler.json` as the `ANCHOR_STORE` binding, so every deploy
+carries it. It needs a Wrangler login (`npx wrangler login`) or a
+`CLOUDFLARE_API_TOKEN` in the environment.
+
+Until the namespace is created the portal still works, but the records live in
+the runtime's memory and are lost on a restart. The local file fallback
+(`data/anchor-store.json`) keeps local development off the network.
 
 Ensure `mapbox-gl/dist/mapbox-gl.css` is properly imported in your project entry file.
 

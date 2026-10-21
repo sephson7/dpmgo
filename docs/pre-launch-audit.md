@@ -74,6 +74,28 @@ the app switches to real departures automatically.
 The QLINE feed is a static schedule. There is no GTFS-RT vehicle feed for either
 Detroit line, so the streetcar marker on the map remains a simulation.
 
+### The streetcar runs the published timetable
+
+The streetcar is no longer a free running cycle. Every trip of the day is
+reconstructed from the feed's own per-stop departure times: the times are split
+by direction, paired by trip index and laid out in the canonical station order
+(`src/data/transit.ts`). The wall clock then decides which trip is running and
+where along the corridor it is, so the vehicle on the map leaves Congress Street
+on a published departure, calls at each stop at the published time and stands at
+Grand Boulevard on the published arrival.
+
+Two details matter:
+
+- The feed lists the stops of a service **in the order that service runs**, and
+  that order differs between services (the weekday service starts at Grand
+  Boulevard, the Sunday service at Congress Street). The trips are therefore
+  indexed by the canonical station order, never by the feed's key order.
+- Once the feed's calendar expires, the **published daily pattern is rolled
+  forward**: the most recent recurring pattern for that weekday is used, so the
+  streetcar keeps running the timetable the agency publishes instead of standing
+  at the terminus. `qlineTripsAt()` reports which of the two it used
+  (`feed`, `pattern` or `none`).
+
 ---
 
 ## 3. Monetization: pricing, slots and the admin portal
@@ -142,6 +164,29 @@ cannot be reached. The session cookie is signed with `ADMIN_SESSION_SECRET`
 only, never with a value derived from the password, so a leaked password cannot
 be turned into a forged session.
 
+### The store is Cloudflare KV
+
+The leads and the slot assignments live in a **Workers KV namespace**, bound as
+`ANCHOR_STORE`:
+
+| | |
+| --- | --- |
+| `anchor:lead:<id>` | one merchant intake lead |
+| `anchor:assignment:<stationId>:<slot>` | one assigned anchor slot |
+
+KV was chosen over D1 because the data is a small document set that is read
+whole and written rarely: there are no queries that need a schema, no joins and
+no migrations to maintain. One key per record means two approvals never
+overwrite each other, and the app can evolve the records without a migration.
+Reads are served from a 20 second snapshot in the isolate, and writes go
+through the KV namespace and refresh that snapshot, so the operator's own list
+is never stale.
+
+`npm run setup:kv` creates the namespace and records its id in `.env.local`;
+the build copies the id into the generated Worker configuration as the binding,
+so every deploy carries it. Without the binding the store falls back to a JSON
+file and then to memory, so nothing breaks before the namespace exists.
+
 **Still open:** there is no refund path, no receipt email and no renewal handling
 for the rotating slot. The credentials are still one shared operator account and
 should be replaced by per-operator accounts before the portal carries real
@@ -157,17 +202,19 @@ customers.
 | Routing | `src/data/transit.test.ts` | hotel / Canada / shortcut / station targets, single-direction loop legs, QLINE corridor legs, Grand Circus transfer, GPS boarding, unknown-id fallback, zero-stop trip |
 | Fleet simulation | `src/data/trainSimulation.test.ts` | 14.5 min loop, 7.25 min headway, two two-car consists, dwell then move, bearing alignment, platform dwell points, arrival telemetry matches the drawn train, published speed and acceleration limits, moving-block separation, service-hours gate |
 | QLINE hours | `src/data/qlineSchedule.test.ts` | Mon–Sat 08:00–24:00, Sun 08:00–21:00, closed overnight, next-departure estimate |
-| QLINE motion | `src/data/qlineSimulation.test.ts` | vehicle paces the corridor, dwells, stays on Woodward, parks at the terminus |
+| QLINE timetable | `src/data/qlineSimulation.test.ts` | the trips of the day are the published ones, the times never go backwards along the route, nothing runs before the first departure or after the last |
+| QLINE motion | `src/data/qlineSimulation.test.ts` | the vehicle paces the corridor, leaves Congress Street on the published departure, stands at Grand Boulevard on the published arrival, runs the southbound back down Woodward, stays on Woodward and parks at the terminus while the line is closed |
 | Parking | `src/data/parking.test.ts` | every garage anchored to a station, walk order, park-once filtering |
 | Merchant intake | `src/data/merchantIntake.test.ts` | required fields, slot values, receipt id |
 | Stripe | `src/lib/stripe.test.ts` | slot/plan rules, published prices, price discovery, session creation, paid-session verification, plan mismatch flagging, Stripe failure handling |
 | Partner portal auth | `src/lib/adminAuth.test.ts` | the portal fails closed without secrets, credential checks, signed session round trip, forged and tampered tokens |
+| Partner portal store | `src/lib/anchorStore.test.ts` | the leads and the slots are written to the KV namespace under one key each, a status change is persisted, one slot per station, the records survive a restart of the runtime, and the local fallback still works without the binding |
 | Homepage layout | `src/routes/index.test.tsx` | the phone renders the Quick Routes menu and the bottom dock, the desktop renders the preset pills and the side directory, and the phone never mounts the desktop directory |
 | Home strip | `src/components/hud/HomeStrip.test.tsx` | the departure leads, the service state is reported when the line is closed, a partner only appears when its slot is filled, every item opens its station, and the strip rotates |
 
-Rows for `transit.test.ts`, `qlineSchedule.test.ts`, `qlineSimulation.test.ts`,
-`parking.test.ts`, `merchantIntake.test.ts` and `stripe.test.ts` describe suites
-that are **not in the repository yet** — the coverage is planned, not shipped.
+Rows for `transit.test.ts`, `parking.test.ts`, `merchantIntake.test.ts` and
+`stripe.test.ts` describe suites that are **not in the repository yet** — the
+coverage is planned, not shipped.
 
 ### Stylesheets
 
@@ -178,7 +225,7 @@ apply and is imported last, so its overrides always win. The duplicated Quick
 Navigation block and 65 rules for elements that no longer exist were removed,
 and the old `700px` tier was folded into `768px` to match the phone layout.
 
-`npx tsc --noEmit` is clean, `npx vitest run` is green (53 tests) and
+`npx tsc --noEmit` is clean, `npx vitest run` is green (61 tests) and
 `npx vite build` succeeds.
 
 ### Continuous integration
@@ -203,11 +250,11 @@ format check so they keep their own layout.
    a deployment secret, not only in `.env.local`. The local file is gitignored and
    was never committed. Also set `PUBLIC_APP_URL` so the redirect URLs point at
    the real domain.
-2. **No durable store on the edge runtime.** Anchors and leads are written to
-   `data/anchor-store.json` when the runtime has a filesystem, and to memory
-   otherwise. On Cloudflare Workers that means approvals are lost on a restart
-   and are not shared between instances. Bind a KV or D1 namespace and point
-   `src/lib/anchorStore.ts` at it.
+2. **Create the KV namespace.** The store is bound to a Workers KV namespace
+   (`ANCHOR_STORE`) and the code is in place, but the namespace has to be
+   created on the account before the approvals are durable: run
+   `npm run setup:kv`, then `npm run build` and redeploy. Until that happens the
+   Worker keeps the in-memory fallback and approvals are lost on a restart.
 3. **Slot enforcement lives in code, not in the admin UI.** The admin portal can
    assign a slot, but there is no expiry handling for the rotating slot and no
    check that a merchant holds only one slot at a time.
@@ -218,10 +265,11 @@ format check so they keep their own layout.
 
 ### 5.2 Should fix before launch
 
-5. **The QLINE feed is stale.** Its calendar ends 2025-12-31, so the app falls back to
-   the published hours for every 2026 date. Ask Trillium/RTA for a 2026 calendar, then
-   run `npm run build:qline`. Until then the drawer shows published hours rather than
-   a timetable for QLINE stops.
+5. **The QLINE feed is stale.** Its calendar ends 2025-12-31, so the app rolls the
+   published daily pattern forward for every 2026 date: the streetcar and the
+   per-stop times follow the pattern the agency published, but the feed itself
+   cannot confirm the dates. Ask Trillium/RTA for a 2026 calendar, then run
+   `npm run build:qline` and the app switches to the dated feed automatically.
 6. **Restaurant photography is incomplete.** 23 of 32 venues have a local photo in
    `src/assets/dining/`. Missing: `brushpark-brunch`, `grey-ghost`, `bar-pigalle`,
    `bodega`, `jolly-pumpkin`, `chartreuse`, `whitney`, `baobab-fare`, `marrow`.
@@ -256,13 +304,10 @@ format check so they keep their own layout.
     does a parking distance sweep. Both are small but could be memoised per
     station id.
 14. The 3D parking layer has no extrusion; the garage pins are flat circles.
-15. The QLINE model runs a single vehicle pair; the real fleet runs four
-    streetcars, so the corridor period could be modelled from the timetable.
-16. The QLINE streetcar is still a free-running cycle. Unlike the People
-    Mover, its position is not anchored to the published corridor timetable, so
-    the drawn streetcar and the published departure times are independent. The
-    People Mover fleet is anchored to its service window and its readout shares
-    that clock, so the two always agree.
+15. The QLINE streetcar is anchored to the published timetable, but the drawer's
+    "next stop" readout still shows the terminus wrap. The real fleet runs four
+    streetcars; the timetable now says which of them is running, so the marker
+    could be labelled with the trip it represents.
 
 ---
 
@@ -278,6 +323,7 @@ format check so they keep their own layout.
 | `PUBLIC_APP_URL` | redirect URLs | recommended |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | `/admin` | yes (the portal is closed without them) |
 | `ADMIN_SESSION_SECRET` | session cookie signing | yes (the portal is closed without it) |
+| `CLOUDFLARE_KV_ANCHOR_STORE_ID` | the partner portal store | yes for a durable store (set by `npm run setup:kv`) |
 | `MERCHANT_INTAKE_WEBHOOK_URL` | `/api/merchant-intake` | optional |
 
 ---
@@ -298,6 +344,11 @@ format check so they keep their own layout.
   published 14.5 minute circuit and 15 second dwell are the schedule, and the
   38 mph top speed and 3.5 ft/s² acceleration are the limits the fleet is held to.
 - Both lines stay gated by their published service windows.
+- The QLINE streetcar is placed by the published timetable, never by a free
+  running cycle. The trips are indexed by the canonical station order, because
+  the feed lists the stops of a service in the order that service runs.
+- The partner portal records live in the KV namespace, one key per lead and one
+  key per slot, so two approvals never overwrite each other.
 - Every station drawer shows exactly two sponsor slots, and slot holders never
   repeat in the standard restaurant list.
 - Prices are decided on the server. The browser never sets an amount.

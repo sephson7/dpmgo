@@ -1,10 +1,10 @@
 import { qlineNorthboundShape, qlineSouthboundShape } from './qlineShape';
-import { qlineSegmentSeconds } from './qlineSchedule';
+import { qlineSegmentSeconds, qlineTripsAt, type QlineTrip } from './qlineSchedule';
+import { detroitNow } from './detroitTime';
 import { qlineStations, type Coordinate } from './transit';
 
-// Illustrative streetcar movement along the Woodward corridor, not live positions.
-// Geometry and run times come from the official QLINE GTFS feed.
-export const QLINE_DWELL_MS = 15000;
+// The streetcar follows the agency timetable: the vehicle is placed where the
+// published schedule says it should be at that moment.
 
 const distance = (a: Coordinate, b: Coordinate) =>
   Math.hypot((b[0] - a[0]) * Math.cos((a[1] * Math.PI) / 180), b[1] - a[1]);
@@ -17,7 +17,8 @@ type Segment = {
   points: Coordinate[];
   lengths: number[];
   length: number;
-  durationMs: number;
+  /** Scheduled run time between the two stops, in seconds. */
+  durationSeconds: number | null;
 };
 
 type Stop = {
@@ -32,11 +33,11 @@ const stationOrder = qlineStations.map((station) => station.id);
 const nearestIndex = (shape: Coordinate[], coordinate: Coordinate): number => {
   let best = 0;
   let bestDistance = Infinity;
-  shape.forEach((point, index) => {
+  shape.forEach((point, i) => {
     const d = distance(point, coordinate);
     if (d < bestDistance) {
       bestDistance = d;
-      best = index;
+      best = i;
     }
   });
   return best;
@@ -60,19 +61,13 @@ function buildSegments(shape: Coordinate[], order: string[], direction: number):
       index = (index + 1) % shape.length;
     }
     const lengths = points.slice(1).map((point, i) => distance(points[i] ?? point, point));
-    const length = lengths.reduce((sum, n) => sum + n, 0);
-    const scheduled = qlineSegmentSeconds(direction, order[i] ?? '', order[i + 1] ?? '');
     segments.push({
       fromStationId: order[i] ?? '',
       toStationId: order[i + 1] ?? '',
       points,
       lengths,
-      length,
-      // The feed measures a leg from the departure of one stop to the
-      // departure of the next, so one dwell is already inside the number.
-      // Only the running time belongs to the segment, otherwise every stop
-      // is paid for twice and the streetcar runs slower than the timetable.
-      durationMs: Math.max(30_000, ((scheduled ?? 120) - QLINE_DWELL_MS / 1000) * 1000),
+      length: lengths.reduce((sum, n) => sum + n, 0),
+      durationSeconds: qlineSegmentSeconds(direction, order[i] ?? '', order[i + 1] ?? ''),
     });
   }
   return segments;
@@ -81,73 +76,70 @@ function buildSegments(shape: Coordinate[], order: string[], direction: number):
 const northSegments = buildSegments(qlineNorthboundShape, stationOrder, 1);
 const southSegments = buildSegments(qlineSouthboundShape, [...stationOrder].reverse(), 0);
 
-/** One full circuit: Congress St up to Grand Blvd and back down. */
-const cycleSegments: Segment[] = [...northSegments, ...southSegments];
-const northStops = stationOrder.map((id) => ({
+const northStops: Stop[] = stationOrder.map((id) => ({
   stationId: id,
   coordinate: stationCoordinate.get(id) ?? [-83.0458, 42.3314],
-  dwellMs: QLINE_DWELL_MS,
+  dwellMs: 0,
 }));
 // The southbound list ends on Congress St, which is where the cycle starts,
 // so it is not repeated as a second stop.
-const cycleStops: Stop[] = [...northStops, ...[...northStops].reverse().slice(1)];
-const cycleMs =
-  cycleSegments.reduce((sum, segment) => sum + segment.durationMs, 0) +
-  cycleStops.reduce((sum, stop) => sum + stop.dwellMs, 0);
+const southStops: Stop[] = [...northStops].reverse().slice(1);
 
 const bearingBetween = (a: Coordinate, b: Coordinate): number =>
   (Math.atan2((b[0] - a[0]) * Math.cos((a[1] * Math.PI) / 180), b[1] - a[1]) * 180) / Math.PI;
 
-/**
- * Streetcar position. The vehicle runs the corridor from Congress Street to
- * Grand Boulevard and back, dwelling at every stop and travelling at the run
- * times published in the GTFS feed.
- */
-export function simulatedQlineTrain(elapsed: number): SimulatedStreetcar {
-  if (cycleMs <= 0) return parkedQlineTrain();
-  const phase = ((elapsed % cycleMs) + cycleMs) % cycleMs;
-  let remaining = phase;
-
-  for (let i = 0; i < cycleStops.length; i += 1) {
-    const stop = cycleStops[i]!;
-    if (remaining < stop.dwellMs) {
-      // Dwelling: hold the bearing of the segment that brought the car in.
-      const incoming = cycleSegments[(i - 1 + cycleSegments.length) % cycleSegments.length];
-      const last = incoming?.points[incoming.points.length - 1];
-      const before = incoming?.points[incoming.points.length - 2] ?? last;
+/** A point a fraction of the way along a segment. */
+function interpolate(segment: Segment, progress: number): SimulatedStreetcar | null {
+  const target = segment.length * progress;
+  let covered = 0;
+  for (let i = 0; i < segment.lengths.length; i += 1) {
+    const length = segment.lengths[i] ?? 0;
+    if (covered + length >= target) {
+      const local = length ? (target - covered) / length : 0;
+      const a = segment.points[i] ?? segment.points[0] ?? [-83.0458, 42.3314];
+      const b = segment.points[i + 1] ?? a;
       return {
-        coordinate: [stop.coordinate[0], stop.coordinate[1]],
-        bearing: last && before ? bearingBetween(before, last) : 0,
+        coordinate: [a[0] + (b[0] - a[0]) * local, a[1] + (b[1] - a[1]) * local],
+        bearing: bearingBetween(a, b),
       };
     }
-    remaining -= stop.dwellMs;
-
-    const segment = cycleSegments[i];
-    if (!segment) break;
-    if (remaining < segment.durationMs) {
-      const target = (segment.length * remaining) / segment.durationMs;
-      let covered = 0;
-      for (let s = 0; s < segment.lengths.length; s += 1) {
-        const length = segment.lengths[s] ?? 0;
-        if (covered + length >= target) {
-          const progress = length ? (target - covered) / length : 0;
-          const a = segment.points[s] ?? segment.points[0] ?? [-83.0458, 42.3314];
-          const b = segment.points[s + 1] ?? a;
-          return {
-            coordinate: [a[0] + (b[0] - a[0]) * progress, a[1] + (b[1] - a[1]) * progress],
-            bearing: bearingBetween(a, b),
-          };
-        }
-        covered += length;
-      }
-      const last = segment.points[segment.points.length - 1] ?? [-83.0458, 42.3314];
-      const before = segment.points[segment.points.length - 2] ?? last;
-      return { coordinate: [last[0], last[1]], bearing: bearingBetween(before, last) };
-    }
-    remaining -= segment.durationMs;
+    covered += length;
   }
+  const last = segment.points[segment.points.length - 1] ?? [-83.0458, 42.3314];
+  const before = segment.points[segment.points.length - 2] ?? last;
+  return { coordinate: [last[0], last[1]], bearing: bearingBetween(before, last) };
+}
 
-  return parkedQlineTrain();
+/** Where a scheduled trip is at a given second of the service day. */
+function positionOnTrip(trip: QlineTrip, seconds: number): SimulatedStreetcar | null {
+  const segments = trip.direction === 1 ? northSegments : southSegments;
+  for (let i = 0; i < trip.stops.length - 1; i += 1) {
+    const from = trip.stops[i]!;
+    const to = trip.stops[i + 1]!;
+    if (seconds < from) break;
+    if (seconds >= to) continue;
+    const segment = segments[i];
+    if (!segment) return null;
+    const progress = (seconds - from) / Math.max(1, to - from);
+    return interpolate(segment, Math.min(1, Math.max(0, progress)));
+  }
+  return null;
+}
+
+/**
+ * The streetcars running at a wall clock instant, taken from the published
+ * timetable. When the line is closed there is nothing to draw and the caller
+ * parks the vehicle at the terminus.
+ */
+export function scheduledQlineTrains(now = new Date()): SimulatedStreetcar[] {
+  const { seconds } = detroitNow(now);
+  const { trips } = qlineTripsAt(now);
+  const trains: SimulatedStreetcar[] = [];
+  for (const trip of trips) {
+    const position = positionOnTrip(trip, seconds);
+    if (position) trains.push(position);
+  }
+  return trains;
 }
 
 /** Streetcar parked at the southern terminus, used while the line is closed. */
@@ -157,10 +149,12 @@ export function parkedQlineTrain(): SimulatedStreetcar {
   return { coordinate: [coordinate[0], coordinate[1]], bearing: 0 };
 }
 
-export const simulatedQlineTrains = (elapsed: number): SimulatedStreetcar[] => [
-  simulatedQlineTrain(elapsed),
-  simulatedQlineTrain(elapsed + cycleMs / 2),
-];
+/** The stops in each direction, kept for the drawer and the timetable. */
+export const QLINE_STOPS = { north: northStops, south: southStops };
 
-/** Length of one full corridor circuit, in milliseconds. */
-export const QLINE_CYCLE_MS = cycleMs;
+/** The length of one full corridor cycle, in milliseconds. */
+export const QLINE_CYCLE_MS =
+  (northSegments.reduce((sum, segment) => sum + (segment.durationSeconds ?? 0), 0) +
+    southSegments.reduce((sum, segment) => sum + (segment.durationSeconds ?? 0), 0) +
+    (northStops.length + southStops.length) * 15) *
+  1000;
