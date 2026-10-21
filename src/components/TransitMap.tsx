@@ -274,7 +274,10 @@ export default function TransitMap({
           })),
         };
       };
-      map.addSource('mover-vehicle', { type: 'geojson', data: moverData(0, true) });
+      map.addSource('mover-vehicle', {
+        type: 'geojson',
+        data: moverData(moverFleetElapsed(), peopleMoverServiceRunning()),
+      });
 
       const pixels = new Uint8Array(20 * 10 * 4);
       for (let y = 1; y < 9; y += 1) {
@@ -515,6 +518,11 @@ export default function TransitMap({
       let lastUpdate = 0;
       let moverRunning = peopleMoverServiceRunning();
       let lastServiceCheck = 0;
+      // Where the vehicles are comes from the published timetable, so the
+      // positions keep tracking the clock even when the rider asked for less
+      // motion. A reduced motion preference only slows the refresh down, which
+      // leaves the vehicles standing still instead of gliding along the route.
+      const updateMs = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1000 : 50;
 
       const animate = (time: number) => {
         if (time - lastServiceCheck >= 1000) {
@@ -524,7 +532,7 @@ export default function TransitMap({
         // The People Mover reads the shared fleet clock, so the drawn vehicles
         // and the arrival countdown can never drift apart. The streetcar reads
         // the wall clock and is placed by the published timetable.
-        if (time - lastUpdate > 50) {
+        if (time - lastUpdate > updateMs) {
           const moverElapsed = moverFleetElapsed();
           (map.getSource('mover-vehicle') as mapboxgl.GeoJSONSource)?.setData(
             moverData(moverElapsed, moverRunning),
@@ -537,8 +545,7 @@ export default function TransitMap({
         frame = requestAnimationFrame(animate);
       };
 
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-        frame = requestAnimationFrame(animate);
+      frame = requestAnimationFrame(animate);
 
       // Initial Visibility
       for (const id of [

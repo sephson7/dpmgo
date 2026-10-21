@@ -24,7 +24,7 @@ import {
   type StationSlot,
 } from '@/data/transit';
 import { nearbyParking } from '@/data/parking';
-import { qlineStatus, qlineStationSchedule, QLINE_HEADWAY_MINUTES } from '@/data/qlineSchedule';
+import { qlineStatus, qlineStationSchedule } from '@/data/qlineSchedule';
 import { stationSchedule } from '@/data/schedule';
 import { getVenueLogo } from '@/components/venueLogo';
 import { useAnchorSlots } from '@/hooks/useAnchorSlots';
@@ -164,6 +164,14 @@ export default function StationDrawer({
     () => (isQLine ? qlineStationSchedule(station.id, now) : []),
     [isQLine, station.id, now],
   );
+  // Where the times came from: the agency's dated schedule, the daily pattern
+  // rolled forward past the end of the feed calendar, or the published hours.
+  const qlineSourceLabel =
+    qline.window.source === 'feed'
+      ? 'agency GTFS'
+      : qline.window.source === 'pattern'
+        ? 'agency GTFS, rolled forward'
+        : 'published hours';
 
   return (
     <div className="detail-content station-drawer-v2">
@@ -294,7 +302,7 @@ export default function StationDrawer({
                 </div>
                 <div className="timetable-time-col">
                   <div className="timetable-primary-time">
-                    {qline.running ? `Every ${QLINE_HEADWAY_MINUTES} Min` : 'Service Closed'}
+                    {qline.running ? qline.label : 'Service Closed'}
                   </div>
                   <div className="timetable-day-note">
                     {qline.running
@@ -316,7 +324,8 @@ export default function StationDrawer({
                     {qline.window.isSunday
                       ? 'Sunday service hours'
                       : 'Monday to Saturday service hours'}
-                    {qline.window.fromFeed ? ' · agency GTFS' : ' · published hours'}
+                    {' · '}
+                    {qlineSourceLabel}
                   </div>
                 </div>
                 <div className="timetable-status-tag">FREE</div>

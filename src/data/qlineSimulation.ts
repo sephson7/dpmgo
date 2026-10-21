@@ -1,5 +1,5 @@
 import { qlineNorthboundShape, qlineSouthboundShape } from './qlineShape';
-import { qlineSegmentSeconds, qlineTripsAt, type QlineTrip } from './qlineSchedule';
+import { qlineTripsAt, type QlineTrip } from './qlineSchedule';
 import { detroitNow } from './detroitTime';
 import { qlineStations, type Coordinate } from './transit';
 
@@ -17,14 +17,6 @@ type Segment = {
   points: Coordinate[];
   lengths: number[];
   length: number;
-  /** Scheduled run time between the two stops, in seconds. */
-  durationSeconds: number | null;
-};
-
-type Stop = {
-  stationId: string;
-  coordinate: Coordinate;
-  dwellMs: number;
 };
 
 const stationCoordinate = new Map(qlineStations.map((station) => [station.id, station.coordinate]));
@@ -44,7 +36,7 @@ const nearestIndex = (shape: Coordinate[], coordinate: Coordinate): number => {
 };
 
 /** Builds the segments between consecutive stations along one direction shape. */
-function buildSegments(shape: Coordinate[], order: string[], direction: number): Segment[] {
+function buildSegments(shape: Coordinate[], order: string[]): Segment[] {
   const indices = order.map((id) =>
     nearestIndex(shape, stationCoordinate.get(id) ?? shape[0] ?? [-83.0458, 42.3314]),
   );
@@ -67,23 +59,13 @@ function buildSegments(shape: Coordinate[], order: string[], direction: number):
       points,
       lengths,
       length: lengths.reduce((sum, n) => sum + n, 0),
-      durationSeconds: qlineSegmentSeconds(direction, order[i] ?? '', order[i + 1] ?? ''),
     });
   }
   return segments;
 }
 
-const northSegments = buildSegments(qlineNorthboundShape, stationOrder, 1);
-const southSegments = buildSegments(qlineSouthboundShape, [...stationOrder].reverse(), 0);
-
-const northStops: Stop[] = stationOrder.map((id) => ({
-  stationId: id,
-  coordinate: stationCoordinate.get(id) ?? [-83.0458, 42.3314],
-  dwellMs: 0,
-}));
-// The southbound list ends on Congress St, which is where the cycle starts,
-// so it is not repeated as a second stop.
-const southStops: Stop[] = [...northStops].reverse().slice(1);
+const northSegments = buildSegments(qlineNorthboundShape, stationOrder);
+const southSegments = buildSegments(qlineSouthboundShape, [...stationOrder].reverse());
 
 const bearingBetween = (a: Coordinate, b: Coordinate): number =>
   (Math.atan2((b[0] - a[0]) * Math.cos((a[1] * Math.PI) / 180), b[1] - a[1]) * 180) / Math.PI;
@@ -148,13 +130,3 @@ export function parkedQlineTrain(): SimulatedStreetcar {
   const coordinate = terminus?.coordinate ?? [-83.0458, 42.3314];
   return { coordinate: [coordinate[0], coordinate[1]], bearing: 0 };
 }
-
-/** The stops in each direction, kept for the drawer and the timetable. */
-export const QLINE_STOPS = { north: northStops, south: southStops };
-
-/** The length of one full corridor cycle, in milliseconds. */
-export const QLINE_CYCLE_MS =
-  (northSegments.reduce((sum, segment) => sum + (segment.durationSeconds ?? 0), 0) +
-    southSegments.reduce((sum, segment) => sum + (segment.durationSeconds ?? 0), 0) +
-    (northStops.length + southStops.length) * 15) *
-  1000;

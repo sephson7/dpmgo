@@ -386,7 +386,6 @@ export const qlineStations: [Station, ...Station[]] = [
   },
 ];
 
-export const qlineStops = qlineStations.map((s) => ({ name: s.name, coordinate: s.coordinate }));
 export const allTransitStations: Station[] = [...peopleMoverStations, ...qlineStations];
 
 const stationsById = new Map<string, Station>(
@@ -451,11 +450,6 @@ export function stationSlotAssignments(stationId: string): {
     slot1: stationSlots.find((s) => s.stationId === stationId && s.slot === 1) ?? null,
     slot2: stationSlots.find((s) => s.stationId === stationId && s.slot === 2) ?? null,
   };
-}
-
-/** Slot and rotation label for a sponsored place, if it holds one. */
-export function sponsorSlotForPlace(placeId: string): StationSlot | undefined {
-  return slotByPlaceId.get(placeId);
 }
 
 const LATE_NIGHT_PLACE_IDS = new Set([

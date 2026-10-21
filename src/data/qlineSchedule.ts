@@ -6,12 +6,10 @@ import { qlineStations } from './transit';
  * QLINE schedule data generated from the official GTFS feed.
  * https://data.trilliumtransit.com/gtfs/qline-mi-us/qline-mi-us.zip
  *
- * The feed is the authority for scheduled departures. When the bundled feed
- * has no service for a given date (its calendar is finite), the app falls
- * back to the published operating hours instead of showing stale times.
+ * The feed is the authority for scheduled departures. Its calendar is finite,
+ * so once it has expired the published daily pattern for that weekday is
+ * rolled forward, and every reader of the schedule follows that one timetable.
  */
-type FeedSegment = { direction: number; from: string; to: string; seconds: number };
-
 type Feed = {
   source: string;
   generatedAt: string;
@@ -19,7 +17,6 @@ type Feed = {
   exceptions: { id: string; date: string; type: number }[];
   departures: Record<string, Record<string, number[]>>;
   directions: Record<string, Record<string, number[]>>;
-  segments: FeedSegment[];
   headwayMinutes: Record<string, { min: number; max: number; median: number }>;
 };
 
@@ -38,8 +35,8 @@ export const QLINE_HOURS = {
 /** The published headway is "every 15 minutes or less". */
 export const QLINE_HEADWAY_MINUTES = 15;
 
-export const QLINE_FEED_SOURCE = feed.source;
-export const QLINE_FEED_GENERATED_AT = feed.generatedAt;
+/** Where the times for a date come from. */
+export type QlineScheduleSource = 'feed' | 'pattern' | 'published';
 
 export type QlineWindow = {
   startMinutes: number;
@@ -47,8 +44,8 @@ export type QlineWindow = {
   isSunday: boolean;
   opensAt: string;
   closesAt: string;
-  /** True when the numbers come from the GTFS feed rather than the published hours. */
-  fromFeed: boolean;
+  /** Whether the numbers come from the agency timetable or the published hours. */
+  source: QlineScheduleSource;
 };
 
 function servicesOn(ymd: string): string[] {
@@ -79,19 +76,36 @@ function serviceSeconds(serviceIds: string[]): number[] {
   return seconds;
 }
 
-/** True when the bundled feed has scheduled service on the given date. */
-export function qlineFeedCoversDate(now = new Date()): boolean {
-  const { ymd } = detroitNow(now);
-  return servicesOn(ymd).length > 0;
+/** The last date the bundled feed's calendar covers. */
+const feedCalendarEnd = feed.calendar.reduce(
+  (latest, entry) => (entry.end > latest ? entry.end : latest),
+  '',
+);
+
+/**
+ * The service that runs on a date. The feed's calendar is finite, so once it
+ * has expired the published daily pattern for that weekday is rolled forward
+ * and the agency timetable keeps driving the map, the drawer and the status
+ * readout alike.
+ */
+function effectiveService(ymd: string): { ids: string[]; source: 'feed' | 'pattern' } | null {
+  const dated = servicesOn(ymd);
+  if (dated.length) return { ids: dated, source: 'feed' };
+  if (ymd <= feedCalendarEnd) return null;
+  const pattern = patternServiceFor(ymd);
+  return pattern ? { ids: [pattern], source: 'pattern' } : null;
 }
 
-export function qlineServiceWindow(now = new Date()): QlineWindow {
-  const { ymd, seconds, weekday } = detroitNow(now);
-  const isSunday = weekday === 6;
-  const services = servicesOn(ymd);
-  const scheduled = serviceSeconds(services);
+/**
+ * The operating window of the line on a date. The agency timetable wins when
+ * it has one, so the window always matches the vehicle drawn on the map.
+ */
+function windowFor(ymd: string): QlineWindow {
+  const isSunday = weekdayInDetroit(ymd) === 6;
+  const service = effectiveService(ymd);
+  const scheduled = service ? serviceSeconds(service.ids) : [];
 
-  if (scheduled.length > 0) {
+  if (service && scheduled.length > 0) {
     const start = Math.min(...scheduled);
     const end = Math.max(...scheduled);
     return {
@@ -100,7 +114,7 @@ export function qlineServiceWindow(now = new Date()): QlineWindow {
       isSunday,
       opensAt: formatClockMinutes(start / 60),
       closesAt: formatClockMinutes(end / 60),
-      fromFeed: true,
+      source: service.source,
     };
   }
 
@@ -111,37 +125,37 @@ export function qlineServiceWindow(now = new Date()): QlineWindow {
     isSunday,
     opensAt: formatClockMinutes(hours.startMinutes),
     closesAt: formatClockMinutes(hours.endMinutes),
-    fromFeed: false,
+    source: 'published',
   };
+}
+
+export function qlineServiceWindow(now = new Date()): QlineWindow {
+  return windowFor(detroitNow(now).ymd);
 }
 
 /** True while the streetcar is running, using Detroit local time. */
 export function qlineServiceRunning(now = new Date()): boolean {
   const { ymd, seconds } = detroitNow(now);
-  // Yesterday's service can run past midnight.
+  // A service day can run past midnight, so yesterday's service still counts.
   for (const offset of [-1, 0]) {
-    const day = shiftDate(ymd, offset);
-    const services = servicesOn(day);
-    if (services.length === 0) continue;
-    const scheduled = serviceSeconds(services);
+    const service = effectiveService(shiftDate(ymd, offset));
+    if (!service) continue;
+    const scheduled = serviceSeconds(service.ids);
     if (scheduled.length === 0) continue;
     const start = Math.min(...scheduled);
     const end = Math.max(...scheduled);
     const time = seconds - offset * 86400;
     if (time >= start && time < end) return true;
   }
-  // The feed calendar is finite and ends 2025-12-31. When it has no service
-  // for the date, the published operating hours are the schedule, so the
-  // streetcar still runs. Without this the vehicle stays parked all year.
-  const window = qlineServiceWindow(now);
-  const minutes = seconds / 60;
-  return minutes >= window.startMinutes && minutes < window.endMinutes;
+  return false;
 }
 
 /** Scheduled headway for the active service, from the feed. */
 function feedHeadway(now = new Date()): { min: number; max: number; median: number } | null {
   const { ymd } = detroitNow(now);
-  for (const serviceId of servicesOn(ymd)) {
+  const service = effectiveService(ymd);
+  if (!service) return null;
+  for (const serviceId of service.ids) {
     const headway = feed.headwayMinutes[serviceId];
     if (headway) return headway;
   }
@@ -152,39 +166,47 @@ export type QlineStatus = {
   running: boolean;
   /** Minutes until the next departure, or null when the line is closed. */
   minutesToNext: number | null;
-  /** "EVERY 6–9 MIN" from the feed, or the published headway. */
+  /** "EVERY 6–9 MIN" from the agency timetable, or the published headway. */
   label: string;
   window: QlineWindow;
   nextDepartureLabel: string;
 };
 
 /**
- * Live status for the QLINE. Arrivals come from the scheduled departures
- * when the feed covers the date, and from the published headway otherwise.
+ * Live status for the QLINE. The running state, the next departure and the
+ * headway all come from the agency timetable for the date, so the readout and
+ * the vehicle on the map can never disagree.
  */
 export function qlineStatus(now = new Date()): QlineStatus {
-  const { seconds } = detroitNow(now);
+  const { ymd, seconds } = detroitNow(now);
   const window = qlineServiceWindow(now);
   const minutes = seconds / 60;
   const headway = feedHeadway(now);
 
-  if (minutes < window.startMinutes) {
-    return {
-      running: false,
-      minutesToNext: Math.ceil(window.startMinutes - minutes),
-      label: 'CLOSED',
-      window,
-      nextDepartureLabel: `OPENS ${window.opensAt}`,
-    };
-  }
-  if (minutes >= window.endMinutes) {
-    const untilOpen = 24 * 60 - minutes + window.startMinutes;
+  if (!qlineServiceRunning(now)) {
+    // The agency published no timetable for this date, so there is no
+    // departure to wait for and the vehicle stays at the terminus.
+    if (window.source === 'published') {
+      return {
+        running: false,
+        minutesToNext: null,
+        label: 'CLOSED',
+        window,
+        nextDepartureLabel: 'NO TIMETABLE PUBLISHED',
+      };
+    }
+    // Between services: the line opens again at the start of the next one.
+    const tomorrow = windowFor(shiftDate(ymd, 1));
+    const opensToday = minutes < window.startMinutes;
+    const untilOpen = opensToday
+      ? window.startMinutes - minutes
+      : 24 * 60 - minutes + tomorrow.startMinutes;
     return {
       running: false,
       minutesToNext: Math.ceil(untilOpen),
       label: 'CLOSED',
       window,
-      nextDepartureLabel: `OPENS ${window.opensAt}`,
+      nextDepartureLabel: `OPENS ${opensToday ? window.opensAt : tomorrow.opensAt}`,
     };
   }
 
@@ -228,15 +250,15 @@ export type QlineDeparture = {
 
 /**
  * The next scheduled departures at a station. Returns an empty list when the
- * bundled feed has no service for the date.
+ * agency has no timetable for the date.
  */
 export function qlineStationSchedule(stationId: string, now = new Date()): QlineDeparture[] {
   const { ymd, seconds } = detroitNow(now);
-  const services = servicesOn(ymd);
-  if (services.length === 0) return [];
+  const service = effectiveService(ymd);
+  if (!service) return [];
 
   const entries: { seconds: number; direction: number }[] = [];
-  for (const serviceId of services) {
+  for (const serviceId of service.ids) {
     const times = feed.departures[serviceId]?.[stationId];
     const directions = feed.directions[serviceId]?.[stationId];
     if (!times) continue;
@@ -260,14 +282,6 @@ function nextScheduledDeparture(stationId: string, now = new Date()): { minutes:
   const upcoming = qlineStationSchedule(stationId, now);
   if (upcoming.length === 0) return null;
   return { minutes: upcoming[0]!.minutes };
-}
-
-/** Scheduled run time between two stations, in seconds. */
-export function qlineSegmentSeconds(direction: number, from: string, to: string): number | null {
-  const segment = feed.segments.find(
-    (entry) => entry.direction === direction && entry.from === from && entry.to === to,
-  );
-  return segment ? segment.seconds : null;
 }
 
 /* ------------------------------------------------------------------ trips */
@@ -321,7 +335,7 @@ function patternServiceFor(ymd: string): string | null {
   );
   if (!candidates.length) return null;
   // The most recent pattern wins.
-  return [...candidates].sort((a, b) => a.end.localeCompare(b.end))[candidates.length - 1]!.id;
+  return [...candidates].sort((a, b) => a.end.localeCompare(b.end)).at(-1)!.id;
 }
 
 /** The trips of one service, shifted into the current service day. */
@@ -390,17 +404,16 @@ function tripsForService(serviceId: string, shift: number): QlineTrip[] {
  */
 export function qlineTripsAt(now = new Date()): QlineTrips {
   const { ymd, seconds } = detroitNow(now);
-  const scheduled = servicesOn(ymd);
-  const serviceIds = scheduled.length
-    ? scheduled
-    : [patternServiceFor(ymd)].filter((id): id is string => Boolean(id));
-  if (!serviceIds.length) return { trips: [], source: 'none' };
+  const today = effectiveService(ymd);
+  // Yesterday's service can run past midnight, so its tail is what is still
+  // on the corridor early in the morning.
+  const yesterday = effectiveService(shiftDate(ymd, -1));
+  if (!today && !yesterday) return { trips: [], source: 'none' };
 
   const trips = [
-    ...serviceIds.flatMap((id) => tripsForService(id, 0)),
-    // Yesterday's service can run past midnight.
-    ...serviceIds.flatMap((id) => tripsForService(id, -86_400)),
+    ...(today?.ids ?? []).flatMap((id) => tripsForService(id, 0)),
+    ...(yesterday?.ids ?? []).flatMap((id) => tripsForService(id, -86_400)),
   ];
   const running = trips.filter((trip) => seconds >= trip.startSeconds && seconds < trip.endSeconds);
-  return { trips: running, source: scheduled.length ? 'feed' : 'pattern' };
+  return { trips: running, source: today?.source ?? yesterday?.source ?? 'none' };
 }

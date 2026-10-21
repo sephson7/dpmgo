@@ -16,7 +16,6 @@ import { peopleMoverShape, peopleMoverStations, type Coordinate, type Station } 
    modelled with the published acceleration and top speed as limits and the
    timetable as the schedule it has to keep.
    ------------------------------------------------------------------------ */
-export const MOVER_TRACK_LENGTH_FT = 15523; // 2.94 miles of elevated guideway
 export const MOVER_LOOP_MS = 14.5 * 60 * 1000; // 14.5 minutes per circuit
 export const MOVER_DWELL_MS = 15000; // 15 seconds of dwell at a platform
 export const MOVER_HEADWAY_MS = MOVER_LOOP_MS / 2; // 7:15 between two-car consists
@@ -371,19 +370,6 @@ export const simulatedMoverPosition = (elapsed: number): Coordinate =>
 export const simulatedMoverPositions = (elapsed: number): Coordinate[] =>
   simulatedMoverTrains(elapsed).map((train) => train.coordinate);
 
-/**
- * Trains parked on a platform. Used while the line is closed for service so
- * the map never shows a vehicle stranded between stations.
- */
-export function parkedMoverTrain(elapsed: number): SimulatedTrain {
-  const phase = ((elapsed % MOVER_LOOP_MS) + MOVER_LOOP_MS) % MOVER_LOOP_MS;
-  const entry = entryAtTime(phase);
-  const index = entry?.legIndex ?? 0;
-  const stop = loopStops[index]!;
-  const platform = stop.platform;
-  return { coordinate: [platform[0], platform[1]], bearing: 0 };
-}
-
 export const parkedMoverTrains = (elapsed: number): SimulatedTrain[] => {
   const cars: SimulatedTrain[] = [];
   for (const offset of [0, MOVER_HEADWAY_MS]) {
@@ -399,7 +385,7 @@ export const parkedMoverTrains = (elapsed: number): SimulatedTrain[] => {
 };
 
 /** Loop position of a station, used to keep arrival telemetry in step with the drawn train. */
-export function moverLoopIndex(stationId: string): number {
+function moverLoopIndex(stationId: string): number {
   return loopStops.findIndex((stop) => stop.station.id === stationId);
 }
 

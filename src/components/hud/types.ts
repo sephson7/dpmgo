@@ -1,6 +1,5 @@
 import type { DestinationShortcut, HowDoIFlow, Station } from '@/data/transit';
 import type { StationSchedule } from '@/data/schedule';
-import type { QlineStatus } from '@/data/qlineSchedule';
 
 /** Which transit layers the map is drawing. */
 export type MapLayers = {
@@ -10,14 +9,12 @@ export type MapLayers = {
 };
 
 /**
- * Everything the home strip needs: the station it is about, its published
- * timetable and the state of the two lines.
+ * Everything the home strip needs: the station it is about and its published
+ * timetable.
  */
 export type TickerState = {
   station: Station;
-  isQLine: boolean;
   schedule: StationSchedule;
-  qline: QlineStatus;
 };
 
 /** Which preset route is active, if any. */

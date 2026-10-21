@@ -14,7 +14,6 @@ import {
   type HowDoIFlow,
   type Station,
 } from '@/data/transit';
-import { qlineStatus } from '@/data/qlineSchedule';
 import { stationSchedule } from '@/data/schedule';
 import { useStationAlert } from '@/hooks/useStationAlert';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -255,12 +254,10 @@ export default function HomeHud() {
   }, [userPos, activeStations]);
 
   const tickerStation = selected ?? nearestStation;
-  const isQLineTicker = tickerStation.line === 'qline';
   const tickerSchedule = useMemo(
     () => stationSchedule(tickerStation.id, now),
     [tickerStation.id, now],
   );
-  const qlineLive = useMemo(() => qlineStatus(now), [now]);
 
   useEffect(() => {
     const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1450;
@@ -318,9 +315,7 @@ export default function HomeHud() {
   };
   const ticker = {
     station: tickerStation,
-    isQLine: isQLineTicker,
     schedule: tickerSchedule,
-    qline: qlineLive,
   };
   const layers = { peopleMover, qline, parking };
 

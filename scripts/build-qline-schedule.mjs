@@ -8,7 +8,7 @@
  * (published by Trillium Solutions for the RTA operated QLINE).
  *
  * Outputs:
- *   src/data/qlineSchedule.json  - calendar, departures, run times and headways
+ *   src/data/qlineSchedule.json  - calendar, departures and headways
  *   src/data/qlineShape.ts       - the northbound and southbound street shapes
  *
  * The app falls back to the published operating hours whenever the feed has
@@ -224,25 +224,6 @@ async function main() {
     }
   }
 
-  // Run times between stops ----------------------------------------------
-  const legSamples = new Map();
-  for (const [, stops] of tripStops) {
-    const ordered = [...stops].sort((a, b) => a.sequence - b.sequence);
-    for (let i = 0; i < ordered.length - 1; i += 1) {
-      const from = ordered[i];
-      const to = ordered[i + 1];
-      if (from.direction !== to.direction) continue;
-      const key = `${from.direction}|${from.stationId}|${to.stationId}`;
-      const list = legSamples.get(key) ?? [];
-      list.push(to.departure - from.departure);
-      legSamples.set(key, list);
-    }
-  }
-  const segments = [...legSamples.entries()].map(([key, samples]) => {
-    const [direction, from, to] = key.split('|');
-    return { direction: Number(direction), from, to, seconds: median(samples) };
-  });
-
   // Headways -------------------------------------------------------------
   const headwayMinutes = {};
   for (const serviceId of Object.keys(departures)) {
@@ -287,7 +268,6 @@ async function main() {
     exceptions,
     departures,
     directions,
-    segments,
     headwayMinutes,
   };
 
@@ -310,9 +290,7 @@ export const qlineSouthboundShape: Coordinate[] = ${JSON.stringify(southbound)};
 
   const services = calendar.length;
   const trips = new Set(stopTimeRows.map((r) => r.trip_id)).size;
-  console.log(
-    `Wrote src/data/qlineSchedule.json (${services} services, ${trips} trips, ${segments.length} run times)`,
-  );
+  console.log(`Wrote src/data/qlineSchedule.json (${services} services, ${trips} trips)`);
   console.log(
     `Wrote src/data/qlineShape.ts (northbound ${northbound.length} pts, southbound ${southbound.length} pts)`,
   );

@@ -51,25 +51,28 @@ https://data.trilliumtransit.com/gtfs/qline-mi-us/qline-mi-us.zip
 ```
 
 `npm run build:qline` downloads it and regenerates `src/data/qlineSchedule.json`
-(calendar, per-stop departures, per-leg run times, headways) and
+(calendar, per-stop departures, headways) and
 `src/data/qlineShape.ts` (the northbound and southbound street alignments).
 
 What the feed changed:
 
 | | Before | From the feed |
 | --- | --- | --- |
-| Service window | published 8:00 AM – 12:00 AM | **7:30 AM – 12:20 AM** Mon–Sat, 7:30 AM – 9:20 AM Sun |
+| Service window | published 8:00 AM – 12:00 AM | **7:30 AM – 12:20 AM** Mon–Sat, 7:30 AM – 9:20 PM Sun |
 | Headway | "every 15 minutes or less" | **every 6–9 minutes** |
 | Station departures | none | real scheduled times with direction |
-| Run times | invented | 1–4 minutes per stop, 24 minutes end to end |
+| Run times | invented | the published per-stop times, 1–4 minutes per stop, 24 minutes end to end |
 | Map line | straight hops between stops | the real Woodward alignment |
 
-**Important:** the feed's calendar still ends **2025-12-31**, so for any date in
-2026 the app has no scheduled service to read and falls back to the published
-operating hours. That fallback is deliberate — showing 2025 times as if they were
-today's would be worse than the published hours. Refresh the feed once the
-agency publishes a 2026 calendar (or run `npm run build:qline` on a schedule) and
-the app switches to real departures automatically.
+**Important:** the feed's calendar still ends **2025-12-31**, so for every later
+date the app rolls the **published daily pattern** forward and reads that one
+schedule everywhere: the vehicle on the map, the service window, the headway and
+the per-stop departures in the drawer. The pattern is the agency's own daily
+timetable rather than a stale copy of a dated service, so the map and the
+readout cannot drift apart. The published operating hours remain the fallback
+for a date the agency has published no timetable for at all. Refresh the feed
+once the agency publishes a 2026 calendar (or run `npm run build:qline` on a
+schedule) and the app switches to real departures automatically.
 
 The QLINE feed is a static schedule. There is no GTFS-RT vehicle feed for either
 Detroit line, so the streetcar marker on the map remains a simulation.
@@ -93,8 +96,16 @@ Two details matter:
 - Once the feed's calendar expires, the **published daily pattern is rolled
   forward**: the most recent recurring pattern for that weekday is used, so the
   streetcar keeps running the timetable the agency publishes instead of standing
-  at the terminus. `qlineTripsAt()` reports which of the two it used
-  (`feed`, `pattern` or `none`).
+  at the terminus. The pattern is resolved once, in
+  `src/data/qlineSchedule.ts`, and every reader of the schedule — the map, the
+  service window, the headway and the per-stop departures — uses it, so the
+  readout and the vehicle on the map always agree. `qlineTripsAt()` reports
+  which of the two it used (`feed`, `pattern` or `none`).
+
+Vehicle positions are timetable facts, not decoration, so they keep tracking the
+wall clock when the rider prefers reduced motion. The refresh is slowed to once
+a second in that case, which leaves the vehicle standing still instead of
+gliding along the route, rather than freezing it on a stale position.
 
 ---
 
@@ -201,8 +212,9 @@ customers.
 | Station order & anchors | `src/data/transit.test.ts` | loop order, unique ids, guides anchored to real stations, radius, routing legs |
 | Routing | `src/data/transit.test.ts` | hotel / Canada / shortcut / station targets, single-direction loop legs, QLINE corridor legs, Grand Circus transfer, GPS boarding, unknown-id fallback, zero-stop trip |
 | Fleet simulation | `src/data/trainSimulation.test.ts` | 14.5 min loop, 7.25 min headway, two two-car consists, dwell then move, bearing alignment, platform dwell points, arrival telemetry matches the drawn train, published speed and acceleration limits, moving-block separation, service-hours gate |
-| QLINE hours | `src/data/qlineSchedule.test.ts` | Mon–Sat 08:00–24:00, Sun 08:00–21:00, closed overnight, next-departure estimate |
+| QLINE hours | `src/data/qlineSchedule.test.ts` | the agency timetable once the feed calendar has expired, the service window and headway from it, closed between the last arrival and the first departure, the late run of the previous service day, the published hours fallback, next-departure estimate |
 | QLINE timetable | `src/data/qlineSimulation.test.ts` | the trips of the day are the published ones, the times never go backwards along the route, nothing runs before the first departure or after the last |
+| QLINE readout | `src/data/qlineSchedule.test.ts` | the scheduled departures of a station, the vehicle on the map, and the running state agree for every minute of the day |
 | QLINE motion | `src/data/qlineSimulation.test.ts` | the vehicle paces the corridor, leaves Congress Street on the published departure, stands at Grand Boulevard on the published arrival, runs the southbound back down Woodward, stays on Woodward and parks at the terminus while the line is closed |
 | Parking | `src/data/parking.test.ts` | every garage anchored to a station, walk order, park-once filtering |
 | Merchant intake | `src/data/merchantIntake.test.ts` | required fields, slot values, receipt id |
@@ -266,10 +278,11 @@ format check so they keep their own layout.
 ### 5.2 Should fix before launch
 
 5. **The QLINE feed is stale.** Its calendar ends 2025-12-31, so the app rolls the
-   published daily pattern forward for every 2026 date: the streetcar and the
-   per-stop times follow the pattern the agency published, but the feed itself
-   cannot confirm the dates. Ask Trillium/RTA for a 2026 calendar, then run
-   `npm run build:qline` and the app switches to the dated feed automatically.
+   published daily pattern forward for every later date: the streetcar, the
+   service window, the headway and the per-stop times all follow the pattern the
+   agency published, but the feed itself cannot confirm the dates. Ask
+   Trillium/RTA for a 2026 calendar, then run `npm run build:qline` and the app
+   switches to the dated feed automatically.
 6. **Restaurant photography is incomplete.** 23 of 32 venues have a local photo in
    `src/assets/dining/`. Missing: `brushpark-brunch`, `grey-ghost`, `bar-pigalle`,
    `bodega`, `jolly-pumpkin`, `chartreuse`, `whitney`, `baobab-fare`, `marrow`.
@@ -346,7 +359,10 @@ format check so they keep their own layout.
 - Both lines stay gated by their published service windows.
 - The QLINE streetcar is placed by the published timetable, never by a free
   running cycle. The trips are indexed by the canonical station order, because
-  the feed lists the stops of a service in the order that service runs.
+  the feed lists the stops of a service in the order that service runs. The
+  schedule is resolved once per date — the dated feed service, or the published
+  daily pattern rolled forward once the calendar expires — and the map, the
+  service window, the headway and the drawer all read that same schedule.
 - The partner portal records live in the KV namespace, one key per lead and one
   key per slot, so two approvals never overwrite each other.
 - Every station drawer shows exactly two sponsor slots, and slot holders never
