@@ -28,3 +28,4 @@
 - Keep the compliance footer a short dock on a phone: below 480px the brand tagline and the `·` separators are dropped so the legal links pack into two rows, because the footer is the last thing on the screen and every pixel of it is taken from the map.
 - Find the generated Worker config through `scripts/lib/worker-config.mjs` instead of hardcoding a folder, because a local build writes `.output/server/wrangler.json` while a Lovable build writes `dist/server/wrangler.json`; a build step must never fail the publish over a missing config path.
 - Keep secrets in `.env.local` (gitignored) or the deployment environment; never in `import.meta.env` or a tracked file.
+- Keep the offline service worker in `public/sw.js` honest about what it caches: the app shell, the stylesheets, the station datasets and the icons are cached, and the partner portal, the Stripe checkout, the slot API and the map tiles never are, because they are personal, transactional or third party.
