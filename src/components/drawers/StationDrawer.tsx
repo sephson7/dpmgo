@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Accessibility,
   Bell,
@@ -19,7 +19,6 @@ import {
   peopleMoverStations,
   qlineStations,
   restaurants,
-  stationSlotAssignments,
   type Place,
   type Station,
   type StationSlot,
@@ -28,6 +27,7 @@ import { nearbyParking } from '@/data/parking';
 import { qlineStatus, qlineStationSchedule, QLINE_HEADWAY_MINUTES } from '@/data/qlineSchedule';
 import { stationSchedule } from '@/data/schedule';
 import { getVenueLogo } from '@/components/venueLogo';
+import { useAnchorSlots } from '@/hooks/useAnchorSlots';
 
 export type StationDrawerProps = {
   station: Station;
@@ -36,6 +36,8 @@ export type StationDrawerProps = {
   isArmed: boolean;
   onArm: () => void;
   onDisarm: () => void;
+  /** Scrolls the sponsor card into view, used by the home strip. */
+  focusPartner?: boolean;
 };
 
 /** The station drawer: timetable, wayfinding, sponsor slots and dining. */
@@ -46,6 +48,7 @@ export default function StationDrawer({
   isArmed,
   onArm,
   onDisarm,
+  focusPartner = false,
 }: StationDrawerProps) {
   const [priceFilter, setPriceFilter] = useState<'all' | '$' | '$$' | '$$$+'>('all');
   const [maxMinutes, setMaxMinutes] = useState<number | 'all'>('all');
@@ -62,29 +65,28 @@ export default function StationDrawer({
 
   // Slot architecture: slot 1 is the annual partner, slot 2 rotates.
   // Admin assignments from the partner portal override the built-in slots.
-  const [assignedSlots, setAssignedSlots] = useState<StationSlot[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/anchor-slots')
-      .then((response) => (response.ok ? response.json() : { assignments: [] }))
-      .then((result: { assignments?: StationSlot[] }) => {
-        if (!cancelled) setAssignedSlots(result.assignments ?? []);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const slots = useAnchorSlots(station.id);
+  const anchorRef = useRef<HTMLDivElement>(null);
 
-  const slots = useMemo(() => {
-    const builtIn = stationSlotAssignments(station.id);
-    const override = (slot: 1 | 2): StationSlot | null =>
-      assignedSlots.find((item) => item.stationId === station.id && item.slot === slot) ?? null;
-    return {
-      slot1: override(1) ?? builtIn.slot1,
-      slot2: override(2) ?? builtIn.slot2,
+  // The home strip opens the drawer straight onto the sponsor card. The
+  // drawer slides in first, so the scroll waits until the content is laid out.
+  useEffect(() => {
+    if (!focusPartner) return;
+    let timer = 0;
+    let attempts = 0;
+    const scroll = () => {
+      const anchor = anchorRef.current;
+      const container = anchor?.closest('.detail-content') as HTMLElement | null;
+      if (anchor && container && container.scrollHeight > container.clientHeight) {
+        container.scrollTop = Math.max(0, anchor.offsetTop - 8);
+        return;
+      }
+      attempts += 1;
+      if (attempts < 20) timer = window.setTimeout(scroll, 50);
     };
-  }, [station.id, assignedSlots]);
+    timer = window.setTimeout(scroll, 60);
+    return () => window.clearTimeout(timer);
+  }, [focusPartner, slots.slot1, slots.slot2]);
 
   const slotPlace = (slot: StationSlot | null): Place | null => {
     if (!slot) return null;
@@ -353,31 +355,33 @@ export default function StationDrawer({
           </a>
         </div>
 
-        {/* Slot 1 — annual partner */}
-        {slot1Place && slots.slot1 ? (
-          <SponsorSlotCard
-            slot={slots.slot1}
-            place={slot1Place}
-            walkMinutes={slotWalkMinutes(slot1Place)}
-            onRestaurant={onRestaurant}
-            isPinned={restaurantId === slot1Place.id}
-          />
-        ) : (
-          <OpenSlotCard slot={1} stationName={station.name} stationId={station.id} />
-        )}
+        <div className="anchor-slots" ref={anchorRef}>
+          {/* Slot 1 — annual partner */}
+          {slot1Place && slots.slot1 ? (
+            <SponsorSlotCard
+              slot={slots.slot1}
+              place={slot1Place}
+              walkMinutes={slotWalkMinutes(slot1Place)}
+              onRestaurant={onRestaurant}
+              isPinned={restaurantId === slot1Place.id}
+            />
+          ) : (
+            <OpenSlotCard slot={1} stationName={station.name} stationId={station.id} />
+          )}
 
-        {/* Slot 2 — rotating partner */}
-        {slot2Place && slots.slot2 ? (
-          <SponsorSlotCard
-            slot={slots.slot2}
-            place={slot2Place}
-            walkMinutes={slotWalkMinutes(slot2Place)}
-            onRestaurant={onRestaurant}
-            isPinned={restaurantId === slot2Place.id}
-          />
-        ) : (
-          <OpenSlotCard slot={2} stationName={station.name} stationId={station.id} />
-        )}
+          {/* Slot 2 — rotating partner */}
+          {slot2Place && slots.slot2 ? (
+            <SponsorSlotCard
+              slot={slots.slot2}
+              place={slot2Place}
+              walkMinutes={slotWalkMinutes(slot2Place)}
+              onRestaurant={onRestaurant}
+              isPinned={restaurantId === slot2Place.id}
+            />
+          ) : (
+            <OpenSlotCard slot={2} stationName={station.name} stationId={station.id} />
+          )}
+        </div>
 
         {/* Filter Bar */}
         <div className="filters-strip">

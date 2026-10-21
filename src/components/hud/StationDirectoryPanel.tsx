@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import StationDirectory from '@/components/StationDirectory';
 import { parkingGarages } from '@/data/parking';
 import { type Station } from '@/data/transit';
-import TickerHud from './TickerHud';
+import HomeStrip from './HomeStrip';
 import type { MapLayers, TickerState } from './types';
 
 export type StationDirectoryPanelProps = {
@@ -18,6 +18,8 @@ export type StationDirectoryPanelProps = {
   layers: MapLayers;
   onFlyTo: (name: string, coordinate: [number, number]) => void;
   ticker: TickerState;
+  /** Opens the station drawer from the home strip. */
+  onOpenStation: (stationId: string, focusPartner: boolean) => void;
 };
 
 /**
@@ -35,6 +37,7 @@ export default function StationDirectoryPanel({
   layers,
   onFlyTo,
   ticker,
+  onOpenStation,
 }: StationDirectoryPanelProps) {
   const onlyQline = !layers.peopleMover && layers.qline;
   const onlyMover = layers.peopleMover && !layers.qline;
@@ -60,7 +63,12 @@ export default function StationDirectoryPanel({
                 : 'People Mover & QLINE · 25 stations'}
           </p>
 
-          <TickerHud ticker={ticker} />
+          <HomeStrip
+            variant="panel"
+            station={ticker.station}
+            schedule={ticker.schedule}
+            onOpenStation={onOpenStation}
+          />
         </div>
         <RouteIcon size={20} className="panel-route-icon" />
       </div>

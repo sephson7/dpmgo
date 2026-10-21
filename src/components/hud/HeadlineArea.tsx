@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import { LocateFixed, Navigation2, SquareParking } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { MapLayers, TickerState } from './types';
+import type { MapLayers } from './types';
 
 export type HeadlineAreaProps = {
-  ticker: TickerState;
+  /** The home strip, shown in place of the cadence readout. */
+  strip: ReactNode;
   layers: MapLayers;
   isBoarded: boolean;
   onToggleBoarded: () => void;
@@ -18,11 +20,11 @@ export type HeadlineAreaProps = {
 };
 
 /**
- * The hero block. On a phone only the arrival readout, the ride toggles and
- * the line switches survive, floating over the map.
+ * The hero block. On a phone only the home strip, the ride toggles and the
+ * line switches survive, floating over the map.
  */
 export default function HeadlineArea({
-  ticker,
+  strip,
   layers,
   isBoarded,
   onToggleBoarded,
@@ -32,8 +34,6 @@ export default function HeadlineArea({
   gpsError,
   onToggleLayer,
 }: HeadlineAreaProps) {
-  const { schedule, arrival, qline } = ticker;
-
   return (
     <section className="headline-area" aria-label="Transit overview">
       <div className="overline">
@@ -47,24 +47,7 @@ export default function HeadlineArea({
       </h1>
       <p>Two lines. One city. Find your next stop.</p>
 
-      <div className="mobile-countdown-pill" role="status" aria-live="polite">
-        <span
-          className={`signal-dot ${ticker.isQLine || schedule.running ? 'signal-pulse' : 'signal-idle'}`}
-        />
-        <span className="mobile-countdown-label">
-          {isBoarded ? 'NEXT STOP' : ticker.isQLine ? 'SCHEDULED CADENCE' : 'SIMULATED CADENCE'} ·{' '}
-          {ticker.station.name.toUpperCase()}:
-        </span>
-        <strong className="mobile-countdown-val">
-          {ticker.isQLine
-            ? qline.running
-              ? qline.nextDepartureLabel
-              : 'OFFLINE'
-            : schedule.running
-              ? arrival.formatted
-              : 'OFFLINE'}
-        </strong>
-      </div>
+      {strip}
 
       <div className="boarded-action-wrap">
         <Button

@@ -77,7 +77,7 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
 .compliance-footer nav a, .compliance-footer nav button { color: var(--primary); font: 500 9px var(--font-mono); text-decoration: none; height: auto; padding: 0; display: inline-flex; gap: 3px; align-items: center; white-space: nowrap; }
 .compliance-footer nav a:hover, .compliance-footer nav button:hover { text-decoration: underline; }
 .detail-drawer { overflow: hidden; }
-.detail-content { min-height: 0; overscroll-behavior: contain; scrollbar-color: var(--primary) transparent; }
+.detail-content { min-height: 0; overscroll-behavior: contain; scrollbar-color: var(--primary) transparent; scroll-behavior: smooth; }
 .restaurant-select { height: auto; min-height: 74px; border-radius: 0; white-space: normal; padding: 7px 0; }
 .restaurant-main { min-width: 0; }
 .restaurant-main strong, .restaurant-main small { white-space: normal; line-height: 1.35; }
@@ -167,6 +167,46 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
   font-weight: 400;
   margin-left: 4px;
 }
+
+/* ==========================================================================
+   HOME STRIP
+   The rotating line on the home screen. It shows what the rider needs first
+   (the next published departure, the service state) and then the partners
+   whose sponsor slot is actually filled. Every item opens its station.
+   ========================================================================== */
+.home-strip {
+  cursor: pointer;
+}
+.home-strip__line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: home-strip-fade .45s ease-out both;
+}
+.home-strip__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.home-strip__icon {
+  color: var(--primary);
+  flex: none;
+}
+@keyframes home-strip-fade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 .ticker-due-now {
   color: var(--primary);
   letter-spacing: 1px;
@@ -186,7 +226,10 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
   align-items: center;
   gap: 8px;
   width: fit-content;
+  max-width: 100%;
   font: 500 9px var(--font-mono);
+  text-align: left;
+  cursor: pointer;
 }
 .mobile-countdown-label {
   color: var(--muted-foreground);
@@ -2131,7 +2174,7 @@ h1 { margin: 22px 0 14px; font-size: clamp(42px, 4.4vw, 75px); line-height: 1.02
     display: none !important;
   }
 
-  /* The arrival countdown is part of the mobile HUD at every phone width. */
+  /* The home strip is part of the mobile HUD at every phone width. */
   .mobile-countdown-pill {
     display: inline-flex !important;
   }

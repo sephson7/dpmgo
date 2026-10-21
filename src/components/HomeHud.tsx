@@ -23,6 +23,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import AlarmBanner from '@/components/hud/AlarmBanner';
 import ComplianceFooter from '@/components/hud/ComplianceFooter';
 import HeadlineArea from '@/components/hud/HeadlineArea';
+import HomeStrip from '@/components/hud/HomeStrip';
 import MapChrome from '@/components/hud/MapChrome';
 import MapStage from '@/components/hud/MapStage';
 import QuickRoutesBar from '@/components/hud/QuickRoutesBar';
@@ -289,6 +290,15 @@ export default function HomeHud() {
     }
   };
 
+  // The home strip opens the station it refers to, and a partner item lands
+  // straight on the sponsor card.
+  const [focusPartner, setFocusPartner] = useState(false);
+  const openStationFromStrip = (stationId: string, partner: boolean) => {
+    setRestaurantId(null);
+    setFocusPartner(partner);
+    setSelectedId(stationId);
+  };
+
   const toggleLayer = (layer: 'peopleMover' | 'qline' | 'parking') => {
     if (layer === 'peopleMover') {
       // Ensure at least one route is visible
@@ -371,7 +381,16 @@ export default function HomeHud() {
         />
 
         <HeadlineArea
-          ticker={ticker}
+          strip={
+            isPhone ? (
+              <HomeStrip
+                variant="pill"
+                station={tickerStation}
+                schedule={tickerSchedule}
+                onOpenStation={openStationFromStrip}
+              />
+            ) : null
+          }
           layers={layers}
           isBoarded={isBoarded}
           onToggleBoarded={() => setIsBoarded((v) => !v)}
@@ -393,6 +412,7 @@ export default function HomeHud() {
             layers={layers}
             onFlyTo={handleFlyToTarget}
             ticker={ticker}
+            onOpenStation={openStationFromStrip}
           />
         )}
 
@@ -416,6 +436,7 @@ export default function HomeHud() {
               isArmed={alertSystem.targetStation?.id === selected.id}
               onArm={() => alertSystem.armAlert(selected)}
               onDisarm={alertSystem.cancelAlert}
+              focusPartner={focusPartner}
             />
           )}
         </DrawerContent>
