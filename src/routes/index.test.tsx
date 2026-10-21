@@ -52,4 +52,17 @@ describe('homepage layout', () => {
     expect(container.querySelector('.mobile-station-trigger')).not.toBeNull();
     expect(screen.getByRole('button', { name: /quick routes/i })).toBeInTheDocument();
   });
+
+  it('keeps the launcher, the status strip and the footer in one dock', async () => {
+    setViewport(375);
+    const { container } = render(<HomeHud />);
+
+    await waitFor(() => expect(container.querySelector('.bottom-dock')).not.toBeNull());
+    // The installed app turns the dock into one glass panel and floats the
+    // launcher over the map, so the three parts have to stay together.
+    const dock = container.querySelector('.bottom-dock');
+    expect(dock?.querySelector('.mobile-station-trigger')).not.toBeNull();
+    expect(dock?.querySelector('.status-strip')).not.toBeNull();
+    expect(dock?.querySelector('.compliance-footer')).not.toBeNull();
+  });
 });

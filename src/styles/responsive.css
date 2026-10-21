@@ -369,6 +369,14 @@
   .compliance-footer {
       order: 3;
     }
+  /* The dock is the last thing on the phone screen, so it owns the bottom
+     edge. The reset control above it keeps the free space, which is why the
+     dock itself must not claim an auto margin. */
+  .bottom-dock {
+    position: relative;
+    margin-top: 0 !important;
+    width: 100% !important;
+  }
   .compliance-footer {
       padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
       gap: 4px !important;

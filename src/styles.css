@@ -1,7 +1,8 @@
 /* The DPM - Go! HUD stylesheet.
    The entry point imports the design tokens, the shared base, the three
-   areas of the interface and the responsive tiers, in that order. The
-   responsive file comes last so its overrides always win.
+   areas of the interface, the responsive tiers and the installed app, in
+   that order. The responsive and the standalone files come last so their
+   overrides always win.
  */
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -11,3 +12,4 @@
 @import "./styles/drawers.css";
 @import "./styles/dialogs.css";
 @import "./styles/responsive.css";
+@import "./styles/standalone.css";

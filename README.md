@@ -38,6 +38,7 @@ The core mission of DPM - Go! is to encourage visitors, commuters, and residents
 - **Quick Routes Presets:** The **"HOW DO I?"** and **"I'M GOING TO:"** presets are one row of pills on a desktop and a single **"QUICK ROUTES!"** dropdown in the header on a phone, where the two rows of pills cannot fit above the map.
 - **Home Strip:** The strip in the top-left HUD (phone) and in the side panel (desktop) rotates every 5 seconds through what the rider needs and what the station offers: the **next published departure** from the bundled GTFS timetable, the **service state** when the line is closed, and the **partners whose sponsor slot is actually filled** at that station. It leads with the rider's information, never shows a partner whose slot is empty, and every item opens the station it refers to — a partner item lands straight on the sponsor card.
 - **Phone Layout (`<= 768px`):** The floating HUD keeps the home strip, the boarded/follow toggles and the line switches over the map; the station directory moves to a **STATIONS** bottom-sheet launcher; the reset control, the map legend and the legal footer stack into one bottom dock that never overlaps the map.
+- **Installed App (Home Screen):** The same dock turns into one glass panel that the map runs behind, and the **STATIONS** launcher floats over the map instead of taking a slice of it, so an app launched from the Home Screen gives the 3D canvas the space the browser toolbar would have taken. See [3c](#3c-the-installed-app).
 - **Reset Map View:** The map control returns the camera to the downtown overview and clears every marked location (the quick route pin, the restaurant pin and the selected station).
 - **Works Offline (PWA):** `public/sw.js` is a service worker that keeps the app on the rider's device. On install it reads the app shell and precaches the exact hashed stylesheets and module chunks the shell asks for — the People Mover and QLINE timetables, the stop lists and the street shapes live in those chunks — and it follows their dynamic imports so the lazily loaded map bundle is cached too. The page reports the resources it has loaded so the rest of the build is cached as it appears. Hashed build output is served cache first because the CDN serves it immutable, the shell document is served network first so a new deploy is picked up as soon as the rider is back online, and the Google fonts are cached so the type survives. The partner portal, the Stripe checkout, the slot API and the map tiles are never cached: they are personal, transactional or third party. The worker is registered in `src/routes/index.tsx` in production builds only.
 - **Installable Icons:** `public/manifest.json` declares a 192px and a 512px icon plus a 512px maskable icon, and `public/apple-touch-icon.png` covers iOS. The icons are rendered from `public/favicon.png`; replacing that file with a 512px original and re-rendering the set gives a crisp home screen icon.
@@ -110,6 +111,7 @@ the order they are imported, so the cascade is predictable:
 | `src/styles/drawers.css` | the station drawers: wayfinding, timetables, sponsor slots and the dining list |
 | `src/styles/dialogs.css` | the quick route itinerary, the legal documents and the rider guide |
 | `src/styles/responsive.css` | every breakpoint in one place, in the order they apply: 900px, 768px, 768px and up, 480px, 500px and up, 370px and reduced motion |
+| `src/styles/standalone.css` | the installed app: the compact glass dock and the floating station launcher |
 
 The responsive file is imported last so its overrides always win, and the old
 `700px` tier is folded into `768px` because the phone layout now runs to 768px.
@@ -119,6 +121,32 @@ two tidy rows instead of three ragged ones, which takes the footer from 82px
 to 59px on a 375px screen.
 The stylesheets are hand written in a compact one-rule-per-line style and are
 excluded from Prettier on purpose.
+
+### 3c. The installed app
+`src/styles/standalone.css` is the one stylesheet that only applies to the app
+opened from the Home Screen. In the browser, `env(safe-area-inset-bottom)` is
+used to lift the tap targets clear of Safari's floating address bar, so the
+phone dock carries a soft margin for it. An installed app has no toolbar at
+all: the only thing at the bottom of the screen is the hardware home
+indicator, which iOS reports as a true 34px inset, and stacking the two
+produced a tall empty chin that ate the map.
+
+The installed app therefore gets its own dock:
+
+- the status strip, the legal line and the home indicator are **one glass
+  panel** that the map runs behind, so the 3D perspective is edge to edge;
+- the status line is a single 22px row;
+- the brand, the People Mover link and the legal links share **one wrapping
+  row**, so the footer is a compact strip instead of a three row stack;
+- the **station launcher floats** over the map above the dock instead of
+  taking a slice of it, and the map legend and the reset control move up to
+  clear it.
+
+Together these take the bottom chrome of a 393pt phone from 140px to 89px,
+and the launcher no longer steals any of it. iOS reports the installed app as
+`display-mode: standalone`, but webkit bug 264218 made it report
+`display-mode: fullscreen` from 16.4 until the behaviour was corrected, so
+both are treated as the installed app. The browser layout is untouched.
 
 ### 4. Partner Program & Admin Portal
 - **Stripe Checkout:** The partner page embeds the Stripe pricing table and can also start a server priced Checkout Session. Slot 1 is sold on the annual plan only, slot 2 on either plan, and the server decides the price.

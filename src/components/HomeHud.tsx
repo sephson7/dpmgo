@@ -401,11 +401,16 @@ export default function HomeHud() {
 
         <MapChrome parking={parking} onReset={handleResetMap} />
 
-        {isPhone && <StationLauncher onOpen={() => setStationListOpen(true)} />}
+        {/* The bottom dock: the station launcher, the status line and the
+            compliance footer. The installed app turns it into one glass
+            panel and floats the launcher over the map. */}
+        <div className="bottom-dock">
+          {isPhone && <StationLauncher onOpen={() => setStationListOpen(true)} />}
 
-        <StatusStrip mapReady={mapReady} />
+          <StatusStrip mapReady={mapReady} />
 
-        <ComplianceFooter onOpenLegal={setLegal} onOpenGuide={() => setWalkthroughOpen(true)} />
+          <ComplianceFooter onOpenLegal={setLegal} onOpenGuide={() => setWalkthroughOpen(true)} />
+        </div>
       </div>
 
       {/* Station Drawer with Dining & Anchor Partner Logic */}

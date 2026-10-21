@@ -60,7 +60,11 @@
 .cyan-line { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
 .warm-line { background: var(--warm); box-shadow: 0 0 8px var(--warm); }
 .legend-vehicle { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 11px var(--primary); }
-.status-strip { margin-top: auto; width: 100%; min-height: 37px; padding: 0 39px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border); background: oklch(0.13 0.025 260 / 85%); backdrop-filter: blur(20px); color: var(--muted-foreground); font: 500 9px var(--font-mono); letter-spacing: .5px; }
+.status-strip { width: 100%; min-height: 37px; padding: 0 39px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border); background: oklch(0.13 0.025 260 / 85%); backdrop-filter: blur(20px); color: var(--muted-foreground); font: 500 9px var(--font-mono); letter-spacing: .5px; }
+/* The bottom dock: the station launcher, the status strip and the compliance
+   footer. It is one element so the installed app can turn it into a single
+   glass panel and float the launcher over the map. */
+.bottom-dock { margin-top: auto; width: 100%; display: flex; flex-direction: column; flex-shrink: 0; }
 .status-strip div { display: flex; align-items: center; gap: 10px; }
 .status-strip svg, .status-strip strong { color: var(--primary); }
 .status-divider { color: var(--border); }

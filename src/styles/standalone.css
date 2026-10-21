@@ -1,0 +1,84 @@
+/* ==========================================================================
+   THE INSTALLED APP
+   A phone that opens DPM - Go! from its Home Screen runs without Safari's
+   navigation toolbar. The only thing left at the bottom of the screen is the
+   hardware home indicator, and because the page draws under it
+   (viewport-fit=cover) iOS reports that as a true env(safe-area-inset-bottom)
+   of about 34px.
+
+   In the browser the same inset is used to lift the tap targets clear of
+   Safari's floating address bar, so the phone dock already carries a soft
+   margin for it. Stacked under the standalone inset the phone grew a tall
+   empty chin that ate the map.
+
+   The rules below only apply to the installed app on a phone. A desktop
+   installed window keeps the desktop dock, and the browser keeps the soft
+   margin it needs for the floating toolbar.
+
+   iOS reports the installed app as display-mode: standalone, but webkit bug
+   264218 made it report display-mode: fullscreen from 16.4 until the
+   behaviour was corrected, so both are treated as the installed app.
+   ========================================================================== */
+
+@media (display-mode: standalone) and (max-width: 768px),
+  (display-mode: fullscreen) and (max-width: 768px) {
+  /* The dock is one glass panel: the status line, the legal line and the
+     home indicator, with the map running behind it. */
+  .bottom-dock {
+    position: relative;
+    margin-top: 0 !important;
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+    background: oklch(0.11 0.02 258 / 78%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    backdrop-filter: blur(26px) saturate(150%);
+    border-top: 1px solid oklch(0.88 0.15 195 / 22%);
+    box-shadow: 0 -16px 44px oklch(0 0 0 / 55%);
+  }
+  /* The status line is one short row on the glass. */
+  .status-strip {
+    min-height: 22px !important;
+    padding: 3px 12px !important;
+    background: transparent !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border-top: 0 !important;
+  }
+  /* The brand and the legal links share one wrapping row, so the footer is a
+     single compact strip under the status line. */
+  .compliance-footer {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 1px 9px !important;
+    padding: 3px 12px 0 !important;
+    background: transparent !important;
+    border-top: 0 !important;
+  }
+  .compliance-footer .footer-brand-wrap,
+  .compliance-footer .footer-links { display: contents !important; }
+  /* The station launcher floats over the map above the dock, so the map
+     canvas runs all the way down behind it. */
+  .mobile-station-trigger {
+    position: absolute !important;
+    bottom: calc(100% + 10px) !important;
+    left: 14px !important;
+    right: 14px !important;
+    width: auto !important;
+    height: 44px !important;
+    margin: 0 !important;
+    border-radius: 14px !important;
+    background: oklch(0.17 0.03 258 / 72%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+    backdrop-filter: blur(24px) saturate(160%) !important;
+    border: 1px solid oklch(0.88 0.15 195 / 45%) !important;
+    box-shadow: 0 12px 34px oklch(0 0 0 / 55%), 0 0 26px oklch(0.88 0.15 195 / 22%) !important;
+  }
+  /* The floating launcher takes the room the legend used to sit in, so the
+     legend and the reset control move up with it. */
+  .map-legend { margin-bottom: 60px !important; }
+  /* The dock is glass, so the map is not dimmed twice. */
+  .map-vignette {
+    background: linear-gradient(180deg, oklch(0.13 0.025 260 / 92%) 0%, oklch(0.13 0.025 260 / 60%) 14%, transparent 30%, transparent 74%, oklch(0.13 0.025 260 / 45%) 100%) !important;
+  }
+}
