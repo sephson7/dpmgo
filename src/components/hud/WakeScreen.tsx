@@ -6,8 +6,6 @@ export default function WakeScreen() {
     <div className="wake-screen" aria-hidden="true">
       <div className="wake-content">
         <img src={logo.url} alt="DPM - Go! logo" className="wake-logo" />
-        <div className="wake-title">DPM - Go!</div>
-        <div className="wake-sub">INITIALIZING DETROIT TRANSIT HUD...</div>
       </div>
     </div>
   );

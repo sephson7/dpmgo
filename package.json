@@ -15,7 +15,8 @@
     "build:qline": "node scripts/build-qline-schedule.mjs",
     "build:dpm": "node scripts/build-dpm-schedule.mjs",
     "build:transit": "npm run build:dpm && npm run build:qline",
-    "audit:contrast": "node scripts/audit-contrast.mjs"
+    "audit:contrast": "node scripts/audit-contrast.mjs",
+    "secrets:admin": "node scripts/set-admin-secrets.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

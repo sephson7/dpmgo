@@ -126,6 +126,36 @@ The partner portal has **no default credentials**. If `ADMIN_USERNAME`,
 signing key is never derived from the password, so a leaked password cannot be
 turned into a forged session cookie.
 
+#### Setting up the portal
+
+The credentials live in the secret store, never in the repository:
+
+1. Put them in the gitignored `.env.local` for local work:
+
+   ```env
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=a-strong-password
+   ADMIN_SESSION_SECRET=64_random_hex_characters
+   ```
+
+   Generate the signing key with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+
+2. Push the same three values to the deployed Worker. The script reads them
+   from `.env.local` and pipes them into Wrangler, so they never appear in a
+   command line or a build log:
+
+   ```bash
+   npm run build          # writes the Worker name the script uses
+   npm run secrets:admin  # or: npm run secrets:admin -- --name <worker>
+   ```
+
+   It needs a Wrangler login (`npx wrangler login`) or a
+   `CLOUDFLARE_API_TOKEN` in the environment.
+
+After that, `/admin` signs in with the configured username and password and
+lists every merchant intake lead for approval. Approving a lead writes the
+anchor slot assignment, which the station drawer picks up immediately.
+
 Ensure `mapbox-gl/dist/mapbox-gl.css` is properly imported in your project entry file.
 
 ### Transit data refresh

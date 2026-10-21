@@ -129,7 +129,12 @@ export function qlineServiceRunning(now = new Date()): boolean {
     const time = seconds - offset * 86400;
     if (time >= start && time < end) return true;
   }
-  return false;
+  // The feed calendar is finite and ends 2025-12-31. When it has no service
+  // for the date, the published operating hours are the schedule, so the
+  // streetcar still runs. Without this the vehicle stays parked all year.
+  const window = qlineServiceWindow(now);
+  const minutes = seconds / 60;
+  return minutes >= window.startMinutes && minutes < window.endMinutes;
 }
 
 /** Scheduled headway for the active service, from the feed. */

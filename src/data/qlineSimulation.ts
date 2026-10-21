@@ -68,9 +68,11 @@ function buildSegments(shape: Coordinate[], order: string[], direction: number):
       points,
       lengths,
       length,
-      // Scheduled run time from the feed, with a floor so a rounded
-      // timetable still produces visible movement.
-      durationMs: Math.max(30_000, (scheduled ?? 120) * 1000),
+      // The feed measures a leg from the departure of one stop to the
+      // departure of the next, so one dwell is already inside the number.
+      // Only the running time belongs to the segment, otherwise every stop
+      // is paid for twice and the streetcar runs slower than the timetable.
+      durationMs: Math.max(30_000, ((scheduled ?? 120) - QLINE_DWELL_MS / 1000) * 1000),
     });
   }
   return segments;

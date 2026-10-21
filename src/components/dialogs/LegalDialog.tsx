@@ -63,6 +63,7 @@ export default function LegalDialog({ document, onOpenChange }: LegalDialogProps
                 simulations. Real-time agency telemetry is currently unavailable from DTC, so no
                 arrival estimate in this app is a live feed.
               </p>
+              <p>Verify arrival times at displays located at each station.</p>
             </>
           ) : (
             <>
