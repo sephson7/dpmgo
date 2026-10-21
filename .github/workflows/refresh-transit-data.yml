@@ -35,6 +35,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      # The generators format their output with prettier, so the dependencies
+      # have to be installed before the feeds are pulled.
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Rebuild the People Mover schedule and shape
         run: node scripts/build-dpm-schedule.mjs
@@ -43,7 +49,7 @@ jobs:
         run: node scripts/build-qline-schedule.mjs
 
       - name: Type check
-        run: npm ci --no-audit --no-fund && npx tsc --noEmit -p tsconfig.json
+        run: npx tsc --noEmit -p tsconfig.json
 
       - name: Contrast audit
         run: npm run audit:contrast

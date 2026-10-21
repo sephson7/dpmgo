@@ -14,6 +14,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { writeGenerated } from './format-generated.mjs';
 
 const FEED_URL = 'https://hosted-gtfs-feeds.s3.amazonaws.com/DPM/gtfs.zip';
 const SHAPE_ID = 'qo5n';
@@ -201,7 +202,7 @@ export const peopleMoverShape: Coordinate[] = [
 ${shape.map((point) => `  [${point[0].toFixed(6)}, ${point[1].toFixed(6)}],`).join('\n')}
 ];
 `;
-  writeFileSync(resolve(root, 'src/data/peopleMoverShape.ts'), shapeSource, 'utf8');
+  await writeGenerated(resolve(root, 'src/data/peopleMoverShape.ts'), shapeSource);
 
   const services = calendar.length;
   const trips = new Set(stopTimeRows.map((row) => row.trip_id)).size;

@@ -17,6 +17,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { writeGenerated } from './format-generated.mjs';
 
 const FEED_URL = 'https://data.trilliumtransit.com/gtfs/qline-mi-us/qline-mi-us.zip';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -286,7 +287,7 @@ export const qlineNorthboundShape: Coordinate[] = ${JSON.stringify(northbound)};
 
 export const qlineSouthboundShape: Coordinate[] = ${JSON.stringify(southbound)};
 `;
-  writeFileSync(resolve(root, 'src/data/qlineShape.ts'), shapeSource, 'utf8');
+  await writeGenerated(resolve(root, 'src/data/qlineShape.ts'), shapeSource);
 
   const services = calendar.length;
   const trips = new Set(stopTimeRows.map((r) => r.trip_id)).size;
