@@ -107,10 +107,14 @@ the order they are imported, so the cascade is predictable:
 | `src/styles/hud.css` | the header, the presets, the hero block, the home strip, the map chrome, the status strip, the footer and the launch screen |
 | `src/styles/drawers.css` | the station drawers: wayfinding, timetables, sponsor slots and the dining list |
 | `src/styles/dialogs.css` | the quick route itinerary, the legal documents and the rider guide |
-| `src/styles/responsive.css` | every breakpoint in one place, in the order they apply: 900px, 768px, 768px and up, 500px and up, 370px and reduced motion |
+| `src/styles/responsive.css` | every breakpoint in one place, in the order they apply: 900px, 768px, 768px and up, 480px, 500px and up, 370px and reduced motion |
 
 The responsive file is imported last so its overrides always win, and the old
 `700px` tier is folded into `768px` because the phone layout now runs to 768px.
+The `480px` tier keeps the compliance footer a short dock on a phone: the
+brand tagline and the `·` separators are dropped so the legal links pack into
+two tidy rows instead of three ragged ones, which takes the footer from 82px
+to 59px on a 375px screen.
 The stylesheets are hand written in a compact one-rule-per-line style and are
 excluded from Prettier on purpose.
 

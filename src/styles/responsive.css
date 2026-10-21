@@ -432,6 +432,26 @@
     }
 }
 
+/* On a phone the compliance footer is a short dock, so the brand line, the
+   tagline and the separators are what give the room back: the tagline only
+   fits beside the title on a tablet, and the separators leave a dangling dot
+   at the end of a wrapped row. */
+@media (max-width: 480px) {
+  .compliance-footer {
+      padding: 5px 12px calc(7px + env(safe-area-inset-bottom, 0px)) !important;
+      gap: 3px !important;
+    }
+  .compliance-footer .footer-sub {
+      display: none !important;
+    }
+  .compliance-footer .footer-divider {
+      display: none !important;
+    }
+  .compliance-footer .footer-links {
+      gap: 2px 12px !important;
+    }
+}
+
 @media (min-width: 500px) {
   .canada-requirements-grid {
       grid-template-columns: 1fr 1fr;

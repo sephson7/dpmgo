@@ -631,6 +631,17 @@ const restaurantSeeds: RestaurantSeed[] = [
     -83.0413,
     42.3335,
   ],
+  // Water Square Café by Say Grace Collective, inside the Residences at
+  // Water Square, 222 3rd Ave, on the Detroit Riverfront.
+  [
+    'water-square-cafe',
+    'Water Square Café',
+    'Specialty coffee',
+    '$',
+    'https://say-grace-llc.square.site/',
+    -83.0519403,
+    42.3248116,
+  ],
   [
     'brushpark-brunch',
     'Brush Park Brunch',

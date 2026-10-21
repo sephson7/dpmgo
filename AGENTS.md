@@ -25,5 +25,6 @@
 - Sell slot 1 on the annual plan only and slot 2 on either plan; the server owns the price and rejects mismatched purchases.
 - Never trust a query string for a completed payment: confirm the checkout session with Stripe before showing a receipt.
 - Keep the partner portal records in the Cloudflare KV namespace, one key per lead and one key per slot, so two approvals never overwrite each other; keep the local file fallback for the runtimes without the binding.
+- Keep the compliance footer a short dock on a phone: below 480px the brand tagline and the `·` separators are dropped so the legal links pack into two rows, because the footer is the last thing on the screen and every pixel of it is taken from the map.
 - Find the generated Worker config through `scripts/lib/worker-config.mjs` instead of hardcoding a folder, because a local build writes `.output/server/wrangler.json` while a Lovable build writes `dist/server/wrangler.json`; a build step must never fail the publish over a missing config path.
 - Keep secrets in `.env.local` (gitignored) or the deployment environment; never in `import.meta.env` or a tracked file.
