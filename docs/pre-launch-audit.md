@@ -169,6 +169,15 @@ Rows for `transit.test.ts`, `qlineSchedule.test.ts`, `qlineSimulation.test.ts`,
 `parking.test.ts`, `merchantIntake.test.ts` and `stripe.test.ts` describe suites
 that are **not in the repository yet** — the coverage is planned, not shipped.
 
+### Stylesheets
+
+`src/styles.css` is only the entry point. The styles live in `src/styles/`:
+`tokens.css`, `base.css`, `hud.css`, `drawers.css`, `dialogs.css` and
+`responsive.css`. The responsive file holds every breakpoint in the order they
+apply and is imported last, so its overrides always win. The duplicated Quick
+Navigation block and 65 rules for elements that no longer exist were removed,
+and the old `700px` tier was folded into `768px` to match the phone layout.
+
 `npx tsc --noEmit` is clean, `npx vitest run` is green (53 tests) and
 `npx vite build` succeeds.
 

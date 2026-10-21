@@ -4,7 +4,7 @@
  *
  *   node scripts/audit-contrast.mjs
  *
- * Reads the colour tokens from src/styles.css, converts OKLCH to sRGB and
+ * Reads the colour tokens from src/styles/tokens.css, converts OKLCH to sRGB and
  * checks every foreground / background pair the HUD renders against the WCAG
  * 2.1 contrast requirements:
  *
@@ -120,10 +120,10 @@ function contrastRatio(foreground, background) {
 
 /* ------------------------------------------------------------------- tokens */
 
-const css = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
+const css = readFileSync(resolve(root, 'src/styles/tokens.css'), 'utf8');
 const rootBlock = css.match(/:root\s*\{([\s\S]*?)\}/);
 if (!rootBlock) {
-  console.error('Could not find the :root token block in src/styles.css');
+  console.error('Could not find the :root token block in src/styles/tokens.css');
   process.exit(2);
 }
 

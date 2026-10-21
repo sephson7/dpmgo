@@ -95,6 +95,24 @@ the desktop panel are never in the phone DOM, so a phone does not download or
 hydrate the desktop layout. The breakpoint lives in `src/hooks/use-mobile.tsx`
 and matches the `768px` breakpoint of the stylesheet.
 
+### 3b. Stylesheets
+`src/styles.css` is only the entry point. The styles live in `src/styles/`, in
+the order they are imported, so the cascade is predictable:
+
+| File | Contents |
+| --- | --- |
+| `src/styles/tokens.css` | the design tokens and the Tailwind theme mapping |
+| `src/styles/base.css` | the base layer, the app shell and the shared elements |
+| `src/styles/hud.css` | the header, the presets, the hero block, the home strip, the map chrome, the status strip, the footer and the launch screen |
+| `src/styles/drawers.css` | the station drawers: wayfinding, timetables, sponsor slots and the dining list |
+| `src/styles/dialogs.css` | the quick route itinerary, the legal documents and the rider guide |
+| `src/styles/responsive.css` | every breakpoint in one place, in the order they apply: 900px, 768px, 768px and up, 500px and up, 370px and reduced motion |
+
+The responsive file is imported last so its overrides always win, and the old
+`700px` tier is folded into `768px` because the phone layout now runs to 768px.
+The stylesheets are hand written in a compact one-rule-per-line style and are
+excluded from Prettier on purpose.
+
 ### 4. Partner Program & Admin Portal
 - **Stripe Checkout:** The partner page embeds the Stripe pricing table and can also start a server priced Checkout Session. Slot 1 is sold on the annual plan only, slot 2 on either plan, and the server decides the price.
 - **Anchor Slots:** Slot 1 of Fort / Cass is held by Lafayette Coney Island; every other slot shows a "Claim Slot" call to action.

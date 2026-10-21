@@ -2,20 +2,24 @@ import { useEffect, useMemo, useState } from 'react';
 import { restaurants, stationSlotAssignments, type StationSlot } from '@/data/transit';
 
 /**
- * The partner slot assignments published by the partner portal. The request
- * is shared, so the home strip and the station drawer cost one call between
- * them.
+ * The partner slot assignments published by the partner portal. Concurrent
+ * callers share one request, but the result is not cached: a slot approved in
+ * the portal has to show up the next time the drawer is opened.
  */
-let pending: Promise<StationSlot[]> | null = null;
+let inflight: Promise<StationSlot[]> | null = null;
 
 export function loadAnchorAssignments(): Promise<StationSlot[]> {
-  if (!pending) {
-    pending = fetch('/api/anchor-slots')
+  if (!inflight) {
+    const request = fetch('/api/anchor-slots')
       .then((response) => (response.ok ? response.json() : { assignments: [] }))
       .then((result: { assignments?: StationSlot[] }) => result.assignments ?? [])
-      .catch(() => [] as StationSlot[]);
+      .catch(() => [] as StationSlot[])
+      .finally(() => {
+        if (inflight === request) inflight = null;
+      });
+    inflight = request;
   }
-  return pending;
+  return inflight;
 }
 
 export type ResolvedSlots = {

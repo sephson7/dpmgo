@@ -10,8 +10,10 @@ routeTree.gen.ts
 # Documentation is written by hand and keeps its own wrapping.
 *.md
 
-# The HUD stylesheet is written in a compact one-rule-per-line style on purpose.
+# The HUD stylesheets are written by hand in a compact one-rule-per-line style
+# and are kept out of the formatter on purpose.
 src/styles.css
+src/styles
 
 # The design system kit is vendored from shadcn and keeps the upstream format.
 src/components/ui
