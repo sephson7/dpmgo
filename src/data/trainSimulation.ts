@@ -64,7 +64,7 @@ const nearestShapeIndex = (coordinate: Coordinate): number => {
  * (Times Square first) and the platforms are the dwell points.
  */
 const loopStops: LoopStop[] = peopleMoverStations
-  .map(station => ({
+  .map((station) => ({
     station,
     shapeIndex: nearestShapeIndex(station.coordinate),
     platform: station.coordinate,
@@ -132,8 +132,10 @@ const legs: Leg[] = loopStops.map((stop, index) => {
  * The free-running profile of one station leg: accelerate from rest, cruise
  * and brake into the platform. This is the shape the timetable stretches.
  */
-function physicalPhases(lengthFt: number): (Omit<Phase, 'durationMs' | 'accel'> & { durationS: number })[] {
-  const rampDistance = (MOVER_MAX_SPEED_FPS ** 2) / (2 * MOVER_ACCEL_FPS2);
+function physicalPhases(
+  lengthFt: number,
+): (Omit<Phase, 'durationMs' | 'accel'> & { durationS: number })[] {
+  const rampDistance = MOVER_MAX_SPEED_FPS ** 2 / (2 * MOVER_ACCEL_FPS2);
   if (lengthFt >= 2 * rampDistance) {
     const cruiseDistance = lengthFt - 2 * rampDistance;
     return [
@@ -196,7 +198,14 @@ const stretch = travelBudgetMs / 1000 / physicalTravelS;
 
 for (const leg of legs) {
   const phases: Phase[] = [
-    { kind: 'dwell', durationMs: MOVER_DWELL_MS, distanceFt: 0, startSpeed: 0, endSpeed: 0, accel: 0 },
+    {
+      kind: 'dwell',
+      durationMs: MOVER_DWELL_MS,
+      distanceFt: 0,
+      startSpeed: 0,
+      endSpeed: 0,
+      accel: 0,
+    },
   ];
   for (const phase of physicalPhases(leg.lengthFt)) {
     const durationMs = phase.durationS * stretch * 1000;
@@ -292,7 +301,7 @@ type LoopState = SimulatedTrain & {
 };
 
 const entryAtTime = (elapsed: number): Entry | undefined =>
-  entries.find(entry => elapsed >= entry.startMs && elapsed < entry.startMs + entry.durationMs);
+  entries.find((entry) => elapsed >= entry.startMs && elapsed < entry.startMs + entry.durationMs);
 
 /** The state of the leading car of a consist at a point in the timeline. */
 function stateAtTime(elapsed: number): LoopState {
@@ -324,7 +333,8 @@ function stateAtTime(elapsed: number): LoopState {
 function stateBehind(distanceFt: number, spacing: number): SimulatedTrain {
   const target = (((distanceFt - spacing) % loopDistanceFt) + loopDistanceFt) % loopDistanceFt;
   const entry = entries.find(
-    item => item.distanceFt > 0 && target >= item.startFt && target < item.startFt + item.distanceFt,
+    (item) =>
+      item.distanceFt > 0 && target >= item.startFt && target < item.startFt + item.distanceFt,
   );
   if (!entry) return { coordinate: [-83.0458, 42.3314], bearing: 0 };
   const leg = legs[entry.legIndex]!;
@@ -356,9 +366,10 @@ export const simulatedMoverTrains = (elapsed: number): SimulatedTrain[] => {
   return cars;
 };
 
-export const simulatedMoverPosition = (elapsed: number): Coordinate => simulatedMoverTrain(elapsed).coordinate;
+export const simulatedMoverPosition = (elapsed: number): Coordinate =>
+  simulatedMoverTrain(elapsed).coordinate;
 export const simulatedMoverPositions = (elapsed: number): Coordinate[] =>
-  simulatedMoverTrains(elapsed).map(train => train.coordinate);
+  simulatedMoverTrains(elapsed).map((train) => train.coordinate);
 
 /**
  * Trains parked on a platform. Used while the line is closed for service so
@@ -389,7 +400,7 @@ export const parkedMoverTrains = (elapsed: number): SimulatedTrain[] => {
 
 /** Loop position of a station, used to keep arrival telemetry in step with the drawn train. */
 export function moverLoopIndex(stationId: string): number {
-  return loopStops.findIndex(stop => stop.station.id === stationId);
+  return loopStops.findIndex((stop) => stop.station.id === stationId);
 }
 
 /** Length of the loop along the agency shape, in feet. */
@@ -454,7 +465,7 @@ export type ArrivalReadout = {
  */
 export function getNextTrainForStation(
   stationId: string,
-  elapsed = moverFleetElapsed()
+  elapsed = moverFleetElapsed(),
 ): ArrivalReadout {
   const arrivalOffset = moverArrivalOffsetMs(stationId);
   if (arrivalOffset === null) {
@@ -462,7 +473,7 @@ export function getNextTrainForStation(
   }
 
   const trainPhases = [0, MOVER_HEADWAY_MS].map(
-    offset => (((elapsed + offset) % MOVER_LOOP_MS) + MOVER_LOOP_MS) % MOVER_LOOP_MS,
+    (offset) => (((elapsed + offset) % MOVER_LOOP_MS) + MOVER_LOOP_MS) % MOVER_LOOP_MS,
   );
 
   let minArrivalDiff = Infinity;

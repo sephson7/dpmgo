@@ -177,7 +177,7 @@ describe('arrival telemetry matches the drawn train', () => {
       const next = getNextTrainForStation('financial', elapsed);
       if (!next.atPlatform) continue;
       const cars = simulatedMoverTrains(elapsed);
-      expect(cars.some(car => nearStation(car.coordinate, 'financial'))).toBe(true);
+      expect(cars.some((car) => nearStation(car.coordinate, 'financial'))).toBe(true);
     }
   });
 });
@@ -202,10 +202,10 @@ describe('shared fleet clock', () => {
     const next = getNextTrainForStation('financial', elapsed);
     const cars = simulatedMoverTrains(elapsed);
     if (next.atPlatform) {
-      expect(cars.some(car => nearStation(car.coordinate, 'financial'))).toBe(true);
+      expect(cars.some((car) => nearStation(car.coordinate, 'financial'))).toBe(true);
     } else {
       // The drawn vehicle is still short of the platform while it counts down.
-      expect(cars.every(car => !nearStation(car.coordinate, 'financial', 1))).toBe(true);
+      expect(cars.every((car) => !nearStation(car.coordinate, 'financial', 1))).toBe(true);
     }
   });
 });

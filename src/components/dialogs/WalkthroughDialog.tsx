@@ -18,7 +18,7 @@ export default function WalkthroughDialog({
   onDontShowAgainChange,
 }: WalkthroughDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={next => !next && onDismiss(false)}>
+    <Dialog open={open} onOpenChange={(next) => !next && onDismiss(false)}>
       <DialogContent className="walkthrough-dialog">
         <div className="walkthrough-header">
           <div className="walkthrough-eyebrow">
@@ -27,7 +27,8 @@ export default function WalkthroughDialog({
           </div>
           <DialogTitle>How DPM - Go! Works</DialogTitle>
           <DialogDescription className="walkthrough-subtitle">
-            Your lightweight companion for navigating the Detroit People Mover &amp; QLINE transit corridors.
+            Your lightweight companion for navigating the Detroit People Mover &amp; QLINE transit
+            corridors.
           </DialogDescription>
         </div>
 
@@ -39,7 +40,8 @@ export default function WalkthroughDialog({
             <div className="walkthrough-step-content">
               <div className="walkthrough-step-title">1. Interactive 3D Transit Map</div>
               <p className="walkthrough-step-desc">
-                Tap any station node on the map or tap <strong>STATIONS</strong> to view scheduled departures, elevator accessibility status, and walking wayfinding.
+                Tap any station node on the map or tap <strong>STATIONS</strong> to view scheduled
+                departures, elevator accessibility status, and walking wayfinding.
               </p>
             </div>
           </div>
@@ -51,7 +53,8 @@ export default function WalkthroughDialog({
             <div className="walkthrough-step-content">
               <div className="walkthrough-step-title">2. "Boarded" GPS Following</div>
               <p className="walkthrough-step-desc">
-                Riding the train? Tap <strong>BOARDED</strong> in the top bar to follow your GPS movement along the elevated track loop directly in your browser.
+                Riding the train? Tap <strong>BOARDED</strong> in the top bar to follow your GPS
+                movement along the elevated track loop directly in your browser.
               </p>
             </div>
           </div>
@@ -63,7 +66,9 @@ export default function WalkthroughDialog({
             <div className="walkthrough-step-content">
               <div className="walkthrough-step-title">3. Station Anchors &amp; Local Dining</div>
               <p className="walkthrough-step-desc">
-                Discover top-rated Detroit eateries and exclusive rider perks near every stop. Tap <strong>SHOW ON 3D MAP</strong> on any restaurant to spotlight its pin on the 3D grid.
+                Discover top-rated Detroit eateries and exclusive rider perks near every stop. Tap{' '}
+                <strong>SHOW ON 3D MAP</strong> on any restaurant to spotlight its pin on the 3D
+                grid.
               </p>
             </div>
           </div>
@@ -75,7 +80,8 @@ export default function WalkthroughDialog({
             <div className="walkthrough-step-content">
               <div className="walkthrough-step-title">4. Proximity Station Alerts</div>
               <p className="walkthrough-step-desc">
-                Tap <strong>NOTIFY ON ARRIVAL</strong> inside any station card. DPM - Go! will chime and vibrate your device as your train approaches your destination.
+                Tap <strong>NOTIFY ON ARRIVAL</strong> inside any station card. DPM - Go! will chime
+                and vibrate your device as your train approaches your destination.
               </p>
             </div>
           </div>
@@ -87,7 +93,8 @@ export default function WalkthroughDialog({
             <div className="walkthrough-step-content">
               <div className="walkthrough-step-title">5. Headways &amp; Scheduled Loop Cadence</div>
               <p className="walkthrough-step-desc">
-                Next-train countdowns follow published headway schedules (every 4–6 mins). Moving trains on the 3D map are simulated to visualize loop cadence.
+                Next-train countdowns follow published headway schedules (every 4–6 mins). Moving
+                trains on the 3D map are simulated to visualize loop cadence.
               </p>
             </div>
           </div>
@@ -98,7 +105,7 @@ export default function WalkthroughDialog({
             <input
               type="checkbox"
               checked={dontShowAgain}
-              onChange={e => onDontShowAgainChange(e.target.checked)}
+              onChange={(e) => onDontShowAgainChange(e.target.checked)}
             />
             <span>Don't show this guide automatically on startup</span>
           </label>

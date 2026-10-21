@@ -196,21 +196,21 @@ export const parkingGarages: ParkingGarage[] = [
 export type NearbyParking = ParkingGarage & { walkMiles: number };
 
 const garageStation = (garage: ParkingGarage): Station | undefined =>
-  allTransitStations.find(station => station.id === garage.nearestStationId);
+  allTransitStations.find((station) => station.id === garage.nearestStationId);
 
 /** Garages that connect to a station, closest first. */
 export function nearbyParking(station: Station): NearbyParking[] {
   return parkingGarages
-    .map(garage => {
+    .map((garage) => {
       const anchor = garageStation(garage);
       const origin = anchor?.entrance ?? garage.coordinate;
       return { ...garage, walkMiles: milesBetween(origin, garage.coordinate) * 1.25 };
     })
-    .filter(garage => garage.walkMiles <= 0.6)
+    .filter((garage) => garage.walkMiles <= 0.6)
     .sort((a, b) => a.walkMiles - b.walkMiles);
 }
 
 /** Garages that work for a park-once trip to the given station. */
 export function parkOnceGarages(station: Station): NearbyParking[] {
-  return nearbyParking(station).filter(garage => garage.parkOnce);
+  return nearbyParking(station).filter((garage) => garage.parkOnce);
 }

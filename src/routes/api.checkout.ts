@@ -30,13 +30,16 @@ export const Route = createFileRoute('/api/checkout')({
       // Create a Checkout Session for a station anchor slot.
       POST: async ({ request, context }) => {
         if (!isAllowedOrigin(request)) {
-          return Response.json({ error: 'Cross-origin checkout requests are not allowed.' }, { status: 403 });
+          return Response.json(
+            { error: 'Cross-origin checkout requests are not allowed.' },
+            { status: 403 },
+          );
         }
         const secretKey = await readServerSecret('STRIPE_SECRET_KEY', context);
         if (!secretKey) {
           return Response.json(
             { error: 'Checkout is not configured on this deployment.' },
-            { status: 503 }
+            { status: 503 },
           );
         }
         let payload: unknown;
@@ -55,12 +58,15 @@ export const Route = createFileRoute('/api/checkout')({
         const plan: AnchorPlan = parsed.value.plan ?? allowed[0] ?? 'annual';
         if (!slotAcceptsPlan(parsed.value.slot, plan)) {
           return Response.json(
-            { error: `Slot ${parsed.value.slot} can only be purchased on the ${allowed.join(' or ')} plan.` },
-            { status: 400 }
+            {
+              error: `Slot ${parsed.value.slot} can only be purchased on the ${allowed.join(' or ')} plan.`,
+            },
+            { status: 400 },
           );
         }
 
-        const origin = (await readServerSecret('PUBLIC_APP_URL', context)) ?? new URL(request.url).origin;
+        const origin =
+          (await readServerSecret('PUBLIC_APP_URL', context)) ?? new URL(request.url).origin;
         const pricingTableId =
           (await readServerSecret('STRIPE_PRICING_TABLE_ID', context)) ?? PRICING_TABLE_ID;
         const configured = {
@@ -71,7 +77,11 @@ export const Route = createFileRoute('/api/checkout')({
             ? { annual: (await readServerSecret('STRIPE_PRICE_ANNUAL', context)) as string }
             : {}),
         };
-        const priceIds = await resolvePlanPriceIds(fetch, { secretKey, pricingTableId, configured });
+        const priceIds = await resolvePlanPriceIds(fetch, {
+          secretKey,
+          pricingTableId,
+          configured,
+        });
         const priceId = priceIds[plan];
 
         try {
@@ -82,7 +92,12 @@ export const Route = createFileRoute('/api/checkout')({
             ...(priceId ? { priceId } : {}),
             pricingTableId,
           });
-          return Response.json({ url: session.url, sessionId: session.id, plan, slot: parsed.value.slot });
+          return Response.json({
+            url: session.url,
+            sessionId: session.id,
+            plan,
+            slot: parsed.value.slot,
+          });
         } catch (error) {
           console.error('Stripe session creation failed', error);
           return Response.json({ error: 'Unable to start checkout.' }, { status: 502 });
@@ -93,7 +108,10 @@ export const Route = createFileRoute('/api/checkout')({
       GET: async ({ request, context }) => {
         const secretKey = await readServerSecret('STRIPE_SECRET_KEY', context);
         if (!secretKey) {
-          return Response.json({ error: 'Checkout is not configured on this deployment.' }, { status: 503 });
+          return Response.json(
+            { error: 'Checkout is not configured on this deployment.' },
+            { status: 503 },
+          );
         }
         const sessionId = new URL(request.url).searchParams.get('session_id');
         if (!sessionId) {
@@ -109,7 +127,11 @@ export const Route = createFileRoute('/api/checkout')({
             ? { annual: (await readServerSecret('STRIPE_PRICE_ANNUAL', context)) as string }
             : {}),
         };
-        const priceIds = await resolvePlanPriceIds(fetch, { secretKey, pricingTableId, configured });
+        const priceIds = await resolvePlanPriceIds(fetch, {
+          secretKey,
+          pricingTableId,
+          configured,
+        });
         try {
           const session = await retrieveCheckoutSession(fetch, { secretKey, sessionId });
           return Response.json(verifyCheckoutSession(session, { priceIds }));

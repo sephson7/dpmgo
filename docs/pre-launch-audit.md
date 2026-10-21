@@ -171,6 +171,18 @@ that are **not in the repository yet** — the coverage is planned, not shipped.
 `npx tsc --noEmit` is clean, `npx vitest run` is green (35 tests) and
 `npx vite build` succeeds.
 
+### Continuous integration
+
+`.github/workflows/pull-request.yml` runs on every pull request and on every
+push to `main`: lint, format check, type check, the contrast audit, the test
+suite and a production build. The build needs no secrets, so the workflow
+runs on forks. The nightly `refresh-transit-data.yml` workflow still refreshes
+the bundled GTFS calendars and commits them.
+
+The repository is now Prettier clean with the checked in configuration. The
+hand written HUD stylesheet and the vendored shadcn kit are excluded from the
+format check so they keep their own layout.
+
 ---
 
 ## 5. Gaps that still block a public launch

@@ -379,16 +379,19 @@ export const qlineStations: [Station, ...Station[]] = [
     crossStreets: 'Woodward Ave & W Grand Blvd',
     elevator: false,
     adaCompliant: true,
-    entranceNotes: 'Northern terminus. Serves the Fisher Building and State of Michigan Cadillac Place.',
+    entranceNotes:
+      'Northern terminus. Serves the Fisher Building and State of Michigan Cadillac Place.',
     restaurants: [],
     line: 'qline',
   },
 ];
 
-export const qlineStops = qlineStations.map(s => ({ name: s.name, coordinate: s.coordinate }));
+export const qlineStops = qlineStations.map((s) => ({ name: s.name, coordinate: s.coordinate }));
 export const allTransitStations: Station[] = [...peopleMoverStations, ...qlineStations];
 
-const stationsById = new Map<string, Station>(allTransitStations.map(station => [station.id, station]));
+const stationsById = new Map<string, Station>(
+  allTransitStations.map((station) => [station.id, station]),
+);
 
 /** Look up any People Mover or QLINE station by id. */
 export function findStation(id: string | null | undefined): Station | undefined {
@@ -435,13 +438,18 @@ const ROTATING_SLOTS: StationSlot[] = [];
 
 export const stationSlots: StationSlot[] = [...ANNUAL_SLOTS, ...ROTATING_SLOTS];
 
-const slotByPlaceId = new Map<string, StationSlot>(stationSlots.map(slot => [slot.placeId, slot]));
+const slotByPlaceId = new Map<string, StationSlot>(
+  stationSlots.map((slot) => [slot.placeId, slot]),
+);
 
 /** The two sponsor slots of a station drawer. */
-export function stationSlotAssignments(stationId: string): { slot1: StationSlot | null; slot2: StationSlot | null } {
+export function stationSlotAssignments(stationId: string): {
+  slot1: StationSlot | null;
+  slot2: StationSlot | null;
+} {
   return {
-    slot1: stationSlots.find(s => s.stationId === stationId && s.slot === 1) ?? null,
-    slot2: stationSlots.find(s => s.stationId === stationId && s.slot === 2) ?? null,
+    slot1: stationSlots.find((s) => s.stationId === stationId && s.slot === 1) ?? null,
+    slot2: stationSlots.find((s) => s.stationId === stationId && s.slot === 2) ?? null,
   };
 }
 
@@ -450,7 +458,14 @@ export function sponsorSlotForPlace(placeId: string): StationSlot | undefined {
   return slotByPlaceId.get(placeId);
 }
 
-const LATE_NIGHT_PLACE_IDS = new Set(['lafayette', 'american', 'checker', 'shillelagh', 'sweetwater', 'grey-ghost']);
+const LATE_NIGHT_PLACE_IDS = new Set([
+  'lafayette',
+  'american',
+  'checker',
+  'shillelagh',
+  'sweetwater',
+  'grey-ghost',
+]);
 
 type RestaurantSeed = readonly [
   id: string,
@@ -463,71 +478,274 @@ type RestaurantSeed = readonly [
 ];
 
 const restaurantSeeds: RestaurantSeed[] = [
-  ['lafayette', 'Lafayette Coney Island', 'Detroit coney dogs', '$', 'https://www.lafayetteconeyisland.com/', -83.0478, 42.3317],
-  ['american', 'American Coney Island', 'Detroit coney dogs', '$', 'https://www.americanconeyisland.com/', -83.0480, 42.3318],
+  [
+    'lafayette',
+    'Lafayette Coney Island',
+    'Detroit coney dogs',
+    '$',
+    'https://www.lafayetteconeyisland.com/',
+    -83.0478,
+    42.3317,
+  ],
+  [
+    'american',
+    'American Coney Island',
+    'Detroit coney dogs',
+    '$',
+    'https://www.americanconeyisland.com/',
+    -83.048,
+    42.3318,
+  ],
   ['parc', 'Parc', 'New American', '$$$', 'https://www.parcdetroit.com/', -83.0467, 42.3318],
-  ['central', 'Central Kitchen + Bar', 'American', '$$', 'https://centralkitchendetroit.com/', -83.0463, 42.3324],
-  ['chophouse', 'London Chop House', 'Steakhouse', '$$$$', 'https://thelondonchophouse.com/', -83.0466, 42.3308],
-  ['checker', 'Checker Bar', 'Burgers & bar', '$', 'https://www.checkerbardetroit.com/', -83.0457, 42.3313],
-  ['joemuer', 'Joe Muer Seafood', 'Seafood', '$$$$', 'https://joemuer.com/', -83.0396, 42.3290],
-  ['andiamo', 'Andiamo Detroit Riverfront', 'Italian', '$$$', 'https://andiamoitalia.com/', -83.0399, 42.3294],
-  ['apparatus', 'The Apparatus Room', 'New American', '$$$', 'https://detroitfoundationhotel.com/eat-drink/', -83.0505, 42.3300],
-  ['anchor', 'Anchor Bar', 'Pub & grill', '$$', 'https://www.anchorbardetroit.com/', -83.0520, 42.3313],
-  ['lumen', 'Lumen Detroit', 'American', '$$', 'https://www.lumendetroit.com/', -83.0530, 42.3297],
-  ['wright', 'Wright & Company', 'Small plates', '$$$', 'https://www.wrightdetroit.com/', -83.0478, 42.3346],
-  ['hudson', 'Hudson Café', 'Breakfast & brunch', '$$', 'https://hudsoncafedetroit.com/', -83.0479, 42.3336],
-  ['townhouse', 'Townhouse Detroit', 'American', '$$$', 'https://townhousedetroit.com/', -83.0470, 42.3335],
+  [
+    'central',
+    'Central Kitchen + Bar',
+    'American',
+    '$$',
+    'https://centralkitchendetroit.com/',
+    -83.0463,
+    42.3324,
+  ],
+  [
+    'chophouse',
+    'London Chop House',
+    'Steakhouse',
+    '$$$$',
+    'https://thelondonchophouse.com/',
+    -83.0466,
+    42.3308,
+  ],
+  [
+    'checker',
+    'Checker Bar',
+    'Burgers & bar',
+    '$',
+    'https://www.checkerbardetroit.com/',
+    -83.0457,
+    42.3313,
+  ],
+  ['joemuer', 'Joe Muer Seafood', 'Seafood', '$$$$', 'https://joemuer.com/', -83.0396, 42.329],
+  [
+    'andiamo',
+    'Andiamo Detroit Riverfront',
+    'Italian',
+    '$$$',
+    'https://andiamoitalia.com/',
+    -83.0399,
+    42.3294,
+  ],
+  [
+    'apparatus',
+    'The Apparatus Room',
+    'New American',
+    '$$$',
+    'https://detroitfoundationhotel.com/eat-drink/',
+    -83.0505,
+    42.33,
+  ],
+  [
+    'anchor',
+    'Anchor Bar',
+    'Pub & grill',
+    '$$',
+    'https://www.anchorbardetroit.com/',
+    -83.052,
+    42.3313,
+  ],
+  ['lumen', 'Lumen Detroit', 'American', '$$', 'https://www.lumendetroit.com/', -83.053, 42.3297],
+  [
+    'wright',
+    'Wright & Company',
+    'Small plates',
+    '$$$',
+    'https://www.wrightdetroit.com/',
+    -83.0478,
+    42.3346,
+  ],
+  [
+    'hudson',
+    'Hudson Café',
+    'Breakfast & brunch',
+    '$$',
+    'https://hudsoncafedetroit.com/',
+    -83.0479,
+    42.3336,
+  ],
+  [
+    'townhouse',
+    'Townhouse Detroit',
+    'American',
+    '$$$',
+    'https://townhousedetroit.com/',
+    -83.047,
+    42.3335,
+  ],
   ['sanmorello', 'San Morello', 'Italian', '$$$', 'https://sanmorello.com/', -83.0487, 42.3356],
   ['mootz', 'Mootz Pizzeria + Bar', 'Pizza', '$$', 'https://mootzpizzeria.com/', -83.0455, 42.3352],
-  ['cliffbells', 'Cliff Bell’s', 'Jazz club & dining', '$$$', 'https://www.cliffbells.com/', -83.0533, 42.3358],
-  ['bucharest', 'Bucharest Grill', 'Mediterranean', '$', 'https://bucharestgrill.com/', -83.0511, 42.3365],
+  [
+    'cliffbells',
+    'Cliff Bell’s',
+    'Jazz club & dining',
+    '$$$',
+    'https://www.cliffbells.com/',
+    -83.0533,
+    42.3358,
+  ],
+  [
+    'bucharest',
+    'Bucharest Grill',
+    'Mediterranean',
+    '$',
+    'https://bucharestgrill.com/',
+    -83.0511,
+    42.3365,
+  ],
   ['pegasus', 'Pegasus Taverna', 'Greek', '$$', 'https://pegasustavernas.com/', -83.0426, 42.3354],
-  ['fishbones', 'Fishbone’s', 'Seafood & Creole', '$$', 'https://fishbonesusa.com/', -83.0421, 42.3350],
-  ['shillelagh', 'The Old Shillelagh', 'Irish pub', '$$', 'https://oldshillelagh.com/', -83.0419, 42.3349],
-  ['firebird', 'Firebird Tavern', 'Tavern', '$$', 'https://www.firebirdtavern.com/', -83.0428, 42.3357],
-  ['sweetwater', 'Sweetwater Tavern', 'Wings & tavern', '$$', 'https://sweetwatertavern.net/', -83.0413, 42.3335],
-  ['brushpark-brunch', 'Brush Park Brunch', 'Brunch & Café', '$$', 'https://www.brushparkbrunch.com/', -83.0558, 42.3438],
-  ['grey-ghost', 'Grey Ghost Detroit', 'Steak & Cocktails', '$$$', 'https://greyghostdetroit.com/', -83.0567, 42.3444],
-  ['bar-pigalle', 'Bar Pigalle', 'French Bistro', '$$$', 'https://www.barpigalle.com/', -83.0549, 42.3431],
-  ['bodega', 'Bodega Market & Café', 'Deli & Bodega', '$', 'https://bodegamkt.com/', -83.0561, 42.3419],
-  ['jolly-pumpkin', 'Jolly Pumpkin Pizzeria', 'Pizza & Brewery', '$$', 'https://www.jollypumpkin.com/', -83.0645, 42.3524],
-  ['chartreuse', 'Chartreuse Kitchen', 'Farm-to-Table', '$$$', 'https://chartreusekc.com/', -83.0655, 42.3582],
-  ['whitney', 'The Whitney', 'Historic American', '$$$$', 'https://thewhitney.com/', -83.0628, 42.3533],
-  ['baobab-fare', 'Baobab Fare', 'East African', '$$', 'https://baobabfare.com/', -83.0746, 42.3720],
-  ['marrow', 'Marrow Detroit Provisions', 'Gastropub & Butcher', '$$$', 'https://www.marrowdetroit.com/', -83.0735, 42.3715],
+  [
+    'fishbones',
+    'Fishbone’s',
+    'Seafood & Creole',
+    '$$',
+    'https://fishbonesusa.com/',
+    -83.0421,
+    42.335,
+  ],
+  [
+    'shillelagh',
+    'The Old Shillelagh',
+    'Irish pub',
+    '$$',
+    'https://oldshillelagh.com/',
+    -83.0419,
+    42.3349,
+  ],
+  [
+    'firebird',
+    'Firebird Tavern',
+    'Tavern',
+    '$$',
+    'https://www.firebirdtavern.com/',
+    -83.0428,
+    42.3357,
+  ],
+  [
+    'sweetwater',
+    'Sweetwater Tavern',
+    'Wings & tavern',
+    '$$',
+    'https://sweetwatertavern.net/',
+    -83.0413,
+    42.3335,
+  ],
+  [
+    'brushpark-brunch',
+    'Brush Park Brunch',
+    'Brunch & Café',
+    '$$',
+    'https://www.brushparkbrunch.com/',
+    -83.0558,
+    42.3438,
+  ],
+  [
+    'grey-ghost',
+    'Grey Ghost Detroit',
+    'Steak & Cocktails',
+    '$$$',
+    'https://greyghostdetroit.com/',
+    -83.0567,
+    42.3444,
+  ],
+  [
+    'bar-pigalle',
+    'Bar Pigalle',
+    'French Bistro',
+    '$$$',
+    'https://www.barpigalle.com/',
+    -83.0549,
+    42.3431,
+  ],
+  [
+    'bodega',
+    'Bodega Market & Café',
+    'Deli & Bodega',
+    '$',
+    'https://bodegamkt.com/',
+    -83.0561,
+    42.3419,
+  ],
+  [
+    'jolly-pumpkin',
+    'Jolly Pumpkin Pizzeria',
+    'Pizza & Brewery',
+    '$$',
+    'https://www.jollypumpkin.com/',
+    -83.0645,
+    42.3524,
+  ],
+  [
+    'chartreuse',
+    'Chartreuse Kitchen',
+    'Farm-to-Table',
+    '$$$',
+    'https://chartreusekc.com/',
+    -83.0655,
+    42.3582,
+  ],
+  [
+    'whitney',
+    'The Whitney',
+    'Historic American',
+    '$$$$',
+    'https://thewhitney.com/',
+    -83.0628,
+    42.3533,
+  ],
+  ['baobab-fare', 'Baobab Fare', 'East African', '$$', 'https://baobabfare.com/', -83.0746, 42.372],
+  [
+    'marrow',
+    'Marrow Detroit Provisions',
+    'Gastropub & Butcher',
+    '$$$',
+    'https://www.marrowdetroit.com/',
+    -83.0735,
+    42.3715,
+  ],
 ];
 
-export const restaurants: Place[] = restaurantSeeds.map(([id, name, category, price, url, lng, lat]) => {
-  // A place is a partner only while it holds a station slot.
-  const slot = slotByPlaceId.get(id);
+export const restaurants: Place[] = restaurantSeeds.map(
+  ([id, name, category, price, url, lng, lat]) => {
+    // A place is a partner only while it holds a station slot.
+    const slot = slotByPlaceId.get(id);
 
-  return {
-    id,
-    name,
-    category,
-    price,
-    url,
-    coordinate: [lng, lat],
-    lateNight: LATE_NIGHT_PLACE_IDS.has(id),
-    sponsored: Boolean(slot),
-    ...(slot
-      ? {
-          sponsorTier: slot.slot === 1 ? ('anchor' as const) : ('featured' as const),
-          sponsorTagline: slot.tagline,
-          sponsorPerk: slot.perk,
-          sponsorStationId: slot.stationId,
-          sponsorSlot: slot.slot,
-          ...(slot.rotation ? { sponsorRotation: slot.rotation } : {}),
-        }
-      : {}),
-  };
-});
+    return {
+      id,
+      name,
+      category,
+      price,
+      url,
+      coordinate: [lng, lat],
+      lateNight: LATE_NIGHT_PLACE_IDS.has(id),
+      sponsored: Boolean(slot),
+      ...(slot
+        ? {
+            sponsorTier: slot.slot === 1 ? ('anchor' as const) : ('featured' as const),
+            sponsorTagline: slot.tagline,
+            sponsorPerk: slot.perk,
+            sponsorStationId: slot.stationId,
+            sponsorSlot: slot.slot,
+            ...(slot.rotation ? { sponsorRotation: slot.rotation } : {}),
+          }
+        : {}),
+    };
+  },
+);
 
 export function milesBetween(a: Coordinate, b: Coordinate): number {
   const r = Math.PI / 180;
   const dLat = (b[1] - a[1]) * r;
   const dLon = (b[0] - a[0]) * r;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLon / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLon / 2) ** 2;
   return 3958.8 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
@@ -535,29 +753,96 @@ export type NearbyPlace = Place & { walkMiles: number };
 
 export function nearbyRestaurants(station: Station): NearbyPlace[] {
   return restaurants
-    .map(p => ({ ...p, walkMiles: milesBetween(station.entrance, p.coordinate) * 1.25 }))
-    .filter(p => p.walkMiles <= 0.4)
+    .map((p) => ({ ...p, walkMiles: milesBetween(station.entrance, p.coordinate) * 1.25 }))
+    .filter((p) => p.walkMiles <= 0.4)
     .sort((a, b) => a.walkMiles - b.walkMiles);
 }
 
 export const sportsTeams = [
-  { id: 'lions', team: 'Detroit Lions', league: 'NFL', venue: 'Ford Field', station: 'Greektown Station', href: 'https://www.detroitlions.com/schedule/' },
-  { id: 'tigers', team: 'Detroit Tigers', league: 'MLB', venue: 'Comerica Park', station: 'Broadway Station', href: 'https://www.mlb.com/tigers/schedule' },
-  { id: 'redwings', team: 'Detroit Red Wings', league: 'NHL', venue: 'Little Caesars Arena', station: 'Sproat / Adelaide (QLINE) · Grand Circus (DPM)', href: 'https://www.nhl.com/redwings/schedule' },
-  { id: 'pistons', team: 'Detroit Pistons', league: 'NBA', venue: 'Little Caesars Arena', station: 'Sproat / Adelaide (QLINE) · Grand Circus (DPM)', href: 'https://www.nba.com/pistons/schedule' },
+  {
+    id: 'lions',
+    team: 'Detroit Lions',
+    league: 'NFL',
+    venue: 'Ford Field',
+    station: 'Greektown Station',
+    href: 'https://www.detroitlions.com/schedule/',
+  },
+  {
+    id: 'tigers',
+    team: 'Detroit Tigers',
+    league: 'MLB',
+    venue: 'Comerica Park',
+    station: 'Broadway Station',
+    href: 'https://www.mlb.com/tigers/schedule',
+  },
+  {
+    id: 'redwings',
+    team: 'Detroit Red Wings',
+    league: 'NHL',
+    venue: 'Little Caesars Arena',
+    station: 'Sproat / Adelaide (QLINE) · Grand Circus (DPM)',
+    href: 'https://www.nhl.com/redwings/schedule',
+  },
+  {
+    id: 'pistons',
+    team: 'Detroit Pistons',
+    league: 'NBA',
+    venue: 'Little Caesars Arena',
+    station: 'Sproat / Adelaide (QLINE) · Grand Circus (DPM)',
+    href: 'https://www.nba.com/pistons/schedule',
+  },
 ];
 
 export const activities = [
-  { name: 'Campus Martius Park events', area: 'Downtown', note: 'Seasonal public programming, ice rink in winter', station: 'Campus Martius (QLINE) / Financial District (DPM)', href: 'https://downtowndetroit.org/events/', downtown: true },
-  { name: 'Beacon Park programming', area: 'Downtown', note: 'Free concerts, night markets and food trucks', station: 'Fort / Cass Station', href: 'https://downtowndetroit.org/events/', downtown: true },
-  { name: 'Detroit RiverWalk', area: 'Downtown riverfront', note: 'Public riverfront paths and conservatory', station: 'Renaissance Center Station', href: 'https://detroitriverfront.org/events', downtown: true },
-  { name: 'Brush Park Historic Walking District', area: 'Brush Park', note: 'Historic Victorians and boutique café corridor', station: 'Sproat / Adelaide (QLINE)', href: 'https://downtowndetroit.org/', downtown: true },
-  { name: 'Detroit Institute of Arts (DIA)', area: 'Midtown Cultural Center', note: 'World-class museum free to MI residents', station: 'Warren Avenue (QLINE)', href: 'https://dia.org/', downtown: true },
-  { name: 'Capitol Park', area: 'Downtown', note: 'Public green plaza with pop-up events', station: 'Times Square Station', href: 'https://downtowndetroit.org/', downtown: true },
-].filter(a => a.downtown);
-
-
-
+  {
+    name: 'Campus Martius Park events',
+    area: 'Downtown',
+    note: 'Seasonal public programming, ice rink in winter',
+    station: 'Campus Martius (QLINE) / Financial District (DPM)',
+    href: 'https://downtowndetroit.org/events/',
+    downtown: true,
+  },
+  {
+    name: 'Beacon Park programming',
+    area: 'Downtown',
+    note: 'Free concerts, night markets and food trucks',
+    station: 'Fort / Cass Station',
+    href: 'https://downtowndetroit.org/events/',
+    downtown: true,
+  },
+  {
+    name: 'Detroit RiverWalk',
+    area: 'Downtown riverfront',
+    note: 'Public riverfront paths and conservatory',
+    station: 'Renaissance Center Station',
+    href: 'https://detroitriverfront.org/events',
+    downtown: true,
+  },
+  {
+    name: 'Brush Park Historic Walking District',
+    area: 'Brush Park',
+    note: 'Historic Victorians and boutique café corridor',
+    station: 'Sproat / Adelaide (QLINE)',
+    href: 'https://downtowndetroit.org/',
+    downtown: true,
+  },
+  {
+    name: 'Detroit Institute of Arts (DIA)',
+    area: 'Midtown Cultural Center',
+    note: 'World-class museum free to MI residents',
+    station: 'Warren Avenue (QLINE)',
+    href: 'https://dia.org/',
+    downtown: true,
+  },
+  {
+    name: 'Capitol Park',
+    area: 'Downtown',
+    note: 'Public green plaza with pop-up events',
+    station: 'Times Square Station',
+    href: 'https://downtowndetroit.org/',
+    downtown: true,
+  },
+].filter((a) => a.downtown);
 
 // ==========================================
 // QUICK NAVIGATION & "HOW DO I?" DATA MODELS
@@ -587,7 +872,8 @@ export const popularHotels: HotelGuide[] = [
     nearestLine: 'mover',
     walkingDistanceMiles: 0.15,
     walkingMinutes: 3,
-    walkingDirections: 'Exit station north onto Cass Ave, head half a block south to Larned St. Entrance is across from Huntington Place.',
+    walkingDirections:
+      'Exit station north onto Cass Ave, head half a block south to Larned St. Entrance is across from Huntington Place.',
   },
   {
     id: 'westin-book-cadillac',
@@ -599,7 +885,8 @@ export const popularHotels: HotelGuide[] = [
     nearestLine: 'mover',
     walkingDistanceMiles: 0.1,
     walkingMinutes: 2,
-    walkingDirections: 'Exit Michigan Station east towards Washington Blvd. The historic hotel tower entrance is 1 block south on Washington Blvd.',
+    walkingDirections:
+      'Exit Michigan Station east towards Washington Blvd. The historic hotel tower entrance is 1 block south on Washington Blvd.',
   },
   {
     id: 'courtyard-marriott',
@@ -611,7 +898,8 @@ export const popularHotels: HotelGuide[] = [
     nearestLine: 'mover',
     walkingDistanceMiles: 0.05,
     walkingMinutes: 1,
-    walkingDirections: 'Direct indoor climate-controlled skywalk connection from the Millender Center Station platform directly into the hotel lobby.',
+    walkingDirections:
+      'Direct indoor climate-controlled skywalk connection from the Millender Center Station platform directly into the hotel lobby.',
   },
   {
     id: 'shinola-hotel',
@@ -623,7 +911,8 @@ export const popularHotels: HotelGuide[] = [
     nearestLine: 'mover',
     walkingDistanceMiles: 0.12,
     walkingMinutes: 2,
-    walkingDirections: 'Exit Broadway Station west along John R St toward Woodward Ave. Turn left into Parker’s Alley or Woodward entrance.',
+    walkingDirections:
+      'Exit Broadway Station west along John R St toward Woodward Ave. Turn left into Parker’s Alley or Woodward entrance.',
   },
   {
     id: 'fort-pontchartrain',
@@ -635,7 +924,8 @@ export const popularHotels: HotelGuide[] = [
     nearestLine: 'mover',
     walkingDistanceMiles: 0.1,
     walkingMinutes: 2,
-    walkingDirections: 'Exit Financial District onto Jefferson Ave and head 1 block south on Washington Blvd toward the river.',
+    walkingDirections:
+      'Exit Financial District onto Jefferson Ave and head 1 block south on Washington Blvd toward the river.',
   },
   {
     id: 'hollywood-greektown',
@@ -647,7 +937,8 @@ export const popularHotels: HotelGuide[] = [
     nearestLine: 'mover',
     walkingDistanceMiles: 0.05,
     walkingMinutes: 1,
-    walkingDirections: 'Direct 3rd floor enclosed pedestrian skybridge directly connecting the People Mover station to the casino & hotel atrium.',
+    walkingDirections:
+      'Direct 3rd floor enclosed pedestrian skybridge directly connecting the People Mover station to the casino & hotel atrium.',
   },
   {
     id: 'david-whitney',
@@ -659,7 +950,8 @@ export const popularHotels: HotelGuide[] = [
     nearestLine: 'mover',
     walkingDistanceMiles: 0.05,
     walkingMinutes: 1,
-    walkingDirections: 'The station entrance sits directly on the Park Ave sidewalk next to the iconic neo-renaissance David Whitney building lobby.',
+    walkingDirections:
+      'The station entrance sits directly on the Park Ave sidewalk next to the iconic neo-renaissance David Whitney building lobby.',
   },
 ];
 
@@ -689,7 +981,8 @@ export const canadaTransitGuide: CanadaGuide = {
   terminalCoordinate: [-83.0426, 42.3292],
   nearestStationId: 'financial',
   nearestStationName: 'Financial District / Millender Center Stations',
-  walkingFromStation: 'Walk 1 block south on Randolph St or Larned St to the Mariners’ Church tunnel plaza boarding platform.',
+  walkingFromStation:
+    'Walk 1 block south on Randolph St or Larned St to the Mariners’ Church tunnel plaza boarding platform.',
   fareCAD: '$15.00 – $17.50 CAD one-way',
   fareUSD: 'Credit or debit card accepted on bus (converts automatically)',
   paymentMethod: 'Contactless debit / credit card on bus boarding (no cash needed)',
@@ -698,7 +991,8 @@ export const canadaTransitGuide: CanadaGuide = {
     'Enhanced Driver’s License (EDL)',
     'NEXUS / FAST Trusted Traveler Card',
   ],
-  scheduleNotes: 'Runs every 60–120 minutes daily directly under the Detroit River to Windsor Transit Terminal (Downtown Windsor).',
+  scheduleNotes:
+    'Runs every 60–120 minutes daily directly under the Detroit River to Windsor Transit Terminal (Downtown Windsor).',
   serviceHours: 'Monday – Saturday: 6:00 AM – 11:54 PM | Sunday: 8:00 AM – 7:54 PM',
   officialWebsite: 'https://thelinqtunnelbus.ca/',
 };
@@ -728,7 +1022,7 @@ export const destinationShortcuts: DestinationShortcut[] = [
     category: 'Sports & Stadium',
     description: 'Home of the Detroit Lions & premier stadium concert arena.',
     icon: 'football',
-    coordinate: [-83.0446, 42.3400],
+    coordinate: [-83.0446, 42.34],
     primaryStationId: 'greektown',
     primaryStationName: 'Greektown Station',
     primaryLine: 'mover',
@@ -736,7 +1030,8 @@ export const destinationShortcuts: DestinationShortcut[] = [
     secondaryStationName: 'Broadway Station',
     walkingDistanceMiles: 0.28,
     walkingMinutes: 5,
-    walkingDirections: 'Exit Greektown Station, walk northeast along Beaubien St or St. Antoine St towards E Adams Ave. Gate G entrance is on Adams.',
+    walkingDirections:
+      'Exit Greektown Station, walk northeast along Beaubien St or St. Antoine St towards E Adams Ave. Gate G entrance is on Adams.',
     popularEvents: 'Detroit Lions NFL, major stadium world tours, Monster Jam',
   },
   {
@@ -753,7 +1048,8 @@ export const destinationShortcuts: DestinationShortcut[] = [
     secondaryStationName: 'Grand Circus Park Station (DPM Transfer)',
     walkingDistanceMiles: 0.1,
     walkingMinutes: 2,
-    walkingDirections: 'The QLINE streetcar stops directly in front of the arena doors along Woodward Ave. Step off directly onto the arena plaza.',
+    walkingDirections:
+      'The QLINE streetcar stops directly in front of the arena doors along Woodward Ave. Step off directly onto the arena plaza.',
     popularEvents: 'Red Wings NHL, Pistons NBA, arena concerts, UFC',
   },
   {
@@ -762,7 +1058,7 @@ export const destinationShortcuts: DestinationShortcut[] = [
     category: 'Sports & Stadium',
     description: 'Home of the Detroit Tigers & open-air downtown ballpark.',
     icon: 'baseball',
-    coordinate: [-83.0485, 42.3390],
+    coordinate: [-83.0485, 42.339],
     primaryStationId: 'broadway',
     primaryStationName: 'Broadway Station',
     primaryLine: 'mover',
@@ -770,7 +1066,8 @@ export const destinationShortcuts: DestinationShortcut[] = [
     secondaryStationName: 'Grand Circus Park Station',
     walkingDistanceMiles: 0.2,
     walkingMinutes: 4,
-    walkingDirections: 'Exit Broadway Station north onto John R St, continue 2 short blocks past Grand Circus Park directly into the Comerica Park outfield gates.',
+    walkingDirections:
+      'Exit Broadway Station north onto John R St, continue 2 short blocks past Grand Circus Park directly into the Comerica Park outfield gates.',
     popularEvents: 'Detroit Tigers MLB baseball, summer ballpark concert festivals',
   },
   {
@@ -787,14 +1084,16 @@ export const destinationShortcuts: DestinationShortcut[] = [
     secondaryStationName: 'Grand Circus (QLINE)',
     walkingDistanceMiles: 0.05,
     walkingMinutes: 1,
-    walkingDirections: 'Direct dual-transit hub: step off the People Mover elevated platform and transfer directly to the Woodward QLINE streetcar.',
+    walkingDirections:
+      'Direct dual-transit hub: step off the People Mover elevated platform and transfer directly to the Woodward QLINE streetcar.',
     popularEvents: 'Theater District dining, Detroit Opera House, historic fountain plaza',
   },
   {
     id: 'campus-martius',
     name: 'Campus Martius Park',
     category: 'Public Park & Civic',
-    description: 'Detroit’s official Point of Origin: year-round ice rink, dining, beach & civic concerts.',
+    description:
+      'Detroit’s official Point of Origin: year-round ice rink, dining, beach & civic concerts.',
     icon: 'sparkles',
     coordinate: [-83.0467, 42.3318],
     primaryStationId: 'cadillac',
@@ -804,14 +1103,16 @@ export const destinationShortcuts: DestinationShortcut[] = [
     secondaryStationName: 'Campus Martius (QLINE)',
     walkingDistanceMiles: 0.12,
     walkingMinutes: 2,
-    walkingDirections: 'Exit Cadillac Center west towards Woodward Ave. Campus Martius Park, the ice rink, Parc restaurant and monument are right in front of you.',
+    walkingDirections:
+      'Exit Cadillac Center west towards Woodward Ave. Campus Martius Park, the ice rink, Parc restaurant and monument are right in front of you.',
     popularEvents: 'Winter ice skating rink, summer beach party, Detroit Tree Lighting, live music',
   },
   {
     id: 'hart-plaza',
     name: 'Hart Plaza',
     category: 'Waterfront',
-    description: 'Waterfront civic plaza on the Detroit River featuring Dodge Fountain & major music festivals.',
+    description:
+      'Waterfront civic plaza on the Detroit River featuring Dodge Fountain & major music festivals.',
     icon: 'waves',
     coordinate: [-83.0441, 42.3274],
     primaryStationId: 'financial',
@@ -821,8 +1122,10 @@ export const destinationShortcuts: DestinationShortcut[] = [
     secondaryStationName: 'Renaissance Center Station',
     walkingDistanceMiles: 0.15,
     walkingMinutes: 3,
-    walkingDirections: 'Exit Financial District south along Griswold St toward the Detroit River. Hart Plaza amphitheater entrance is on Jefferson Ave.',
-    popularEvents: 'Movement Electronic Music Festival, Detroit Jazz Festival, ethnic river festivals',
+    walkingDirections:
+      'Exit Financial District south along Griswold St toward the Detroit River. Hart Plaza amphitheater entrance is on Jefferson Ave.',
+    popularEvents:
+      'Movement Electronic Music Festival, Detroit Jazz Festival, ethnic river festivals',
   },
 ];
 
@@ -846,7 +1149,8 @@ export const howDoIFlows: HowDoIFlow[] = [
     id: 'canada',
     title: 'Get to Canada',
     badge: 'BORDER CROSSING',
-    shortDesc: 'Official Transit Windsor Tunnel Bus guide, nearest station, and border credentials.',
+    shortDesc:
+      'Official Transit Windsor Tunnel Bus guide, nearest station, and border credentials.',
     icon: 'flag',
   },
   {
@@ -927,8 +1231,8 @@ type LegStops = { stopsCount: number; intermediateStations: string[] };
  * starting at Times Square.
  */
 function moverLegStops(from: Station, to: Station): LegStops {
-  const fromIdx = peopleMoverStations.findIndex(s => s.id === from.id);
-  const toIdx = peopleMoverStations.findIndex(s => s.id === to.id);
+  const fromIdx = peopleMoverStations.findIndex((s) => s.id === from.id);
+  const toIdx = peopleMoverStations.findIndex((s) => s.id === to.id);
   if (fromIdx === -1 || toIdx === -1) return { stopsCount: 0, intermediateStations: [] };
 
   const total = peopleMoverStations.length;
@@ -943,8 +1247,8 @@ function moverLegStops(from: Station, to: Station): LegStops {
 
 /** QLINE corridor leg. The streetcar runs in both directions along Woodward. */
 function qlineLegStops(from: Station, to: Station): LegStops {
-  const fromIdx = qlineStations.findIndex(s => s.id === from.id);
-  const toIdx = qlineStations.findIndex(s => s.id === to.id);
+  const fromIdx = qlineStations.findIndex((s) => s.id === from.id);
+  const toIdx = qlineStations.findIndex((s) => s.id === to.id);
   if (fromIdx === -1 || toIdx === -1) return { stopsCount: 0, intermediateStations: [] };
 
   const step = toIdx > fromIdx ? 1 : -1;
@@ -957,14 +1261,16 @@ function qlineLegStops(from: Station, to: Station): LegStops {
 }
 
 function buildLeg(line: TransitLine, from: Station, to: Station): TransitRouteLeg {
-  const { stopsCount, intermediateStations } = line === 'qline' ? qlineLegStops(from, to) : moverLegStops(from, to);
+  const { stopsCount, intermediateStations } =
+    line === 'qline' ? qlineLegStops(from, to) : moverLegStops(from, to);
   const minutesPerStop = line === 'qline' ? QLINE_MINUTES_PER_STOP : MOVER_MINUTES_PER_STOP;
   return {
     line,
     fromStation: from,
     toStation: to,
     stopsCount,
-    estimatedRideMinutes: stopsCount === 0 ? 0 : Math.max(1, Math.round(stopsCount * minutesPerStop)),
+    estimatedRideMinutes:
+      stopsCount === 0 ? 0 : Math.max(1, Math.round(stopsCount * minutesPerStop)),
     intermediateStations,
   };
 }
@@ -980,10 +1286,12 @@ function buildLegs(origin: Station, destination: Station): [TransitRouteLeg, ...
   }
 
   const transfer = lineTransfers.find(
-    t => t.lines.includes(origin.line) && t.lines.includes(destination.line)
+    (t) => t.lines.includes(origin.line) && t.lines.includes(destination.line),
   );
   const originTransfer = transfer ? findStation(transfer.stations[origin.line]) : undefined;
-  const destinationTransfer = transfer ? findStation(transfer.stations[destination.line]) : undefined;
+  const destinationTransfer = transfer
+    ? findStation(transfer.stations[destination.line])
+    : undefined;
   if (!originTransfer || !destinationTransfer) {
     return [buildLeg(origin.line, origin, destination)];
   }
@@ -1047,7 +1355,9 @@ export function calculateFlexibleRoute({
     targetCoord = targetDestination.coordinate;
     walkMiles = 0.05;
     walkMin = 1;
-    walkDirections = targetDestination.entranceNotes || 'Platform elevator and stairs connect directly to street level.';
+    walkDirections =
+      targetDestination.entranceNotes ||
+      'Platform elevator and stairs connect directly to street level.';
   }
 
   const destinationStation = findStation(destinationStationId) ?? peopleMoverStations[0];
@@ -1077,12 +1387,15 @@ export function calculateFlexibleRoute({
   const [primaryLeg, secondLeg] = legs;
   const stopsCount = legs.reduce((sum, leg) => sum + leg.stopsCount, 0);
   const estimatedRideMinutes = legs.reduce((sum, leg) => sum + leg.estimatedRideMinutes, 0);
-  const intermediateStations = legs.flatMap(leg => leg.intermediateStations);
+  const intermediateStations = legs.flatMap((leg) => leg.intermediateStations);
   const transferStation = secondLeg ? primaryLeg.toStation : null;
   const transferWalkMinutes = secondLeg
     ? Math.max(
         1,
-        Math.round(milesBetween(primaryLeg.toStation.entrance, secondLeg.fromStation.entrance) * 1.3 / WALK_MILES_PER_MINUTE)
+        Math.round(
+          (milesBetween(primaryLeg.toStation.entrance, secondLeg.fromStation.entrance) * 1.3) /
+            WALK_MILES_PER_MINUTE,
+        ),
       )
     : 0;
 

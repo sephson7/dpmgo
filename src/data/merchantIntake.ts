@@ -16,18 +16,8 @@ export const merchantIntakeSchema = z.object({
     .min(2, 'Enter the restaurant or business name.')
     .max(80, 'Business name is too long.'),
   email: z.string().trim().email('Enter a valid email address.').max(120, 'Email is too long.'),
-  phone: z
-    .string()
-    .trim()
-    .max(30, 'Phone number is too long.')
-    .optional()
-    .or(z.literal('')),
-  website: z
-    .string()
-    .trim()
-    .max(200, 'Website is too long.')
-    .optional()
-    .or(z.literal('')),
+  phone: z.string().trim().max(30, 'Phone number is too long.').optional().or(z.literal('')),
+  website: z.string().trim().max(200, 'Website is too long.').optional().or(z.literal('')),
   stationId: z
     .string()
     .trim()

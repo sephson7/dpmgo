@@ -53,8 +53,11 @@ export type QlineWindow = {
 function servicesOn(ymd: string): string[] {
   const active = new Set(
     feed.calendar
-      .filter(entry => entry.start <= ymd && entry.end >= ymd && entry.days.includes(weekdayInDetroit(ymd)))
-      .map(entry => entry.id)
+      .filter(
+        (entry) =>
+          entry.start <= ymd && entry.end >= ymd && entry.days.includes(weekdayInDetroit(ymd)),
+      )
+      .map((entry) => entry.id),
   );
   for (const exception of feed.exceptions) {
     if (exception.date !== ymd) continue;
@@ -232,12 +235,13 @@ export function qlineStationSchedule(stationId: string, now = new Date()): Qline
     const directions = feed.directions[serviceId]?.[stationId];
     if (!times) continue;
     times.forEach((value, index) => {
-      if (value >= seconds - 60) entries.push({ seconds: value, direction: directions?.[index] ?? 0 });
+      if (value >= seconds - 60)
+        entries.push({ seconds: value, direction: directions?.[index] ?? 0 });
     });
   }
   entries.sort((a, b) => a.seconds - b.seconds);
 
-  return entries.slice(0, 4).map(entry => ({
+  return entries.slice(0, 4).map((entry) => ({
     seconds: entry.seconds,
     time: formatClockMinutes(entry.seconds / 60),
     minutes: Math.round((entry.seconds - seconds) / 60),
@@ -255,7 +259,7 @@ function nextScheduledDeparture(stationId: string, now = new Date()): { minutes:
 /** Scheduled run time between two stations, in seconds. */
 export function qlineSegmentSeconds(direction: number, from: string, to: string): number | null {
   const segment = feed.segments.find(
-    entry => entry.direction === direction && entry.from === from && entry.to === to
+    (entry) => entry.direction === direction && entry.from === from && entry.to === to,
   );
   return segment ? segment.seconds : null;
 }

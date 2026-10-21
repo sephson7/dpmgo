@@ -17,7 +17,11 @@ export default function InfoPanel({ panel }: InfoPanelProps) {
           <div className="drawer-header-top">
             <div className="drawer-eyebrow">DOWNTOWN CALENDAR</div>
             <DrawerClose asChild>
-              <button type="button" className="drawer-close-btn" aria-label="Close activities drawer">
+              <button
+                type="button"
+                className="drawer-close-btn"
+                aria-label="Close activities drawer"
+              >
                 <X size={18} />
               </button>
             </DrawerClose>
@@ -27,7 +31,13 @@ export default function InfoPanel({ panel }: InfoPanelProps) {
         </DrawerHeader>
         <div className="info-list">
           {activities.map((a, i) => (
-            <a key={i} href={a.href} target="_blank" rel="noopener noreferrer" className="restaurant-item">
+            <a
+              key={i}
+              href={a.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="restaurant-item"
+            >
               <span className="restaurant-main">
                 <strong>{a.name}</strong>
                 <small>
@@ -43,7 +53,7 @@ export default function InfoPanel({ panel }: InfoPanelProps) {
     );
   }
 
-  const team = sportsTeams.find(item => item.id === panel);
+  const team = sportsTeams.find((item) => item.id === panel);
   if (!team) return null;
 
   return (

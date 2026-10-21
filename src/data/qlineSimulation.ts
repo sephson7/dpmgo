@@ -26,8 +26,8 @@ type Stop = {
   dwellMs: number;
 };
 
-const stationCoordinate = new Map(qlineStations.map(station => [station.id, station.coordinate]));
-const stationOrder = qlineStations.map(station => station.id);
+const stationCoordinate = new Map(qlineStations.map((station) => [station.id, station.coordinate]));
+const stationOrder = qlineStations.map((station) => station.id);
 
 const nearestIndex = (shape: Coordinate[], coordinate: Coordinate): number => {
   let best = 0;
@@ -44,7 +44,9 @@ const nearestIndex = (shape: Coordinate[], coordinate: Coordinate): number => {
 
 /** Builds the segments between consecutive stations along one direction shape. */
 function buildSegments(shape: Coordinate[], order: string[], direction: number): Segment[] {
-  const indices = order.map(id => nearestIndex(shape, stationCoordinate.get(id) ?? shape[0] ?? [-83.0458, 42.3314]));
+  const indices = order.map((id) =>
+    nearestIndex(shape, stationCoordinate.get(id) ?? shape[0] ?? [-83.0458, 42.3314]),
+  );
   const segments: Segment[] = [];
   for (let i = 0; i < order.length - 1; i += 1) {
     const from = indices[i] ?? 0;
@@ -79,7 +81,7 @@ const southSegments = buildSegments(qlineSouthboundShape, [...stationOrder].reve
 
 /** One full circuit: Congress St up to Grand Blvd and back down. */
 const cycleSegments: Segment[] = [...northSegments, ...southSegments];
-const northStops = stationOrder.map(id => ({
+const northStops = stationOrder.map((id) => ({
   stationId: id,
   coordinate: stationCoordinate.get(id) ?? [-83.0458, 42.3314],
   dwellMs: QLINE_DWELL_MS,

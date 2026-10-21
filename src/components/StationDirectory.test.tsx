@@ -12,7 +12,7 @@ describe('keyboard access to the station pins', () => {
         selectedId={null}
         onSelect={() => undefined}
         label="Transit stations"
-      />
+      />,
     );
     expect(screen.getByRole('group', { name: 'Transit stations' })).toBeInTheDocument();
     expect(screen.getAllByRole('button')).toHaveLength(peopleMoverStations.length);
@@ -25,9 +25,9 @@ describe('keyboard access to the station pins', () => {
         stations={peopleMoverStations}
         numbering={peopleMoverStations}
         selectedId={null}
-        onSelect={id => selected.push(id)}
+        onSelect={(id) => selected.push(id)}
         label="Transit stations"
-      />
+      />,
     );
 
     const buttons = screen.getAllByRole('button');
@@ -60,12 +60,12 @@ describe('keyboard access to the station pins', () => {
         selectedId={allTransitStations[3]!.id}
         onSelect={() => undefined}
         label="Transit stations"
-      />
+      />,
     );
     expect(screen.getByRole('button', { current: true })).toHaveAttribute('aria-current', 'true');
     const tabStops = screen
       .getAllByRole('button')
-      .filter(button => button.getAttribute('tabindex') === '0');
+      .filter((button) => button.getAttribute('tabindex') === '0');
     expect(tabStops).toHaveLength(1);
 
     rerender(
@@ -75,7 +75,7 @@ describe('keyboard access to the station pins', () => {
         selectedId={null}
         onSelect={() => undefined}
         label="Transit stations"
-      />
+      />,
     );
     expect(screen.queryByRole('button', { current: true })).toBeNull();
   });

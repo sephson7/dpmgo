@@ -54,7 +54,7 @@ export default function StationDrawer({
   const isQLine = station.line === 'qline';
 
   const allNearby = useMemo(() => {
-    return nearbyRestaurants(station).map(r => ({
+    return nearbyRestaurants(station).map((r) => ({
       ...r,
       walkMinutes: Math.max(1, Math.round(r.walkMiles * 20)),
     }));
@@ -66,7 +66,7 @@ export default function StationDrawer({
   useEffect(() => {
     let cancelled = false;
     fetch('/api/anchor-slots')
-      .then(response => (response.ok ? response.json() : { assignments: [] }))
+      .then((response) => (response.ok ? response.json() : { assignments: [] }))
       .then((result: { assignments?: StationSlot[] }) => {
         if (!cancelled) setAssignedSlots(result.assignments ?? []);
       })
@@ -79,7 +79,7 @@ export default function StationDrawer({
   const slots = useMemo(() => {
     const builtIn = stationSlotAssignments(station.id);
     const override = (slot: 1 | 2): StationSlot | null =>
-      assignedSlots.find(item => item.stationId === station.id && item.slot === slot) ?? null;
+      assignedSlots.find((item) => item.stationId === station.id && item.slot === slot) ?? null;
     return {
       slot1: override(1) ?? builtIn.slot1,
       slot2: override(2) ?? builtIn.slot2,
@@ -88,7 +88,7 @@ export default function StationDrawer({
 
   const slotPlace = (slot: StationSlot | null): Place | null => {
     if (!slot) return null;
-    const place = restaurants.find(r => r.id === slot.placeId);
+    const place = restaurants.find((r) => r.id === slot.placeId);
     if (place) return place;
     // Slots assigned from the partner portal can point at a new business.
     return {
@@ -111,8 +111,8 @@ export default function StationDrawer({
   const standardSpots = useMemo(() => {
     const slotIds = new Set([slots.slot1?.placeId, slots.slot2?.placeId].filter(Boolean));
     return allNearby
-      .filter(r => !slotIds.has(r.id))
-      .filter(r => {
+      .filter((r) => !slotIds.has(r.id))
+      .filter((r) => {
         if (priceFilter === '$' && r.price !== '$') return false;
         if (priceFilter === '$$' && r.price !== '$$') return false;
         if (priceFilter === '$$$+' && r.price !== '$$$' && r.price !== '$$$$') return false;
@@ -123,18 +123,18 @@ export default function StationDrawer({
   }, [allNearby, slots, priceFilter, maxMinutes, lateNightOnly]);
 
   const stationsInLine = isQLine ? qlineStations : peopleMoverStations;
-  const number = stationsInLine.findIndex(s => s.id === station.id) + 1;
+  const number = stationsInLine.findIndex((s) => s.id === station.id) + 1;
   const next = stationsInLine[number % stationsInLine.length] ?? station;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${station.entrance[1]},${station.entrance[0]}`;
 
   // Garages that connect to this station for a park-once trip.
   const stationParking = useMemo(
     () =>
-      nearbyParking(station).map(garage => ({
+      nearbyParking(station).map((garage) => ({
         ...garage,
         walkMinutes: Math.max(1, Math.round(garage.walkMiles * 20)),
       })),
-    [station]
+    [station],
   );
 
   // Walk estimate from downtown center (Campus Martius [-83.0466, 42.3316])
@@ -151,7 +151,7 @@ export default function StationDrawer({
   const qline = useMemo(() => qlineStatus(now), [now]);
   const qlineDepartures = useMemo(
     () => (isQLine ? qlineStationSchedule(station.id, now) : []),
-    [isQLine, station.id, now]
+    [isQLine, station.id, now],
   );
 
   return (
@@ -160,7 +160,8 @@ export default function StationDrawer({
       <DrawerHeader className="detail-heading">
         <div className="drawer-header-top">
           <div className="drawer-eyebrow">
-            <span className="signal-dot" /> {isQLine ? 'QLINE' : 'PEOPLE MOVER'} <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
+            <span className="signal-dot" /> {isQLine ? 'QLINE' : 'PEOPLE MOVER'}{' '}
+            <span className="detail-divider">/</span> STATION {String(number).padStart(2, '0')}
           </div>
           <DrawerClose asChild>
             <button type="button" className="drawer-close-btn" aria-label="Close station drawer">
@@ -190,7 +191,8 @@ export default function StationDrawer({
         <div className="stat-tri-cell">
           <span className="stat-tri-label">WALK FROM CAMPUS MARTIUS*</span>
           <div className="stat-tri-value">
-            <span className="stat-tri-accent">{walkingMinutes}</span> min <span className="stat-tri-sub">· ~{walkingMiles.toFixed(1)} mi</span>
+            <span className="stat-tri-accent">{walkingMinutes}</span> min{' '}
+            <span className="stat-tri-sub">· ~{walkingMiles.toFixed(1)} mi</span>
           </div>
         </div>
         <div className="stat-tri-cell">
@@ -220,7 +222,9 @@ export default function StationDrawer({
             <Accessibility size={16} className="text-cyan-400" />
             <span>STATION WAYFINDING &amp; ENTRANCE GUIDE</span>
           </div>
-          <div className={`wayfinding-elevator-pill ${station.elevator ? 'elevator-yes' : 'elevator-no'}`}>
+          <div
+            className={`wayfinding-elevator-pill ${station.elevator ? 'elevator-yes' : 'elevator-no'}`}
+          >
             {station.elevator ? 'ELEVATOR AVAILABLE' : 'STAIRS / RAMP'}
           </div>
         </div>
@@ -298,7 +302,9 @@ export default function StationDrawer({
                     {qline.window.opensAt} to {qline.window.closesAt}
                   </div>
                   <div className="timetable-day-note">
-                    {qline.window.isSunday ? 'Sunday service hours' : 'Monday to Saturday service hours'}
+                    {qline.window.isSunday
+                      ? 'Sunday service hours'
+                      : 'Monday to Saturday service hours'}
                     {qline.window.fromFeed ? ' · agency GTFS' : ' · published hours'}
                   </div>
                 </div>
@@ -315,7 +321,15 @@ export default function StationDrawer({
                 </div>
                 <div className="timetable-time-col">
                   <div className="timetable-primary-time">{train.time}</div>
-                  <div className="timetable-day-note">{train.minutes <= 0 ? 'Due at platform' : train.minutes <= 15 ? `In ~${train.minutes} min` : train.day ? train.day : 'Scheduled run'}</div>
+                  <div className="timetable-day-note">
+                    {train.minutes <= 0
+                      ? 'Due at platform'
+                      : train.minutes <= 15
+                        ? `In ~${train.minutes} min`
+                        : train.day
+                          ? train.day
+                          : 'Scheduled run'}
+                  </div>
                 </div>
                 {train.minutes > 0 && train.minutes <= 10 && (
                   <span className="timetable-pill-due">APPROACHING</span>
@@ -324,7 +338,9 @@ export default function StationDrawer({
             ))}
           </div>
         ) : (
-          <div className="timetable-empty">Service currently closed. Next service begins tomorrow at 6:00 AM.</div>
+          <div className="timetable-empty">
+            Service currently closed. Next service begins tomorrow at 6:00 AM.
+          </div>
         )}
       </div>
 
@@ -367,7 +383,7 @@ export default function StationDrawer({
         <div className="filters-strip">
           <div className="filter-group">
             <span className="filter-title">PRICE:</span>
-            {(['all', '$', '$$', '$$$+'] as const).map(p => (
+            {(['all', '$', '$$', '$$$+'] as const).map((p) => (
               <button
                 key={p}
                 type="button"
@@ -381,7 +397,13 @@ export default function StationDrawer({
 
           <div className="filter-group">
             <span className="filter-title">WALK:</span>
-            {([['all', 'ANY'], [5, '≤5M'], [10, '≤10M']] as const).map(([val, lbl]) => (
+            {(
+              [
+                ['all', 'ANY'],
+                [5, '≤5M'],
+                [10, '≤10M'],
+              ] as const
+            ).map(([val, lbl]) => (
               <button
                 key={String(val)}
                 type="button"
@@ -394,7 +416,7 @@ export default function StationDrawer({
             <button
               type="button"
               className={`filter-button ${lateNightOnly ? 'selected-warm' : ''}`}
-              onClick={() => setLateNightOnly(v => !v)}
+              onClick={() => setLateNightOnly((v) => !v)}
             >
               LATE NIGHT
             </button>
@@ -404,7 +426,7 @@ export default function StationDrawer({
         {/* Restaurants List */}
         {standardSpots.length > 0 ? (
           <div className="restaurants-scroll-list">
-            {standardSpots.map(r => (
+            {standardSpots.map((r) => (
               <div
                 key={r.id}
                 className={`restaurant-row-card ${restaurantId === r.id ? 'is-selected' : ''}`}
@@ -433,7 +455,7 @@ export default function StationDrawer({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="restaurant-external-link"
-                    onClick={e => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
                     aria-label={`Open ${r.name} menu`}
                   >
                     <ExternalLink size={16} />
@@ -453,7 +475,7 @@ export default function StationDrawer({
               <span className="dining-section-title">PARK ONCE · NEARBY GARAGES</span>
             </div>
             <div className="restaurants-scroll-list">
-              {stationParking.map(garage => (
+              {stationParking.map((garage) => (
                 <div key={garage.id} className="restaurant-row-card">
                   <div className="restaurant-thumb-box">
                     <SquareParking size={18} />
@@ -463,7 +485,8 @@ export default function StationDrawer({
                       <span className="restaurant-name">{garage.name}</span>
                     </div>
                     <div className="restaurant-meta-line">
-                      {garage.address} · ~{garage.walkMinutes} min walk · {garage.line === 'mover' ? 'DPM' : 'QLINE'}
+                      {garage.address} · ~{garage.walkMinutes} min walk ·{' '}
+                      {garage.line === 'mover' ? 'DPM' : 'QLINE'}
                     </div>
                     <div className="restaurant-meta-line">{garage.hours}</div>
                   </div>
@@ -502,7 +525,8 @@ export default function StationDrawer({
       </div>
 
       <div className="detail-disclaimer">
-        <Clock3 size={13} /> Arrivals calculated from published headway schedules. Real-time agency telemetry currently unavailable from DTC. Vehicle markers are simulated.
+        <Clock3 size={13} /> Arrivals calculated from published headway schedules. Real-time agency
+        telemetry currently unavailable from DTC. Vehicle markers are simulated.
       </div>
     </div>
   );
@@ -526,7 +550,9 @@ function SponsorSlotCard({
     <div className="anchor-spot-wrapper">
       <div className="anchor-spot-eyebrow">
         <span className="anchor-spot-dot" /> SLOT {slot.slot} ·{' '}
-        {slot.kind === 'annual' ? 'ANNUAL PARTNER' : `ROTATING PARTNER${slot.rotation ? ` · ${slot.rotation}` : ''}`}
+        {slot.kind === 'annual'
+          ? 'ANNUAL PARTNER'
+          : `ROTATING PARTNER${slot.rotation ? ` · ${slot.rotation}` : ''}`}
       </div>
       <div className="anchor-spot-box">
         <div className="anchor-spot-top">
@@ -578,7 +604,15 @@ function SponsorSlotCard({
   );
 }
 
-function OpenSlotCard({ slot, stationName, stationId }: { slot: 1 | 2; stationName: string; stationId: string }) {
+function OpenSlotCard({
+  slot,
+  stationName,
+  stationId,
+}: {
+  slot: 1 | 2;
+  stationName: string;
+  stationId: string;
+}) {
   const annual = slot === 1;
   return (
     <div className="unclaimed-anchor-banner">

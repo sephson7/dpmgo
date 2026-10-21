@@ -31,7 +31,7 @@ type Assignment = {
 };
 
 const stationName = (id: string) =>
-  [...peopleMoverStations, ...qlineStations].find(station => station.id === id)?.name ?? id;
+  [...peopleMoverStations, ...qlineStations].find((station) => station.id === id)?.name ?? id;
 
 export const Route = createFileRoute('/admin')({
   head: () => ({
@@ -132,7 +132,9 @@ function AdminPortal() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-wider text-cyan-400">PARTNER ADMIN</h1>
-            <p className="text-xs text-slate-400">Anchor slot approvals · Motorcity Automated Systems</p>
+            <p className="text-xs text-slate-400">
+              Anchor slot approvals · Motorcity Automated Systems
+            </p>
           </div>
         </div>
         <a href="/" className="text-cyan-400 hover:underline flex items-center gap-1 text-sm">
@@ -145,7 +147,9 @@ function AdminPortal() {
           <p className="text-sm text-slate-400 py-8">Checking session…</p>
         ) : notConfigured ? (
           <div className="w-full max-w-md bg-slate-900/60 border border-amber-500/40 rounded-2xl p-6 space-y-3">
-            <h2 className="text-xl font-bold tracking-tight text-white mb-1">Portal not configured</h2>
+            <h2 className="text-xl font-bold tracking-tight text-white mb-1">
+              Portal not configured
+            </h2>
             <p className="text-xs text-slate-400 leading-relaxed">
               This deployment has no partner portal credentials, so the portal is closed. Set{' '}
               <code className="text-amber-300">ADMIN_USERNAME</code>,{' '}
@@ -173,7 +177,7 @@ function AdminPortal() {
                 type="text"
                 autoComplete="username"
                 value={username}
-                onChange={e => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-slate-950/70 border border-slate-700 text-sm text-white focus:outline-none focus:border-cyan-400"
               />
             </div>
@@ -185,7 +189,7 @@ function AdminPortal() {
                 type="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-slate-950/70 border border-slate-700 text-sm text-white focus:outline-none focus:border-cyan-400"
               />
             </div>
@@ -215,7 +219,7 @@ function AdminPortal() {
                 <p className="text-sm text-slate-400">No merchant submissions yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {leads.map(lead => (
+                  {leads.map((lead) => (
                     <div
                       key={lead.id}
                       className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-4 flex flex-col gap-2"
@@ -283,7 +287,7 @@ function AdminPortal() {
                 <p className="text-sm text-slate-400">No slots assigned yet.</p>
               ) : (
                 <div className="space-y-2">
-                  {assignments.map(item => (
+                  {assignments.map((item) => (
                     <div
                       key={`${item.stationId}-${item.slot}`}
                       className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 flex flex-wrap items-center gap-3 justify-between"

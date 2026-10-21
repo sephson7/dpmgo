@@ -20,13 +20,10 @@ export const Route = createFileRoute('/api/admin/leads')({
         if (!(await adminPortalConfigured(context))) {
           return Response.json(
             { error: 'The partner portal is not configured on this deployment.' },
-            { status: 503 }
+            { status: 503 },
           );
         }
-        const remaining = await verifyAdminToken(
-          readAdminCookie(request),
-          context
-        );
+        const remaining = await verifyAdminToken(readAdminCookie(request), context);
         if (remaining === null) {
           return Response.json({ error: 'Not signed in.' }, { status: 401 });
         }
@@ -39,13 +36,10 @@ export const Route = createFileRoute('/api/admin/leads')({
         if (!(await adminPortalConfigured(context))) {
           return Response.json(
             { error: 'The partner portal is not configured on this deployment.' },
-            { status: 503 }
+            { status: 503 },
           );
         }
-        const remaining = await verifyAdminToken(
-          readAdminCookie(request),
-          context
-        );
+        const remaining = await verifyAdminToken(readAdminCookie(request), context);
         if (remaining === null) {
           return Response.json({ error: 'Not signed in.' }, { status: 401 });
         }
@@ -70,7 +64,7 @@ export const Route = createFileRoute('/api/admin/leads')({
           return Response.json({ error: 'A lead id is required.' }, { status: 400 });
         }
         const leads = await listLeads();
-        const lead = leads.find(item => item.id === leadId);
+        const lead = leads.find((item) => item.id === leadId);
         if (!lead) {
           return Response.json({ error: 'Unknown lead.' }, { status: 404 });
         }
@@ -87,7 +81,8 @@ export const Route = createFileRoute('/api/admin/leads')({
             : lead.stationId;
         const slot = payload.slot === 1 || payload.slot === 2 ? payload.slot : lead.slot;
         const businessName =
-          (typeof payload.businessName === 'string' && payload.businessName.trim()) || lead.businessName;
+          (typeof payload.businessName === 'string' && payload.businessName.trim()) ||
+          lead.businessName;
 
         const assignment: AnchorAssignment = {
           stationId,
@@ -95,14 +90,17 @@ export const Route = createFileRoute('/api/admin/leads')({
           kind: slot === 1 ? 'annual' : 'rotating',
           businessName,
           placeId: leadId,
-          tagline: (typeof payload.tagline === 'string' && payload.tagline.trim()) || `Official ${stationId} partner`,
+          tagline:
+            (typeof payload.tagline === 'string' && payload.tagline.trim()) ||
+            `Official ${stationId} partner`,
           perk: (typeof payload.perk === 'string' && payload.perk.trim()) || lead.deal,
           ...(typeof payload.rotation === 'string' && payload.rotation.trim()
             ? { rotation: payload.rotation.trim() }
             : {}),
           leadId,
           assignedAt: new Date().toISOString(),
-        };        const saved = await assignSlot(assignment);
+        };
+        const saved = await assignSlot(assignment);
         const updated = await setLeadStatus(leadId, 'approved');
         return Response.json({ ok: true, lead: updated, assignment: saved });
       },

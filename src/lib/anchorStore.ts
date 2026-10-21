@@ -95,9 +95,12 @@ export async function addLead(lead: AnchorLead): Promise<AnchorLead> {
   return lead;
 }
 
-export async function setLeadStatus(id: string, status: AnchorLeadStatus): Promise<AnchorLead | null> {
+export async function setLeadStatus(
+  id: string,
+  status: AnchorLeadStatus,
+): Promise<AnchorLead | null> {
   const store = await readAnchorStore();
-  const lead = store.leads.find(item => item.id === id);
+  const lead = store.leads.find((item) => item.id === id);
   if (!lead) return null;
   lead.status = status;
   if (status === 'approved') lead.approvedAt = new Date().toISOString();
@@ -113,7 +116,7 @@ export async function assignSlot(assignment: AnchorAssignment): Promise<AnchorAs
   const store = await readAnchorStore();
   store.assignments = [
     ...store.assignments.filter(
-      item => !(item.stationId === assignment.stationId && item.slot === assignment.slot)
+      (item) => !(item.stationId === assignment.stationId && item.slot === assignment.slot),
     ),
     assignment,
   ];

@@ -30,11 +30,13 @@ export default function TickerHud({ ticker }: TickerHudProps) {
           {isQLine ? (
             qline.running ? (
               <>
-                HEADWAY: <strong>{QLINE_HEADWAY_MINUTES}</strong> MIN <small>({qline.nextDepartureLabel})</small>
+                HEADWAY: <strong>{QLINE_HEADWAY_MINUTES}</strong> MIN{' '}
+                <small>({qline.nextDepartureLabel})</small>
               </>
             ) : (
               <>
-                <span className="ticker-off-hours">SERVICE SUSPENDED</span> <small>({qline.nextDepartureLabel})</small>
+                <span className="ticker-off-hours">SERVICE SUSPENDED</span>{' '}
+                <small>({qline.nextDepartureLabel})</small>
               </>
             )
           ) : schedule.running ? (

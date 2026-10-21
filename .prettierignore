@@ -6,3 +6,16 @@ pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+
+# Documentation is written by hand and keeps its own wrapping.
+*.md
+
+# The HUD stylesheet is written in a compact one-rule-per-line style on purpose.
+src/styles.css
+
+# The design system kit is vendored from shadcn and keeps the upstream format.
+src/components/ui
+
+# Generated transit data.
+src/data/dpmSchedule.json
+src/data/qlineSchedule.json

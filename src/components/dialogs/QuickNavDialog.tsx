@@ -54,7 +54,9 @@ export default function QuickNavDialog({
         <div className="quick-nav-header">
           <div className="quick-nav-badge">
             <Compass size={12} />
-            <span>{activeHowDoI ? activeHowDoI.badge : activeShortcut?.category?.toUpperCase()}</span>
+            <span>
+              {activeHowDoI ? activeHowDoI.badge : activeShortcut?.category?.toUpperCase()}
+            </span>
           </div>
           <DialogTitle className="quick-nav-title">{route.destinationHubName}</DialogTitle>
           <DialogDescription className="quick-nav-subtitle">
@@ -76,13 +78,13 @@ export default function QuickNavDialog({
             <select
               id="hotel-select"
               value={selectedHotel.id}
-              onChange={e => {
-                const hotel = popularHotels.find(h => h.id === e.target.value);
+              onChange={(e) => {
+                const hotel = popularHotels.find((h) => h.id === e.target.value);
                 if (hotel) onSelectHotel(hotel);
               }}
               className="quick-nav-dropdown"
             >
-              {popularHotels.map(h => (
+              {popularHotels.map((h) => (
                 <option key={h.id} value={h.id}>
                   {h.name} ({h.address})
                 </option>
@@ -99,7 +101,9 @@ export default function QuickNavDialog({
               <strong>INTERNATIONAL CROSS-BORDER TRANSIT</strong>
             </div>
             <p className="canada-banner-desc">
-              The <strong>Transit Windsor Tunnel Bus</strong> departs from the Mariners’ Church Tunnel Plaza (170 E Jefferson Ave), just 1 block from Financial District / Millender Center Stations.
+              The <strong>Transit Windsor Tunnel Bus</strong> departs from the Mariners’ Church
+              Tunnel Plaza (170 E Jefferson Ave), just 1 block from Financial District / Millender
+              Center Stations.
             </p>
             <div className="canada-requirements-grid">
               <div>
@@ -130,21 +134,24 @@ export default function QuickNavDialog({
           </div>
           <select
             value={manualOriginId ?? '__auto__'}
-            onChange={e => onSelectOrigin(e.target.value === '__auto__' ? null : e.target.value)}
+            onChange={(e) => onSelectOrigin(e.target.value === '__auto__' ? null : e.target.value)}
             className="quick-nav-dropdown"
           >
             <option value="__auto__">
               {userPosition ? '📍 Nearest to me' : 'Auto'} — {route.originStation.name}
             </option>
             <optgroup label="People Mover Loop Stations">
-              {peopleMoverStations.map(s => (
+              {peopleMoverStations.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.name} {userPosition && milesBetween(userPosition, s.coordinate) < 0.25 ? '(Near You)' : ''}
+                  {s.name}{' '}
+                  {userPosition && milesBetween(userPosition, s.coordinate) < 0.25
+                    ? '(Near You)'
+                    : ''}
                 </option>
               ))}
             </optgroup>
             <optgroup label="QLINE Woodward Streetcar">
-              {qlineStations.map(s => (
+              {qlineStations.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} (Woodward Ave)
                 </option>
@@ -183,10 +190,14 @@ export default function QuickNavDialog({
                 </div>
               ) : (
                 <div className="route-step-title">
-                  Ride <strong>{route.stopsCount} stop{route.stopsCount === 1 ? '' : 's'}</strong> (~{route.estimatedRideMinutes} mins)
+                  Ride{' '}
+                  <strong>
+                    {route.stopsCount} stop{route.stopsCount === 1 ? '' : 's'}
+                  </strong>{' '}
+                  (~{route.estimatedRideMinutes} mins)
                 </div>
               )}
-              {route.legs.map(leg => (
+              {route.legs.map((leg) => (
                 <div className="intermediate-stops" key={`leg-${leg.line}-${leg.toStation.id}`}>
                   {leg.line === 'mover' ? 'People Mover' : 'QLINE'}
                   {leg.intermediateStations.length > 0
@@ -196,7 +207,8 @@ export default function QuickNavDialog({
               ))}
               {route.transferStation && (
                 <div className="route-step-note">
-                  Transfer at <strong>{route.transferStation.name}</strong> — walk ~{route.transferWalkMinutes} min to the{' '}
+                  Transfer at <strong>{route.transferStation.name}</strong> — walk ~
+                  {route.transferWalkMinutes} min to the{' '}
                   {route.legs[1]?.line === 'qline' ? 'QLINE' : 'People Mover'} platform.
                 </div>
               )}
@@ -223,7 +235,8 @@ export default function QuickNavDialog({
             <div className="route-step-content">
               <div className="route-step-title">
                 <Footprints size={14} className="inline mr-1 text-cyan-400" />
-                Walk {route.walkingDistanceMiles} mi (~{route.walkingMinutes} min) to {route.destinationHubName}
+                Walk {route.walkingDistanceMiles} mi (~{route.walkingMinutes} min) to{' '}
+                {route.destinationHubName}
               </div>
               <div className="route-step-note">{route.walkingDirections}</div>
             </div>
@@ -232,7 +245,11 @@ export default function QuickNavDialog({
 
         {/* ACTIONS: 3D MAP FLYTO & ALARM */}
         <div className="quick-nav-actions">
-          <Button variant="hudOutline" className="quick-nav-action-btn map-btn" onClick={onFlyToDestination}>
+          <Button
+            variant="hudOutline"
+            className="quick-nav-action-btn map-btn"
+            onClick={onFlyToDestination}
+          >
             <Compass size={14} />
             <span>FLY TO 3D MAP</span>
           </Button>

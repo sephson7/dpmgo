@@ -25,7 +25,11 @@ export type TopBarProps = {
 };
 
 /** The header: the brand, the city tag, the explore menu and the directory. */
-export default function TopBar({ onSelectPanel, onOpenStationDirectory, quickRoutes }: TopBarProps) {
+export default function TopBar({
+  onSelectPanel,
+  onOpenStationDirectory,
+  quickRoutes,
+}: TopBarProps) {
   return (
     <header className="topbar">
       <div className="brand-block">
@@ -33,11 +37,16 @@ export default function TopBar({ onSelectPanel, onOpenStationDirectory, quickRou
       </div>
       <div className="topbar-right">
         <div className="city-tag">
-          <span className="signal-dot" /> DETROIT, MI <span className="tag-divider">/</span> TRANSIT NETWORK
+          <span className="signal-dot" /> DETROIT, MI <span className="tag-divider">/</span> TRANSIT
+          NETWORK
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="hudOutline" size="hud" aria-label="Open Detroit events and sports links">
+            <Button
+              variant="hudOutline"
+              size="hud"
+              aria-label="Open Detroit events and sports links"
+            >
               <span className="desktop-label">EXPLORE DETROIT</span>
               <span className="mobile-label">EVENTS</span>
               <ChevronDown size={14} />
@@ -50,7 +59,7 @@ export default function TopBar({ onSelectPanel, onOpenStationDirectory, quickRou
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>DETROIT SPORTS</DropdownMenuLabel>
-            {sportsTeams.map(item => (
+            {sportsTeams.map((item) => (
               <DropdownMenuItem key={item.id} onClick={() => onSelectPanel(item.id)}>
                 <span>{item.team}</span>
                 <small className="menu-sub">{item.league}</small>
@@ -59,7 +68,12 @@ export default function TopBar({ onSelectPanel, onOpenStationDirectory, quickRou
           </DropdownMenuContent>
         </DropdownMenu>
         {quickRoutes}
-        <Button variant="hudOutline" size="hud" className="station-list-btn" onClick={onOpenStationDirectory}>
+        <Button
+          variant="hudOutline"
+          size="hud"
+          className="station-list-btn"
+          onClick={onOpenStationDirectory}
+        >
           <Layers3 size={14} />
           <span>STATIONS</span>
         </Button>

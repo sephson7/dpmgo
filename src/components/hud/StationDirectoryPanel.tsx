@@ -45,7 +45,11 @@ export default function StationDirectoryPanel({
         <div>
           <div className="panel-kicker">
             <span className="signal-dot" />{' '}
-            {onlyQline ? 'NETWORK 02 · QLINE' : onlyMover ? 'NETWORK 01 · DPM' : 'TRANSIT DIRECTORY'}
+            {onlyQline
+              ? 'NETWORK 02 · QLINE'
+              : onlyMover
+                ? 'NETWORK 01 · DPM'
+                : 'TRANSIT DIRECTORY'}
           </div>
           <h2>{onlyQline ? 'QLINE Streetcar' : onlyMover ? 'People Mover' : 'Detroit Transit'}</h2>
           <p>
@@ -70,7 +74,7 @@ export default function StationDirectoryPanel({
         <Search size={15} />
         <input
           value={search}
-          onChange={e => onSearch(e.target.value)}
+          onChange={(e) => onSearch(e.target.value)}
           placeholder="Find a station..."
           aria-label="Find a station"
         />
@@ -93,7 +97,7 @@ export default function StationDirectoryPanel({
             <span>02 — {String(parkingGarages.length).padStart(2, '0')}</span>
           </div>
           <div className="station-scroll">
-            {parkingGarages.map(garage => (
+            {parkingGarages.map((garage) => (
               <Button
                 key={garage.id}
                 variant="station"
@@ -113,7 +117,7 @@ export default function StationDirectoryPanel({
             <span>
               <span className="tiny-diamond" /> RATES CONFIRM ON ARRIVAL
             </span>
-            <span>{parkingGarages.filter(g => g.parkOnce).length} PARK ONCE</span>
+            <span>{parkingGarages.filter((g) => g.parkOnce).length} PARK ONCE</span>
           </div>
         </>
       )}

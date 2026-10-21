@@ -67,9 +67,7 @@ export type CheckoutRequestBody = {
   email?: string;
 };
 
-export type ParseResult =
-  | { ok: true; value: CheckoutRequestBody }
-  | { ok: false; error: string };
+export type ParseResult = { ok: true; value: CheckoutRequestBody } | { ok: false; error: string };
 
 const STATION_ID_PATTERN = /^[a-z0-9-]{2,64}$/;
 
@@ -173,7 +171,7 @@ async function stripeRequest(
   fetchImpl: typeof fetch,
   secretKey: string,
   path: string,
-  init: { method: 'GET' | 'POST'; body?: URLSearchParams }
+  init: { method: 'GET' | 'POST'; body?: URLSearchParams },
 ): Promise<unknown> {
   const response = await fetchImpl(`${STRIPE_API}${path}`, {
     method: init.method,
@@ -198,7 +196,7 @@ export async function createCheckoutSession(
     body: CheckoutRequestBody;
     priceId?: string;
     pricingTableId?: string;
-  }
+  },
 ): Promise<StripeSession> {
   const plan = options.body.plan ?? plansAllowedForSlot(options.body.slot)[0] ?? 'annual';
   const form = buildSessionForm({
@@ -228,22 +226,31 @@ type StripePrice = {
  */
 export async function resolvePlanPriceIds(
   fetchImpl: typeof fetch,
-  options: { secretKey: string; pricingTableId: string; configured?: Partial<Record<AnchorPlan, string>> }
+  options: {
+    secretKey: string;
+    pricingTableId: string;
+    configured?: Partial<Record<AnchorPlan, string>>;
+  },
 ): Promise<Partial<Record<AnchorPlan, string>>> {
   const found: Partial<Record<AnchorPlan, string>> = { ...(options.configured ?? {}) };
 
   // 1. The pricing table points at the product that carries the published prices.
   try {
-    const table = (await stripeRequest(fetchImpl, options.secretKey, `/pricing_tables/${encodeURIComponent(options.pricingTableId)}`, {
-      method: 'GET',
-    })) as { product?: string; data?: { product?: string }[] };
+    const table = (await stripeRequest(
+      fetchImpl,
+      options.secretKey,
+      `/pricing_tables/${encodeURIComponent(options.pricingTableId)}`,
+      {
+        method: 'GET',
+      },
+    )) as { product?: string; data?: { product?: string }[] };
     const product = table?.product ?? table?.data?.[0]?.product;
     if (product) {
       const prices = (await stripeRequest(
         fetchImpl,
         options.secretKey,
         `/prices?product=${encodeURIComponent(product)}&active=true&limit=100`,
-        { method: 'GET' }
+        { method: 'GET' },
       )) as { data?: StripePrice[] };
       collectPlanPrices(prices.data, found);
     }
@@ -254,9 +261,14 @@ export async function resolvePlanPriceIds(
   // 2. Fall back to the published catalogue, matched on amount and interval.
   if (!found.monthly || !found.annual) {
     try {
-      const prices = (await stripeRequest(fetchImpl, options.secretKey, '/prices?active=true&limit=100', {
-        method: 'GET',
-      })) as { data?: StripePrice[] };
+      const prices = (await stripeRequest(
+        fetchImpl,
+        options.secretKey,
+        '/prices?active=true&limit=100',
+        {
+          method: 'GET',
+        },
+      )) as { data?: StripePrice[] };
       collectPlanPrices(prices.data, found);
     } catch {
       // Use whatever was configured.
@@ -268,7 +280,7 @@ export async function resolvePlanPriceIds(
 
 function collectPlanPrices(
   prices: StripePrice[] | undefined,
-  found: Partial<Record<AnchorPlan, string>>
+  found: Partial<Record<AnchorPlan, string>>,
 ): void {
   for (const price of prices ?? []) {
     if (price.active === false) continue;
@@ -284,11 +296,16 @@ function collectPlanPrices(
 
 export async function retrieveCheckoutSession(
   fetchImpl: typeof fetch,
-  options: { secretKey: string; sessionId: string }
+  options: { secretKey: string; sessionId: string },
 ): Promise<StripeSession> {
-  return (await stripeRequest(fetchImpl, options.secretKey, `/checkout/sessions/${encodeURIComponent(options.sessionId)}`, {
-    method: 'GET',
-  })) as StripeSession;
+  return (await stripeRequest(
+    fetchImpl,
+    options.secretKey,
+    `/checkout/sessions/${encodeURIComponent(options.sessionId)}`,
+    {
+      method: 'GET',
+    },
+  )) as StripeSession;
 }
 
 /** A session only counts as paid when Stripe says so. */
@@ -297,7 +314,10 @@ export function isPaidSession(session: StripeSession): boolean {
 }
 
 /** Works out which published plan a session bought. */
-export function planFromSession(session: StripeSession, priceIds?: Partial<Record<AnchorPlan, string>>): AnchorPlan | null {
+export function planFromSession(
+  session: StripeSession,
+  priceIds?: Partial<Record<AnchorPlan, string>>,
+): AnchorPlan | null {
   if (priceIds?.monthly && session.metadata['priceId'] === priceIds.monthly) return 'monthly';
   if (priceIds?.annual && session.metadata['priceId'] === priceIds.annual) return 'annual';
   const total = session.amount_total;
@@ -323,7 +343,7 @@ export type VerifiedCheckout = {
 /** Turns a Stripe session into the receipt shown after checkout. */
 export function verifyCheckoutSession(
   session: StripeSession,
-  options?: { priceIds?: Partial<Record<AnchorPlan, string>> }
+  options?: { priceIds?: Partial<Record<AnchorPlan, string>> },
 ): VerifiedCheckout {
   // Attribution lives on the session reference so it survives both checkout
   // modes, with the metadata as a fallback.

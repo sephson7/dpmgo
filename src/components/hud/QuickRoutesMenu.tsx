@@ -53,13 +53,15 @@ export default function QuickRoutesMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="quick-routes-menu">
         <DropdownMenuLabel className="quick-routes-menu-label">HOW DO I?</DropdownMenuLabel>
-        {howDoIFlows.map(flow => {
+        {howDoIFlows.map((flow) => {
           const Icon = HOW_DO_I_ICONS[flow.id];
           return (
             <DropdownMenuItem
               key={flow.id}
               onSelect={() => onOpenHowDoI(flow)}
-              className={activeHowDoI?.id === flow.id ? 'quick-routes-item is-active' : 'quick-routes-item'}
+              className={
+                activeHowDoI?.id === flow.id ? 'quick-routes-item is-active' : 'quick-routes-item'
+              }
             >
               <Icon size={14} />
               <span>{flow.title}</span>
@@ -68,13 +70,15 @@ export default function QuickRoutesMenu({
         })}
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="quick-routes-menu-label">I’M GOING TO:</DropdownMenuLabel>
-        {destinationShortcuts.map(dest => {
+        {destinationShortcuts.map((dest) => {
           const Icon = DESTINATION_ICONS[dest.icon] ?? Trophy;
           return (
             <DropdownMenuItem
               key={dest.id}
               onSelect={() => onOpenDestination(dest)}
-              className={activeShortcut?.id === dest.id ? 'quick-routes-item is-active' : 'quick-routes-item'}
+              className={
+                activeShortcut?.id === dest.id ? 'quick-routes-item is-active' : 'quick-routes-item'
+              }
             >
               <Icon size={14} />
               <span>{dest.name}</span>

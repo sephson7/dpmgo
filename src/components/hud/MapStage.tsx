@@ -11,7 +11,7 @@ export default function MapStage({ onReady, ...mapProps }: MapStageProps) {
   const [MapComponent, setMapComponent] = useState<ComponentType<TransitMapProps> | null>(null);
 
   useEffect(() => {
-    import('@/components/TransitMap').then(module => setMapComponent(() => module.default));
+    import('@/components/TransitMap').then((module) => setMapComponent(() => module.default));
   }, []);
 
   return (

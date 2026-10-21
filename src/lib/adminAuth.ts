@@ -18,7 +18,7 @@ async function sha256(value: string): Promise<Uint8Array> {
     new TextEncoder().encode(value),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign']
+    ['sign'],
   );
   const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value));
   return new Uint8Array(signature);
@@ -31,9 +31,7 @@ export type AdminCredentials = { username: string; password: string };
  * default: a deployment that is missing the secrets must not expose the
  * partner portal to anybody.
  */
-export async function adminCredentials(
-  context?: unknown
-): Promise<AdminCredentials | null> {
+export async function adminCredentials(context?: unknown): Promise<AdminCredentials | null> {
   const username = await readServerSecret('ADMIN_USERNAME', context);
   const password = await readServerSecret('ADMIN_PASSWORD', context);
   if (!username || !password) return null;
@@ -50,7 +48,7 @@ export async function adminPortalConfigured(context?: unknown): Promise<boolean>
 export async function verifyAdminCredentials(
   username: string,
   password: string,
-  context?: unknown
+  context?: unknown,
 ): Promise<boolean> {
   const expected = await adminCredentials(context);
   if (!expected) return false;
@@ -73,11 +71,11 @@ async function hmac(value: string, secret: string): Promise<string> {
     new TextEncoder().encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign']
+    ['sign'],
   );
   const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value));
   return Array.from(new Uint8Array(signature))
-    .map(byte => byte.toString(16).padStart(2, '0'))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
 }
 
@@ -94,7 +92,7 @@ export async function createAdminToken(context?: unknown): Promise<string | null
 /** Validates a session token and returns the remaining lifetime in ms. */
 export async function verifyAdminToken(
   token: string | undefined | null,
-  context?: unknown
+  context?: unknown,
 ): Promise<number | null> {
   if (!token) return null;
   const secret = await sessionSecret(context);

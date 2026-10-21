@@ -82,10 +82,12 @@ export default function HomeHud() {
     if (activeHowDoI?.id === 'hotel') return selectedHotel;
     if (activeHowDoI?.id === 'canada') return canadaTransitGuide;
     if (activeHowDoI?.id === 'campus-martius') {
-      return destinationShortcuts.find(d => d.id === 'campus-martius') || destinationShortcuts[4]!;
+      return (
+        destinationShortcuts.find((d) => d.id === 'campus-martius') || destinationShortcuts[4]!
+      );
     }
     if (activeHowDoI?.id === 'riverfront') {
-      return destinationShortcuts.find(d => d.id === 'hart-plaza') || destinationShortcuts[5]!;
+      return destinationShortcuts.find((d) => d.id === 'hart-plaza') || destinationShortcuts[5]!;
     }
     return destinationShortcuts[0]!;
   }, [activeShortcut, activeHowDoI, selectedHotel]);
@@ -111,7 +113,7 @@ export default function HomeHud() {
             bearing: -15,
             targetName,
           },
-        })
+        }),
       );
     }
   };
@@ -132,10 +134,10 @@ export default function HomeHud() {
     } else if (flow.id === 'canada') {
       handleFlyToTarget(canadaTransitGuide.terminalName, canadaTransitGuide.terminalCoordinate);
     } else if (flow.id === 'campus-martius') {
-      const target = destinationShortcuts.find(d => d.id === 'campus-martius')!;
+      const target = destinationShortcuts.find((d) => d.id === 'campus-martius')!;
       handleFlyToTarget(target.name, target.coordinate);
     } else if (flow.id === 'riverfront') {
-      const target = destinationShortcuts.find(d => d.id === 'hart-plaza')!;
+      const target = destinationShortcuts.find((d) => d.id === 'hart-plaza')!;
       handleFlyToTarget(target.name, target.coordinate);
     }
   };
@@ -160,17 +162,21 @@ export default function HomeHud() {
     if (typeof navigator === 'undefined' || !('geolocation' in navigator)) return;
     let cancelled = false;
     const watchId = navigator.geolocation.watchPosition(
-      pos => {
+      (pos) => {
         if (cancelled) return;
         setUserPos([pos.coords.longitude, pos.coords.latitude]);
         setGpsError(null);
       },
-      err => {
+      (err) => {
         if (cancelled) return;
         // A denied or unavailable GPS must never break the map.
-        setGpsError(err.code === err.PERMISSION_DENIED ? 'Location permission denied' : 'Location unavailable');
+        setGpsError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location permission denied'
+            : 'Location unavailable',
+        );
       },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
     return () => {
       cancelled = true;
@@ -179,13 +185,14 @@ export default function HomeHud() {
   }, []);
 
   const toggleRestaurant = (id: string) => {
-    setRestaurantId(prev => (prev === id ? null : id));
+    setRestaurantId((prev) => (prev === id ? null : id));
   };
 
   useEffect(() => {
     let timer: number | undefined;
     try {
-      const seen = typeof window !== 'undefined' ? localStorage.getItem('dpmgo_walkthrough_seen') : null;
+      const seen =
+        typeof window !== 'undefined' ? localStorage.getItem('dpmgo_walkthrough_seen') : null;
       if (!seen) {
         timer = window.setTimeout(() => {
           setWalkthroughOpen(true);
@@ -222,7 +229,7 @@ export default function HomeHud() {
     return allTransitStations;
   }, [peopleMover, qline]);
 
-  const selected = allTransitStations.find(station => station.id === selectedId) ?? null;
+  const selected = allTransitStations.find((station) => station.id === selectedId) ?? null;
 
   // Announce the selected stop for screen reader users. The map pins are
   // drawn on a canvas, so the station directory is the accessible route.
@@ -230,22 +237,29 @@ export default function HomeHud() {
     if (!selected) return '';
     const line = selected.line === 'qline' ? 'QLINE streetcar' : 'People Mover';
     const lineStations = selected.line === 'qline' ? qlineStations : peopleMoverStations;
-    const index = lineStations.findIndex(station => station.id === selected.id);
+    const index = lineStations.findIndex((station) => station.id === selected.id);
     const next = lineStations[(index + 1) % lineStations.length];
     return `${selected.name} selected on the ${line}. Next stop ${next?.name ?? 'unknown'}.`;
   }, [selected]);
-  const filtered = activeStations.filter(station => station.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = activeStations.filter((station) =>
+    station.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   // Active station for hero countdown ticker
   const nearestStation = useMemo(() => {
     if (!userPos) return activeStations[0] as Station;
-    const sorted = [...activeStations].sort((a, b) => milesBetween(userPos, a.coordinate) - milesBetween(userPos, b.coordinate));
+    const sorted = [...activeStations].sort(
+      (a, b) => milesBetween(userPos, a.coordinate) - milesBetween(userPos, b.coordinate),
+    );
     return (sorted[0] as Station) ?? (activeStations[0] as Station);
   }, [userPos, activeStations]);
 
   const tickerStation = selected ?? nearestStation;
   const isQLineTicker = tickerStation.line === 'qline';
-  const tickerSchedule = useMemo(() => stationSchedule(tickerStation.id, now), [tickerStation.id, now]);
+  const tickerSchedule = useMemo(
+    () => stationSchedule(tickerStation.id, now),
+    [tickerStation.id, now],
+  );
   const qlineLive = useMemo(() => qlineStatus(now), [now]);
 
   // The arrival readout shares the fleet clock with the map, so the vehicle
@@ -282,7 +296,7 @@ export default function HomeHud() {
         setQline(true);
         setPeopleMover(false);
       } else {
-        setPeopleMover(v => !v);
+        setPeopleMover((v) => !v);
       }
       return;
     }
@@ -292,15 +306,18 @@ export default function HomeHud() {
         setPeopleMover(true);
         setQline(false);
       } else {
-        setQline(v => !v);
+        setQline((v) => !v);
       }
       return;
     }
-    setParking(v => !v);
+    setParking((v) => !v);
   };
 
   const quickRouteState = { activeShortcut, activeHowDoI };
-  const quickRouteActions = { onOpenDestination: openDestinationShortcut, onOpenHowDoI: openHowDoIFlow };
+  const quickRouteActions = {
+    onOpenDestination: openDestinationShortcut,
+    onOpenHowDoI: openHowDoIFlow,
+  };
   const ticker = {
     station: tickerStation,
     isQLine: isQLineTicker,
@@ -326,7 +343,10 @@ export default function HomeHud() {
       />
 
       <div className="interface-shell">
-        <a className="skip-link" href={isPhone ? '#station-directory-launcher' : '#station-directory'}>
+        <a
+          className="skip-link"
+          href={isPhone ? '#station-directory-launcher' : '#station-directory'}
+        >
           Skip to the station directory
         </a>
         <p className="sr-only" role="status" aria-live="polite">
@@ -336,7 +356,9 @@ export default function HomeHud() {
         <TopBar
           onSelectPanel={setPanel}
           onOpenStationDirectory={() => setStationListOpen(true)}
-          quickRoutes={isPhone ? <QuickRoutesMenu {...quickRouteState} {...quickRouteActions} /> : null}
+          quickRoutes={
+            isPhone ? <QuickRoutesMenu {...quickRouteState} {...quickRouteActions} /> : null
+          }
         />
 
         {!isPhone && <QuickRoutesBar {...quickRouteState} {...quickRouteActions} />}
@@ -352,9 +374,9 @@ export default function HomeHud() {
           ticker={ticker}
           layers={layers}
           isBoarded={isBoarded}
-          onToggleBoarded={() => setIsBoarded(v => !v)}
+          onToggleBoarded={() => setIsBoarded((v) => !v)}
           followUser={followUser}
-          onToggleFollow={() => setFollowUser(v => !v)}
+          onToggleFollow={() => setFollowUser((v) => !v)}
           hasUserPosition={Boolean(userPos)}
           gpsError={gpsError}
           onToggleLayer={toggleLayer}
@@ -384,7 +406,7 @@ export default function HomeHud() {
       </div>
 
       {/* Station Drawer with Dining & Anchor Partner Logic */}
-      <Drawer open={Boolean(selected)} onOpenChange={open => !open && setSelectedId(null)}>
+      <Drawer open={Boolean(selected)} onOpenChange={(open) => !open && setSelectedId(null)}>
         <DrawerContent className="drawer-shell detail-drawer">
           {selected && (
             <StationDrawer
@@ -410,13 +432,13 @@ export default function HomeHud() {
         onSearch={setSearch}
       />
 
-      <Drawer open={Boolean(panel)} onOpenChange={open => !open && setPanel(null)}>
+      <Drawer open={Boolean(panel)} onOpenChange={(open) => !open && setPanel(null)}>
         <DrawerContent className="drawer-shell detail-drawer">
           <InfoPanel panel={panel} />
         </DrawerContent>
       </Drawer>
 
-      <LegalDialog document={legal} onOpenChange={open => !open && setLegal(null)} />
+      <LegalDialog document={legal} onOpenChange={(open) => !open && setLegal(null)} />
 
       {/* QUICK NAVIGATION & FLEXIBLE BOARDING DIALOG */}
       <QuickNavDialog
@@ -426,7 +448,7 @@ export default function HomeHud() {
         activeHowDoI={activeHowDoI}
         route={flexibleRoute}
         selectedHotel={selectedHotel}
-        onSelectHotel={hotel => {
+        onSelectHotel={(hotel) => {
           setSelectedHotel(hotel);
           handleFlyToTarget(hotel.name, hotel.coordinate);
         }}

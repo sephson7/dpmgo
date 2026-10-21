@@ -16,7 +16,7 @@ export const Route = createFileRoute('/api/admin/login')({
         if (!(await adminPortalConfigured(context))) {
           return Response.json(
             { error: 'The partner portal is not configured on this deployment.' },
-            { status: 503 }
+            { status: 503 },
           );
         }
         let payload: { username?: string; password?: string } = {};
@@ -35,13 +35,14 @@ export const Route = createFileRoute('/api/admin/login')({
         if (!token) {
           return Response.json(
             { error: 'The partner portal is not configured on this deployment.' },
-            { status: 503 }
+            { status: 503 },
           );
         }
-        const origin = (await readServerSecret('PUBLIC_APP_URL', context)) ?? new URL(request.url).origin;
+        const origin =
+          (await readServerSecret('PUBLIC_APP_URL', context)) ?? new URL(request.url).origin;
         return Response.json(
           { ok: true },
-          { headers: { 'Set-Cookie': adminCookie(token, origin.startsWith('https://')) } }
+          { headers: { 'Set-Cookie': adminCookie(token, origin.startsWith('https://')) } },
         );
       },
     },

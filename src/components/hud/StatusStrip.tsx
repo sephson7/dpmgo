@@ -16,7 +16,8 @@ export default function StatusStrip({ mapReady }: StatusStripProps) {
         <span>{mapReady ? 'MAP ONLINE' : 'LOADING MAP'}</span>
       </div>
       <span className="truncate max-w-md">
-        Arrivals calculated from published headway schedules. Real-time agency telemetry currently unavailable from DTC.
+        Arrivals calculated from published headway schedules. Real-time agency telemetry currently
+        unavailable from DTC.
       </span>
     </div>
   );

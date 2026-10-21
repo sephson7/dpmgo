@@ -156,6 +156,32 @@ npm run dev
 
 ```
 
+### Checks that gate a pull request
+
+`.github/workflows/pull-request.yml` runs on every pull request and on every
+push to `main`:
+
+| Step | Command | What it catches |
+| --- | --- | --- |
+| Lint | `npm run lint` | React hook misuse, unsafe imports, `any` types |
+| Format | `npx prettier --check .` | formatting drift |
+| Type check | `npx tsc --noEmit -p tsconfig.json` | type errors |
+| Contrast audit | `npm run audit:contrast` | WCAG AA regressions in the HUD palette |
+| Test | `npm test` | the fleet simulation, the layout split, the portal auth |
+| Build | `npm run build` | a broken production build |
+
+The build needs no secrets, so the workflow runs on forks. Run the same
+commands locally before opening a pull request:
+
+```sh
+npm run lint && npx prettier --check . && npx tsc --noEmit && npm run audit:contrast && npm test && npm run build
+```
+
+Formatting is enforced with the repository's own Prettier configuration
+(single quotes, 100 column). The hand written HUD stylesheet in
+`src/styles.css` and the vendored shadcn kit in `src/components/ui` are
+excluded from it, so they keep their compact and upstream formatting.
+
 ---
 
 ## 📄 Compliance & Footer

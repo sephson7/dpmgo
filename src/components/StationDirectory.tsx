@@ -37,7 +37,7 @@ export default function StationDirectory({
       setActiveId(null);
       return;
     }
-    if (!activeId || !stations.some(station => station.id === activeId)) {
+    if (!activeId || !stations.some((station) => station.id === activeId)) {
       setActiveId(stations[0]!.id);
     }
   }, [stations, activeId]);
@@ -54,7 +54,7 @@ export default function StationDirectory({
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (stations.length === 0) return;
-    const index = stations.findIndex(station => station.id === activeId);
+    const index = stations.findIndex((station) => station.id === activeId);
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
@@ -83,10 +83,10 @@ export default function StationDirectory({
 
   return (
     <div ref={listRef} role="group" aria-label={label} onKeyDown={handleKeyDown}>
-      {stations.map(station => {
+      {stations.map((station) => {
         const isActive = station.id === activeId;
         const isSelected = station.id === selectedId;
-        const number = numbering.findIndex(entry => entry.id === station.id) + 1;
+        const number = numbering.findIndex((entry) => entry.id === station.id) + 1;
         return (
           <Button
             key={station.id}

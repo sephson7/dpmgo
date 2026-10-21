@@ -8,7 +8,14 @@ import { parkedMoverTrains, simulatedMoverTrains, moverFleetElapsed } from '@/da
 import { parkedQlineTrain, simulatedQlineTrains } from '@/data/qlineSimulation';
 import { parkingGarages } from '@/data/parking';
 import { qlineNorthboundShape } from '@/data/qlineShape';
-import { peopleMoverShape, peopleMoverStations, qlineStations, allTransitStations, restaurants, type Coordinate } from '@/data/transit';
+import {
+  peopleMoverShape,
+  peopleMoverStations,
+  qlineStations,
+  allTransitStations,
+  restaurants,
+  type Coordinate,
+} from '@/data/transit';
 
 export type TransitMapProps = {
   peopleMover: boolean;
@@ -24,20 +31,43 @@ export type TransitMapProps = {
 };
 
 type Point = GeoJSON.Feature<GeoJSON.Point>;
-const point = (coordinate: Coordinate): Point => ({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: coordinate } });
-const route = (coordinates: Coordinate[]): GeoJSON.Feature<GeoJSON.LineString> => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } });
+const point = (coordinate: Coordinate): Point => ({
+  type: 'Feature',
+  properties: {},
+  geometry: { type: 'Point', coordinates: coordinate },
+});
+const route = (coordinates: Coordinate[]): GeoJSON.Feature<GeoJSON.LineString> => ({
+  type: 'Feature',
+  properties: {},
+  geometry: { type: 'LineString', coordinates },
+});
 // The QLINE alignment comes from the agency GTFS shape, so the line follows
 // the real Woodward Avenue track instead of straight hops between stops.
 const qPath = qlineNorthboundShape;
-const routeData = (coordinates: Coordinate[]): GeoJSON.FeatureCollection => ({ type: 'FeatureCollection', features: [route(coordinates)] });
+const routeData = (coordinates: Coordinate[]): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [route(coordinates)],
+});
 
-
-export default function TransitMap({ peopleMover, qline, parking = false, selectedId, onSelect, onReady, restaurantId, isBoarded, userPosition, followUser }: TransitMapProps) {
+export default function TransitMap({
+  peopleMover,
+  qline,
+  parking = false,
+  selectedId,
+  onSelect,
+  onReady,
+  restaurantId,
+  isBoarded,
+  userPosition,
+  followUser,
+}: TransitMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const onSelectRef = useRef(onSelect);
+  const onReadyRef = useRef(onReady);
   const enabledRef = useRef({ peopleMover, qline, parking });
   onSelectRef.current = onSelect;
+  onReadyRef.current = onReady;
   enabledRef.current = { peopleMover, qline, parking };
 
   useEffect(() => {
@@ -67,7 +97,7 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         showUserHeading: true,
         showAccuracyCircle: true,
       }),
-      'top-right'
+      'top-right',
     );
 
     let frame = 0;
@@ -78,7 +108,12 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         type: 'line',
         source: id,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': color, 'line-width': width, 'line-opacity': 0.95, 'line-blur': 0.35 },
+        paint: {
+          'line-color': color,
+          'line-width': width,
+          'line-opacity': 0.95,
+          'line-blur': 0.35,
+        },
       });
     };
 
@@ -93,8 +128,24 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
           minzoom: 14,
           paint: {
             'fill-extrusion-color': '#7e9aa7',
-            'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, ['get', 'height']],
-            'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, ['get', 'min_height']],
+            'fill-extrusion-height': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              14,
+              0,
+              14.5,
+              ['get', 'height'],
+            ],
+            'fill-extrusion-base': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              14,
+              0,
+              14.5,
+              ['get', 'min_height'],
+            ],
             'fill-extrusion-opacity': 0.66,
           },
         });
@@ -117,13 +168,40 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
           })),
         },
       });
-      map.addLayer({ id: 'station-halo', type: 'circle', source: 'stations', paint: { 'circle-radius': 15, 'circle-color': '#00f0ff', 'circle-opacity': 0.15, 'circle-blur': 0.55 } });
-      map.addLayer({ id: 'station-pins', type: 'circle', source: 'stations', paint: { 'circle-radius': 7, 'circle-color': '#07131b', 'circle-stroke-color': '#00f0ff', 'circle-stroke-width': 2.5 } });
+      map.addLayer({
+        id: 'station-halo',
+        type: 'circle',
+        source: 'stations',
+        paint: {
+          'circle-radius': 15,
+          'circle-color': '#00f0ff',
+          'circle-opacity': 0.15,
+          'circle-blur': 0.55,
+        },
+      });
+      map.addLayer({
+        id: 'station-pins',
+        type: 'circle',
+        source: 'stations',
+        paint: {
+          'circle-radius': 7,
+          'circle-color': '#07131b',
+          'circle-stroke-color': '#00f0ff',
+          'circle-stroke-width': 2.5,
+        },
+      });
       map.addLayer({
         id: 'station-labels',
         type: 'symbol',
         source: 'stations',
-        layout: { 'text-field': ['get', 'name'], 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'], 'text-size': 11, 'text-offset': [0, 1.45], 'text-anchor': 'top', 'text-optional': true },
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+          'text-size': 11,
+          'text-offset': [0, 1.45],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
         paint: { 'text-color': '#eafaff', 'text-halo-color': '#07131b', 'text-halo-width': 1.5 },
       });
 
@@ -138,27 +216,56 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
           })),
         },
       });
-      map.addLayer({ id: 'qline-stops-halo', type: 'circle', source: 'qline-stops', paint: { 'circle-radius': 14, 'circle-color': '#ffbb70', 'circle-opacity': 0.2, 'circle-blur': 0.5 } });
-      map.addLayer({ id: 'qline-stops', type: 'circle', source: 'qline-stops', paint: { 'circle-radius': 6.5, 'circle-color': '#07131b', 'circle-stroke-color': '#ffbb70', 'circle-stroke-width': 2.5 } });
+      map.addLayer({
+        id: 'qline-stops-halo',
+        type: 'circle',
+        source: 'qline-stops',
+        paint: {
+          'circle-radius': 14,
+          'circle-color': '#ffbb70',
+          'circle-opacity': 0.2,
+          'circle-blur': 0.5,
+        },
+      });
+      map.addLayer({
+        id: 'qline-stops',
+        type: 'circle',
+        source: 'qline-stops',
+        paint: {
+          'circle-radius': 6.5,
+          'circle-color': '#07131b',
+          'circle-stroke-color': '#ffbb70',
+          'circle-stroke-width': 2.5,
+        },
+      });
       map.addLayer({
         id: 'qline-labels',
         type: 'symbol',
         source: 'qline-stops',
-        layout: { 'text-field': ['get', 'name'], 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'], 'text-size': 10.5, 'text-offset': [0, 1.45], 'text-anchor': 'top', 'text-optional': true },
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+          'text-size': 10.5,
+          'text-offset': [0, 1.45],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
         paint: { 'text-color': '#ffe9d1', 'text-halo-color': '#07131b', 'text-halo-width': 1.5 },
       });
 
       // Simulated Vehicles
       const moverData = (elapsed: number, running: boolean): GeoJSON.FeatureCollection => ({
         type: 'FeatureCollection',
-        features: (running ? simulatedMoverTrains(elapsed) : parkedMoverTrains(elapsed)).map(train => ({
-          ...point(train.coordinate),
-          properties: { rotation: train.bearing - 90 },
-        })),
+        features: (running ? simulatedMoverTrains(elapsed) : parkedMoverTrains(elapsed)).map(
+          (train) => ({
+            ...point(train.coordinate),
+            properties: { rotation: train.bearing - 90 },
+          }),
+        ),
       });
       const qlineData = (elapsed: number, running: boolean): GeoJSON.FeatureCollection => ({
         type: 'FeatureCollection',
-        features: (running ? simulatedQlineTrains(elapsed) : [parkedQlineTrain()]).map(train => ({
+        features: (running ? simulatedQlineTrains(elapsed) : [parkedQlineTrain()]).map((train) => ({
           ...point(train.coordinate),
           properties: { rotation: train.bearing - 90 },
         })),
@@ -183,15 +290,30 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         canvas.height = 1;
         const context = canvas.getContext('2d');
         if (!context) return 'transparent';
-        context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+        context.fillStyle = getComputedStyle(document.documentElement)
+          .getPropertyValue(token)
+          .trim();
         context.fillRect(0, 0, 1, 1);
         const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
         return `rgb(${r}, ${g}, ${b})`;
       };
 
       map.addSource('qline-vehicle', { type: 'geojson', data: qlineData(0, true) });
-      for (const [id, color] of [['mover-vehicle', tokenColor('--primary')], ['qline-vehicle', tokenColor('--warm')]] as const) {
-        map.addLayer({ id: `${id}-glow`, type: 'circle', source: id, paint: { 'circle-radius': 19, 'circle-color': color, 'circle-opacity': 0.24, 'circle-blur': 0.65 } });
+      for (const [id, color] of [
+        ['mover-vehicle', tokenColor('--primary')],
+        ['qline-vehicle', tokenColor('--warm')],
+      ] as const) {
+        map.addLayer({
+          id: `${id}-glow`,
+          type: 'circle',
+          source: id,
+          paint: {
+            'circle-radius': 19,
+            'circle-color': color,
+            'circle-opacity': 0.24,
+            'circle-blur': 0.65,
+          },
+        });
         map.addLayer({
           id,
           type: 'symbol',
@@ -205,7 +327,11 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
             'icon-allow-overlap': true,
             'icon-ignore-placement': true,
           },
-          paint: { 'icon-color': color, 'icon-halo-color': tokenColor('--background'), 'icon-halo-width': 1 },
+          paint: {
+            'icon-color': color,
+            'icon-halo-color': tokenColor('--background'),
+            'icon-halo-width': 1,
+          },
         });
       }
 
@@ -214,24 +340,46 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         type: 'geojson',
         data: {
           type: 'FeatureCollection',
-          features: parkingGarages.map(garage => ({
+          features: parkingGarages.map((garage) => ({
             ...point(garage.coordinate),
             properties: { id: garage.id, name: garage.name, parkOnce: garage.parkOnce },
           })),
         },
       });
-      map.addLayer({ id: 'parking-halo', type: 'circle', source: 'parking-garages', paint: { 'circle-radius': 16, 'circle-color': '#f59e0b', 'circle-opacity': 0.18, 'circle-blur': 0.6 } });
+      map.addLayer({
+        id: 'parking-halo',
+        type: 'circle',
+        source: 'parking-garages',
+        paint: {
+          'circle-radius': 16,
+          'circle-color': '#f59e0b',
+          'circle-opacity': 0.18,
+          'circle-blur': 0.6,
+        },
+      });
       map.addLayer({
         id: 'parking-pins',
         type: 'circle',
         source: 'parking-garages',
-        paint: { 'circle-radius': 6, 'circle-color': '#0b1220', 'circle-stroke-color': '#f59e0b', 'circle-stroke-width': 2.2 },
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#0b1220',
+          'circle-stroke-color': '#f59e0b',
+          'circle-stroke-width': 2.2,
+        },
       });
       map.addLayer({
         id: 'parking-labels',
         type: 'symbol',
         source: 'parking-garages',
-        layout: { 'text-field': ['get', 'name'], 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'], 'text-size': 10, 'text-offset': [0, 1.4], 'text-anchor': 'top', 'text-optional': true },
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+          'text-size': 10,
+          'text-offset': [0, 1.4],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
         paint: { 'text-color': '#ffe9c2', 'text-halo-color': '#07131b', 'text-halo-width': 1.5 },
       });
 
@@ -240,28 +388,94 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
       });
-      map.addLayer({ id: 'user-position-halo', type: 'circle', source: 'user-position', paint: { 'circle-radius': 18, 'circle-color': '#22d3ee', 'circle-opacity': 0.22, 'circle-blur': 0.55 } });
+      map.addLayer({
+        id: 'user-position-halo',
+        type: 'circle',
+        source: 'user-position',
+        paint: {
+          'circle-radius': 18,
+          'circle-color': '#22d3ee',
+          'circle-opacity': 0.22,
+          'circle-blur': 0.55,
+        },
+      });
       map.addLayer({
         id: 'user-position-dot',
         type: 'circle',
         source: 'user-position',
-        paint: { 'circle-radius': 7, 'circle-color': '#22d3ee', 'circle-stroke-color': '#041016', 'circle-stroke-width': 2.5 },
+        paint: {
+          'circle-radius': 7,
+          'circle-color': '#22d3ee',
+          'circle-stroke-color': '#041016',
+          'circle-stroke-width': 2.5,
+        },
       });
 
       // 3D Restaurant Focus Pin
-      map.addSource('restaurant-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-      map.addLayer({ id: 'restaurant-pin-glow', type: 'circle', source: 'restaurant-pin', paint: { 'circle-radius': 22, 'circle-color': '#ff4fd8', 'circle-opacity': 0.25, 'circle-blur': 0.6 } });
-      map.addLayer({ id: 'restaurant-pin', type: 'circle', source: 'restaurant-pin', paint: { 'circle-radius': 9, 'circle-color': '#ff4fd8', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2.5 } });
-      
+      map.addSource('restaurant-pin', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+      map.addLayer({
+        id: 'restaurant-pin-glow',
+        type: 'circle',
+        source: 'restaurant-pin',
+        paint: {
+          'circle-radius': 22,
+          'circle-color': '#ff4fd8',
+          'circle-opacity': 0.25,
+          'circle-blur': 0.6,
+        },
+      });
+      map.addLayer({
+        id: 'restaurant-pin',
+        type: 'circle',
+        source: 'restaurant-pin',
+        paint: {
+          'circle-radius': 9,
+          'circle-color': '#ff4fd8',
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 2.5,
+        },
+      });
+
       // 3D Quick Navigation Destination Pin & Halo
-      map.addSource('destination-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-      map.addLayer({ id: 'destination-halo', type: 'circle', source: 'destination-pin', paint: { 'circle-radius': 26, 'circle-color': '#f59e0b', 'circle-opacity': 0.35, 'circle-blur': 0.6 } });
-      map.addLayer({ id: 'destination-pin', type: 'circle', source: 'destination-pin', paint: { 'circle-radius': 10, 'circle-color': '#f59e0b', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 } });
+      map.addSource('destination-pin', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+      map.addLayer({
+        id: 'destination-halo',
+        type: 'circle',
+        source: 'destination-pin',
+        paint: {
+          'circle-radius': 26,
+          'circle-color': '#f59e0b',
+          'circle-opacity': 0.35,
+          'circle-blur': 0.6,
+        },
+      });
+      map.addLayer({
+        id: 'destination-pin',
+        type: 'circle',
+        source: 'destination-pin',
+        paint: {
+          'circle-radius': 10,
+          'circle-color': '#f59e0b',
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 3,
+        },
+      });
       map.addLayer({
         id: 'destination-label',
         type: 'symbol',
         source: 'destination-pin',
-        layout: { 'text-field': ['get', 'name'], 'text-size': 13, 'text-offset': [0, -1.8], 'text-anchor': 'bottom' },
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 13,
+          'text-offset': [0, -1.8],
+          'text-anchor': 'bottom',
+        },
         paint: { 'text-color': '#ffffff', 'text-halo-color': '#07131b', 'text-halo-width': 2.5 },
       });
 
@@ -269,13 +483,18 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         id: 'restaurant-label',
         type: 'symbol',
         source: 'restaurant-pin',
-        layout: { 'text-field': ['get', 'name'], 'text-size': 13, 'text-offset': [0, -1.6], 'text-anchor': 'bottom' },
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 13,
+          'text-offset': [0, -1.6],
+          'text-anchor': 'bottom',
+        },
         paint: { 'text-color': '#ffffff', 'text-halo-color': '#07131b', 'text-halo-width': 2 },
       });
 
       // Click & Hover Listeners on Station Pins (both networks)
       for (const layer of ['station-pins', 'station-labels', 'qline-stops', 'qline-labels']) {
-        map.on('click', layer, e => {
+        map.on('click', layer, (e) => {
           const id = e.features?.[0]?.properties?.['id'];
           if (typeof id === 'string') onSelectRef.current(id);
         });
@@ -287,7 +506,7 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         });
       }
 
-      onReady?.(true);
+      onReadyRef.current?.(true);
 
       let lastUpdate = 0;
       let lastTime: number | null = null;
@@ -310,24 +529,50 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
         if (qlineRunning) qlineElapsed += delta;
         if (time - lastUpdate > 50) {
           const moverElapsed = moverFleetElapsed();
-          (map.getSource('mover-vehicle') as mapboxgl.GeoJSONSource)?.setData(moverData(moverElapsed, moverRunning));
-          (map.getSource('qline-vehicle') as mapboxgl.GeoJSONSource)?.setData(qlineData(qlineElapsed, qlineRunning));
+          (map.getSource('mover-vehicle') as mapboxgl.GeoJSONSource)?.setData(
+            moverData(moverElapsed, moverRunning),
+          );
+          (map.getSource('qline-vehicle') as mapboxgl.GeoJSONSource)?.setData(
+            qlineData(qlineElapsed, qlineRunning),
+          );
           lastUpdate = time;
         }
         frame = requestAnimationFrame(animate);
       };
 
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) frame = requestAnimationFrame(animate);
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+        frame = requestAnimationFrame(animate);
 
       // Initial Visibility
-      for (const id of ['mover-line', 'station-halo', 'station-pins', 'station-labels', 'mover-vehicle', 'mover-vehicle-glow']) {
-        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', enabledRef.current.peopleMover ? 'visible' : 'none');
+      for (const id of [
+        'mover-line',
+        'station-halo',
+        'station-pins',
+        'station-labels',
+        'mover-vehicle',
+        'mover-vehicle-glow',
+      ]) {
+        if (map.getLayer(id))
+          map.setLayoutProperty(
+            id,
+            'visibility',
+            enabledRef.current.peopleMover ? 'visible' : 'none',
+          );
       }
-      for (const id of ['qline-line', 'qline-stops-halo', 'qline-stops', 'qline-labels', 'qline-vehicle', 'qline-vehicle-glow']) {
-        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', enabledRef.current.qline ? 'visible' : 'none');
+      for (const id of [
+        'qline-line',
+        'qline-stops-halo',
+        'qline-stops',
+        'qline-labels',
+        'qline-vehicle',
+        'qline-vehicle-glow',
+      ]) {
+        if (map.getLayer(id))
+          map.setLayoutProperty(id, 'visibility', enabledRef.current.qline ? 'visible' : 'none');
       }
       for (const id of ['parking-halo', 'parking-pins', 'parking-labels']) {
-        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', enabledRef.current.parking ? 'visible' : 'none');
+        if (map.getLayer(id))
+          map.setLayoutProperty(id, 'visibility', enabledRef.current.parking ? 'visible' : 'none');
       }
     });
 
@@ -342,7 +587,13 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
 
     const resetView = () => {
       clearMarkedLocations();
-      map.flyTo({ center: [-83.0458, 42.3314], zoom: 15.5, pitch: 50, bearing: -20, duration: 900 });
+      map.flyTo({
+        center: [-83.0458, 42.3314],
+        zoom: 15.5,
+        pitch: 50,
+        bearing: -20,
+        duration: 900,
+      });
     };
     window.addEventListener('dpm-map-reset', resetView);
 
@@ -359,11 +610,13 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
       const venueSource = map.getSource('destination-pin') as mapboxgl.GeoJSONSource | undefined;
       venueSource?.setData({
         type: 'FeatureCollection',
-        features: [{
-          type: 'Feature',
-          properties: { name: detail.targetName || '' },
-          geometry: { type: 'Point', coordinates: detail.center },
-        }],
+        features: [
+          {
+            type: 'Feature',
+            properties: { name: detail.targetName || '' },
+            geometry: { type: 'Point', coordinates: detail.center },
+          },
+        ],
       });
 
       map.flyTo({
@@ -378,7 +631,7 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
     };
     window.addEventListener('dpm-map-flyto', handleFlyTo);
 
-    map.on('error', e => console.warn('Mapbox error:', e.error));
+    map.on('error', (e) => console.warn('Mapbox error:', e.error));
 
     return () => {
       cancelAnimationFrame(frame);
@@ -393,10 +646,25 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
   useEffect(() => {
     const map = mapRef.current;
     if (!map?.getLayer('mover-line')) return;
-    for (const id of ['mover-line', 'station-halo', 'station-pins', 'station-labels', 'mover-vehicle', 'mover-vehicle-glow']) {
-      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', peopleMover ? 'visible' : 'none');
+    for (const id of [
+      'mover-line',
+      'station-halo',
+      'station-pins',
+      'station-labels',
+      'mover-vehicle',
+      'mover-vehicle-glow',
+    ]) {
+      if (map.getLayer(id))
+        map.setLayoutProperty(id, 'visibility', peopleMover ? 'visible' : 'none');
     }
-    for (const id of ['qline-line', 'qline-stops-halo', 'qline-stops', 'qline-labels', 'qline-vehicle', 'qline-vehicle-glow']) {
+    for (const id of [
+      'qline-line',
+      'qline-stops-halo',
+      'qline-stops',
+      'qline-labels',
+      'qline-vehicle',
+      'qline-vehicle-glow',
+    ]) {
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', qline ? 'visible' : 'none');
     }
     for (const id of ['parking-halo', 'parking-pins', 'parking-labels']) {
@@ -407,7 +675,7 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
   // Fly to selected station across either network
   useEffect(() => {
     const map = mapRef.current;
-    const station = allTransitStations.find(s => s.id === selectedId);
+    const station = allTransitStations.find((s) => s.id === selectedId);
     if (map && station) {
       map.flyTo({
         center: station.coordinate,
@@ -423,10 +691,13 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
   useEffect(() => {
     const map = mapRef.current;
     const source = map?.getSource('restaurant-pin') as mapboxgl.GeoJSONSource | undefined;
-    const place = restaurants.find(r => r.id === restaurantId);
+    const place = restaurants.find((r) => r.id === restaurantId);
 
     if (place) {
-      source?.setData({ type: 'FeatureCollection', features: [{ ...point(place.coordinate), properties: { name: place.name } }] });
+      source?.setData({
+        type: 'FeatureCollection',
+        features: [{ ...point(place.coordinate), properties: { name: place.name } }],
+      });
       if (map) {
         map.flyTo({
           center: place.coordinate,
@@ -438,7 +709,7 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
       }
     } else {
       source?.setData({ type: 'FeatureCollection', features: [] });
-      const station = allTransitStations.find(s => s.id === selectedId);
+      const station = allTransitStations.find((s) => s.id === selectedId);
       if (map && station && !isBoarded) {
         map.flyTo({
           center: station.coordinate,
@@ -473,15 +744,26 @@ export default function TransitMap({ peopleMover, qline, parking = false, select
     const center = map.getCenter();
     const moved = Math.hypot(
       (center.lng - userPosition[0]) * Math.cos((userPosition[1] * Math.PI) / 180),
-      center.lat - userPosition[1]
+      center.lat - userPosition[1],
     );
     // Only recentre when the rider has actually drifted from the canvas, or the
     // moment follow mode is switched on.
     if (moved > 0.0004 || !wasFollowing.current) {
-      map.easeTo({ center: userPosition, zoom: Math.max(map.getZoom(), 16.4), duration: 700, essential: true });
+      map.easeTo({
+        center: userPosition,
+        zoom: Math.max(map.getZoom(), 16.4),
+        duration: 700,
+        essential: true,
+      });
     }
     wasFollowing.current = true;
   }, [userPosition, followUser]);
 
-  return <div ref={container} className="h-full w-full" aria-label="Satellite map of Detroit transit stops" />;
+  return (
+    <div
+      ref={container}
+      className="h-full w-full"
+      aria-label="Satellite map of Detroit transit stops"
+    />
+  );
 }

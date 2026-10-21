@@ -34,7 +34,10 @@ async function fromLocalFile(): Promise<Record<string, string>> {
       const index = trimmed.indexOf('=');
       if (index === -1) continue;
       const key = trimmed.slice(0, index).trim();
-      const value = trimmed.slice(index + 1).trim().replace(/^["']|["']$/g, '');
+      const value = trimmed
+        .slice(index + 1)
+        .trim()
+        .replace(/^["']|["']$/g, '');
       localEnvCache[key] = value;
     }
   } catch {
@@ -46,7 +49,7 @@ async function fromLocalFile(): Promise<Record<string, string>> {
 /** Reads a server secret. Returns undefined when it is not configured. */
 export async function readServerSecret(
   name: string,
-  context?: unknown
+  context?: unknown,
 ): Promise<string | undefined> {
   return fromProcess(name) ?? fromContext(context, name) ?? (await fromLocalFile())[name];
 }

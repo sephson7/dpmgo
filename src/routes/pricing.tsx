@@ -1,6 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Clock, Mail, ShieldCheck, Sparkles, ArrowRight, Building, MapPin, Send, Tag } from 'lucide-react';
+import {
+  CheckCircle2,
+  Clock,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+  ArrowRight,
+  Building,
+  MapPin,
+  Send,
+  Tag,
+} from 'lucide-react';
 import { peopleMoverStations, qlineStations } from '../data/transit';
 import {
   PRICING_TABLE_ID,
@@ -12,9 +23,17 @@ export const Route = createFileRoute('/pricing')({
   head: () => ({
     meta: [
       { title: 'Station Anchor Partnership | DPM - Go!' },
-      { name: 'description', content: 'Claim exclusive station anchor sponsorship on Detroit’s DPM - Go! 3D transit HUD.' },
+      {
+        name: 'description',
+        content:
+          'Claim exclusive station anchor sponsorship on Detroit’s DPM - Go! 3D transit HUD.',
+      },
       { property: 'og:title', content: 'Station Anchor Partnership | DPM - Go!' },
-      { property: 'og:description', content: 'Claim exclusive station anchor sponsorship on Detroit’s DPM - Go! 3D transit HUD.' },
+      {
+        property: 'og:description',
+        content:
+          'Claim exclusive station anchor sponsorship on Detroit’s DPM - Go! 3D transit HUD.',
+      },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
     ],
@@ -23,7 +42,9 @@ export const Route = createFileRoute('/pricing')({
 });
 
 function PricingPage() {
-  const [checkoutState, setCheckoutState] = useState<'idle' | 'verifying' | 'paid' | 'failed'>('idle');
+  const [checkoutState, setCheckoutState] = useState<'idle' | 'verifying' | 'paid' | 'failed'>(
+    'idle',
+  );
   const [receipt, setReceipt] = useState<string | null>(null);
   const [stationId, setStationId] = useState('');
   const [stationName, setStationName] = useState('');
@@ -101,7 +122,7 @@ function PricingPage() {
     // The payment is only confirmed by Stripe, never by the query string.
     setCheckoutState('verifying');
     fetch(`/api/checkout?session_id=${encodeURIComponent(sessionId)}`)
-      .then(response => response.json())
+      .then((response) => response.json())
       .then(
         (result: {
           paid?: boolean;
@@ -122,7 +143,7 @@ function PricingPage() {
           } else {
             setCheckoutState('failed');
           }
-        }
+        },
       )
       .catch(() => setCheckoutState('failed'));
   }, []);
@@ -248,8 +269,8 @@ function PricingPage() {
         )}
         {checkoutState === 'failed' && (
           <div className="w-full max-w-xl mb-6 rounded-xl border border-amber-500/40 bg-amber-950/30 p-4 text-center text-sm text-amber-200">
-            We could not confirm that payment. If you were charged, contact us with your receipt and we will
-            sort it out.
+            We could not confirm that payment. If you were charged, contact us with your receipt and
+            we will sort it out.
           </div>
         )}
         {isSuccess ? (
@@ -304,12 +325,15 @@ function PricingPage() {
                     Point of Contact:
                   </label>
                   <div className="relative">
-                    <Building size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Building
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
                     <input
                       type="text"
                       required
                       value={contactName}
-                      onChange={e => setContactName(e.target.value)}
+                      onChange={(e) => setContactName(e.target.value)}
                       placeholder="Who should we reach out to?"
                       className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-950/70 border border-slate-700 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
                     />
@@ -321,12 +345,15 @@ function PricingPage() {
                     Business / Restaurant Name:
                   </label>
                   <div className="relative">
-                    <Building size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Building
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
                     <input
                       type="text"
                       required
                       value={businessName}
-                      onChange={e => setBusinessName(e.target.value)}
+                      onChange={(e) => setBusinessName(e.target.value)}
                       placeholder="e.g. Lafayette Coney Island"
                       className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-950/70 border border-slate-700 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
                     />
@@ -338,12 +365,15 @@ function PricingPage() {
                     Manager Contact Email:
                   </label>
                   <div className="relative">
-                    <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Mail
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
                     <input
                       type="email"
                       required
                       value={submittedEmail}
-                      onChange={e => setSubmittedEmail(e.target.value)}
+                      onChange={(e) => setSubmittedEmail(e.target.value)}
                       placeholder="manager@yourbusiness.com"
                       className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-950/70 border border-slate-700 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
                     />
@@ -355,11 +385,14 @@ function PricingPage() {
                     Exclusive Rider Perk (Optional):
                   </label>
                   <div className="relative">
-                    <Tag size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Tag
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
                     <input
                       type="text"
                       value={perkOffer}
-                      onChange={e => setPerkOffer(e.target.value)}
+                      onChange={(e) => setPerkOffer(e.target.value)}
                       placeholder="e.g. 15% off with People Mover ride proof"
                       className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-950/70 border border-slate-700 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
                     />
@@ -373,13 +406,12 @@ function PricingPage() {
                 >
                   <Send size={13} /> {intakePending ? 'SENDING…' : 'COMPLETE PARTNER INTAKE'}
                 </button>
-                {intakeError && (
-                  <p className="text-xs text-amber-300">{intakeError}</p>
-                )}
+                {intakeError && <p className="text-xs text-amber-300">{intakeError}</p>}
               </form>
             ) : (
               <div className="text-sm text-emerald-400 font-medium py-3 border border-emerald-500/30 rounded-lg bg-emerald-950/20 my-4">
-                ✓ Intake received{receipt ? ` (ref ${receipt})` : ''}. Check your inbox shortly for asset confirmation.
+                ✓ Intake received{receipt ? ` (ref ${receipt})` : ''}. Check your inbox shortly for
+                asset confirmation.
               </div>
             )}
 
@@ -411,7 +443,8 @@ function PricingPage() {
             {stationName ? (
               <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 text-xs font-mono tracking-wider">
                 <MapPin size={14} className="text-cyan-400" />
-                CLAIMING EXCLUSIVE ANCHOR FOR: <strong className="text-white uppercase">{stationName}</strong>
+                CLAIMING EXCLUSIVE ANCHOR FOR:{' '}
+                <strong className="text-white uppercase">{stationName}</strong>
               </div>
             ) : (
               <div className="w-full max-w-md mb-6">
@@ -420,8 +453,8 @@ function PricingPage() {
                 </label>
                 <select
                   value={stationId}
-                  onChange={e => {
-                    const sel = allStations.find(s => s.id === e.target.value);
+                  onChange={(e) => {
+                    const sel = allStations.find((s) => s.id === e.target.value);
                     setStationId(e.target.value);
                     setStationName(sel ? sel.name : '');
                   }}
@@ -429,13 +462,17 @@ function PricingPage() {
                 >
                   <option value="">Choose a Detroit Station...</option>
                   <optgroup label="People Mover (13 Stations)">
-                    {peopleMoverStations.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                    {peopleMoverStations.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
                     ))}
                   </optgroup>
                   <optgroup label="QLINE (12 Stations)">
-                    {qlineStations.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                    {qlineStations.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
                     ))}
                   </optgroup>
                 </select>
@@ -446,7 +483,8 @@ function PricingPage() {
             <div className="w-full max-w-3xl mb-6 bg-cyan-950/30 border border-cyan-500/30 rounded-xl p-4 flex items-center gap-3">
               <Clock size={18} className="text-cyan-400 shrink-0" />
               <p className="text-xs md:text-sm text-cyan-100">
-                <strong className="text-cyan-300">Activation Timeline:</strong> Upon checkout, our team reviews and activates your station anchor placement within 24 hours.
+                <strong className="text-cyan-300">Activation Timeline:</strong> Upon checkout, our
+                team reviews and activates your station anchor placement within 24 hours.
               </p>
             </div>
 
@@ -454,14 +492,16 @@ function PricingPage() {
             <div className="w-full max-w-3xl mb-6 bg-slate-900/60 border border-cyan-500/30 rounded-2xl p-4 sm:p-5">
               <div className="flex flex-wrap items-center gap-3 justify-between mb-4">
                 <div>
-                  <p className="text-xs font-mono uppercase tracking-wider text-cyan-300 mb-1">Claim a station slot</p>
+                  <p className="text-xs font-mono uppercase tracking-wider text-cyan-300 mb-1">
+                    Claim a station slot
+                  </p>
                   <p className="text-[11px] text-slate-400">
                     Slot 1 is the annual partner slot. Slot 2 is the rotating slot and can be bought
                     monthly or annually.
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  {([1, 2] as const).map(value => (
+                  {([1, 2] as const).map((value) => (
                     <button
                       key={value}
                       type="button"
@@ -484,7 +524,7 @@ function PricingPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
-                {(['monthly', 'annual'] as const).map(value => {
+                {(['monthly', 'annual'] as const).map((value) => {
                   const allowed = plansAllowedForSlot(slot).includes(value);
                   return (
                     <button
@@ -504,7 +544,9 @@ function PricingPage() {
                   );
                 })}
                 <span className="self-center text-[11px] text-slate-400">
-                  {slot === 1 ? 'Slot 1 accepts the annual option only.' : 'Slot 2 accepts both options.'}
+                  {slot === 1
+                    ? 'Slot 1 accepts the annual option only.'
+                    : 'Slot 2 accepts both options.'}
                 </span>
               </div>
               <button
@@ -513,7 +555,9 @@ function PricingPage() {
                 disabled={checkoutBusy}
                 className="w-full py-2.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-xs tracking-wider uppercase hover:bg-cyan-400 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60"
               >
-                {checkoutBusy ? 'STARTING CHECKOUT…' : `CHECKOUT · SLOT ${slot} · ${plan.toUpperCase()}`}
+                {checkoutBusy
+                  ? 'STARTING CHECKOUT…'
+                  : `CHECKOUT · SLOT ${slot} · ${plan.toUpperCase()}`}
               </button>
               {checkoutError && (
                 <p className="mt-2 text-xs text-amber-300 text-center">{checkoutError}</p>

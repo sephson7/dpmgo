@@ -37,7 +37,8 @@ export default function HeadlineArea({
   return (
     <section className="headline-area" aria-label="Transit overview">
       <div className="overline">
-        <span className="overline-bar" /> DOWNTOWN DETROIT <span className="overline-slash">/</span> SYSTEM OVERVIEW
+        <span className="overline-bar" /> DOWNTOWN DETROIT <span className="overline-slash">/</span>{' '}
+        SYSTEM OVERVIEW
       </div>
       <h1>
         Move through
@@ -47,10 +48,12 @@ export default function HeadlineArea({
       <p>Two lines. One city. Find your next stop.</p>
 
       <div className="mobile-countdown-pill" role="status" aria-live="polite">
-        <span className={`signal-dot ${ticker.isQLine || schedule.running ? 'signal-pulse' : 'signal-idle'}`} />
+        <span
+          className={`signal-dot ${ticker.isQLine || schedule.running ? 'signal-pulse' : 'signal-idle'}`}
+        />
         <span className="mobile-countdown-label">
-          {isBoarded ? 'NEXT STOP' : ticker.isQLine ? 'SCHEDULED CADENCE' : 'SIMULATED CADENCE'}{' '}
-          · {ticker.station.name.toUpperCase()}:
+          {isBoarded ? 'NEXT STOP' : ticker.isQLine ? 'SCHEDULED CADENCE' : 'SIMULATED CADENCE'} ·{' '}
+          {ticker.station.name.toUpperCase()}:
         </span>
         <strong className="mobile-countdown-val">
           {ticker.isQLine
@@ -84,7 +87,9 @@ export default function HeadlineArea({
           title={gpsError ?? 'Lock the map onto your device location'}
         >
           <LocateFixed size={13} className={followUser ? 'animate-pulse text-cyan-300' : ''} />
-          <span>{gpsError ? 'GPS UNAVAILABLE' : followUser ? 'FOLLOWING YOU' : 'LOCK MAP TO ME'}</span>
+          <span>
+            {gpsError ? 'GPS UNAVAILABLE' : followUser ? 'FOLLOWING YOU' : 'LOCK MAP TO ME'}
+          </span>
         </Button>
       </div>
 
@@ -105,7 +110,8 @@ export default function HeadlineArea({
           aria-pressed={layers.qline}
           onClick={() => onToggleLayer('qline')}
         >
-          <span className="route-pill-dot" /> QLINE <span className="route-pill-state">{layers.qline ? 'ON' : 'OFF'}</span>
+          <span className="route-pill-dot" /> QLINE{' '}
+          <span className="route-pill-state">{layers.qline ? 'ON' : 'OFF'}</span>
         </Button>
         <Button
           variant={layers.parking ? 'hudWarm' : 'hudInactive'}
@@ -113,7 +119,8 @@ export default function HeadlineArea({
           aria-pressed={layers.parking}
           onClick={() => onToggleLayer('parking')}
         >
-          <SquareParking size={12} /> PARKING <span className="route-pill-state">{layers.parking ? 'ON' : 'OFF'}</span>
+          <SquareParking size={12} /> PARKING{' '}
+          <span className="route-pill-state">{layers.parking ? 'ON' : 'OFF'}</span>
         </Button>
       </div>
     </section>

@@ -16,7 +16,12 @@ export function useStationAlert() {
     }
     // Web audio bell chime fallback
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Safari still needs the prefixed constructor.
+      const AudioContextCtor =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) throw new Error('AudioContext unavailable');
+      const ctx = new AudioContextCtor();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -68,7 +73,7 @@ export function useStationAlert() {
       (err) => {
         setGpsError(err.message);
       },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 },
     );
 
     return () => {

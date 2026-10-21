@@ -12,7 +12,12 @@ export type AlarmBannerProps = {
 };
 
 /** The stop alarm banner that sits over the map. */
-export default function AlarmBanner({ target, triggered, distanceMiles, onCancel }: AlarmBannerProps) {
+export default function AlarmBanner({
+  target,
+  triggered,
+  distanceMiles,
+  onCancel,
+}: AlarmBannerProps) {
   if (!target) return null;
 
   return (

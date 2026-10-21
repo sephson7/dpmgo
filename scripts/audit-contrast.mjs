@@ -52,13 +52,24 @@ const clamp01 = (value) => Math.min(1, Math.max(0, value));
 function parseOklch(value) {
   const match = value.match(/oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+%?))?\s*\)/);
   if (!match) return null;
-  const alpha = match[4] === undefined ? 1 : match[4].endsWith('%') ? parseFloat(match[4]) / 100 : parseFloat(match[4]);
+  const alpha =
+    match[4] === undefined
+      ? 1
+      : match[4].endsWith('%')
+        ? parseFloat(match[4]) / 100
+        : parseFloat(match[4]);
   return { L: Number(match[1]), C: Number(match[2]), H: Number(match[3]), alpha };
 }
 
 function parseHex(value) {
   const hex = value.trim().replace('#', '');
-  const full = hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex;
+  const full =
+    hex.length === 3
+      ? hex
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : hex;
   return {
     r: parseInt(full.slice(0, 2), 16) / 255,
     g: parseInt(full.slice(2, 4), 16) / 255,
@@ -92,7 +103,8 @@ function composite(foreground, background) {
 }
 
 function relativeLuminance({ r, g, b }) {
-  const lin = channel => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+  const lin = (channel) =>
+    channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
 
@@ -125,11 +137,15 @@ for (const line of rootBlock[1].split(';')) {
   else if (value.startsWith('#')) tokens[match[1]] = { hex: parseHex(value) };
 }
 
-const hex = value => ({ hex: { ...parseHex(value), a: 1 } });
-const opaque = name => {
+const hex = (value) => ({ hex: { ...parseHex(value), a: 1 } });
+const opaque = (name) => {
   const token = tokens[name];
   if (!token) throw new Error(`Unknown token --${name}`);
-  return { ...token, oklch: token.oklch ? { ...token.oklch, alpha: 1 } : undefined, hex: token.hex };
+  return {
+    ...token,
+    oklch: token.oklch ? { ...token.oklch, alpha: 1 } : undefined,
+    hex: token.hex,
+  };
 };
 
 /**
@@ -137,37 +153,117 @@ const opaque = name => {
  * `min` is the WCAG requirement: 4.5 for text, 3 for meaningful UI parts.
  */
 const pairs = [
-  { label: 'Body text on the page background', fg: opaque('foreground'), bg: opaque('background'), min: 4.5 },
+  {
+    label: 'Body text on the page background',
+    fg: opaque('foreground'),
+    bg: opaque('background'),
+    min: 4.5,
+  },
   { label: 'Body text on a card', fg: opaque('foreground'), bg: opaque('card'), min: 4.5 },
   { label: 'Body text on a panel', fg: opaque('foreground'), bg: opaque('panel'), min: 4.5 },
-  { label: 'Muted meta text on the background', fg: opaque('muted-foreground'), bg: opaque('background'), min: 4.5 },
-  { label: 'Muted meta text on a card', fg: opaque('muted-foreground'), bg: opaque('card'), min: 4.5 },
-  { label: 'Muted meta text on a panel', fg: opaque('muted-foreground'), bg: opaque('panel'), min: 4.5 },
-  { label: 'Primary label on the background', fg: opaque('primary'), bg: opaque('background'), min: 4.5 },
+  {
+    label: 'Muted meta text on the background',
+    fg: opaque('muted-foreground'),
+    bg: opaque('background'),
+    min: 4.5,
+  },
+  {
+    label: 'Muted meta text on a card',
+    fg: opaque('muted-foreground'),
+    bg: opaque('card'),
+    min: 4.5,
+  },
+  {
+    label: 'Muted meta text on a panel',
+    fg: opaque('muted-foreground'),
+    bg: opaque('panel'),
+    min: 4.5,
+  },
+  {
+    label: 'Primary label on the background',
+    fg: opaque('primary'),
+    bg: opaque('background'),
+    min: 4.5,
+  },
   { label: 'Primary label on a card', fg: opaque('primary'), bg: opaque('card'), min: 4.5 },
   { label: 'Primary label on a panel', fg: opaque('primary'), bg: opaque('panel'), min: 4.5 },
-  { label: 'Primary button text', fg: opaque('primary-foreground'), bg: opaque('primary'), min: 4.5 },
-  { label: 'Warm accent label on the background', fg: opaque('warm'), bg: opaque('background'), min: 4.5 },
+  {
+    label: 'Primary button text',
+    fg: opaque('primary-foreground'),
+    bg: opaque('primary'),
+    min: 4.5,
+  },
+  {
+    label: 'Warm accent label on the background',
+    fg: opaque('warm'),
+    bg: opaque('background'),
+    min: 4.5,
+  },
   { label: 'Warm accent label on a card', fg: opaque('warm'), bg: opaque('card'), min: 4.5 },
-  { label: 'Destructive label on the background', fg: opaque('destructive'), bg: opaque('background'), min: 4.5 },
-  { label: 'Panel edge against the background', fg: opaque('border'), bg: opaque('background'), min: 3 },
-  { label: 'Skip link text on the primary chip', fg: opaque('primary-foreground'), bg: opaque('primary'), min: 4.5 },
+  {
+    label: 'Destructive label on the background',
+    fg: opaque('destructive'),
+    bg: opaque('background'),
+    min: 4.5,
+  },
+  {
+    label: 'Panel edge against the background',
+    fg: opaque('border'),
+    bg: opaque('background'),
+    min: 3,
+  },
+  {
+    label: 'Skip link text on the primary chip',
+    fg: opaque('primary-foreground'),
+    bg: opaque('primary'),
+    min: 4.5,
+  },
   { label: 'Map line cyan on the map background', fg: hex('#00f0ff'), bg: hex('#070B14'), min: 3 },
   { label: 'Map line amber on the map background', fg: hex('#ffbb70'), bg: hex('#070B14'), min: 3 },
-  { label: 'Parking pin amber on the map background', fg: hex('#f59e0b'), bg: hex('#070B14'), min: 3 },
-  { label: 'Rider location cyan on the map background', fg: hex('#22d3ee'), bg: hex('#070B14'), min: 3 },
-  { label: 'Restaurant pin magenta on the map background', fg: hex('#ff4fd8'), bg: hex('#070B14'), min: 3 },
+  {
+    label: 'Parking pin amber on the map background',
+    fg: hex('#f59e0b'),
+    bg: hex('#070B14'),
+    min: 3,
+  },
+  {
+    label: 'Rider location cyan on the map background',
+    fg: hex('#22d3ee'),
+    bg: hex('#070B14'),
+    min: 3,
+  },
+  {
+    label: 'Restaurant pin magenta on the map background',
+    fg: hex('#ff4fd8'),
+    bg: hex('#070B14'),
+    min: 3,
+  },
   { label: 'Pricing page body text', fg: hex('#94a3b8'), bg: hex('#070B14'), min: 4.5 },
   { label: 'Pricing page dim text', fg: hex('#94a3b8'), bg: hex('#070B14'), min: 4.5 },
   { label: 'Pricing page heading text', fg: hex('#ffffff'), bg: hex('#070B14'), min: 4.5 },
-  { label: 'Restaurant thumb placeholder on its card', fg: hex('#94a3b8'), bg: hex('#0f172a'), min: 3 },
+  {
+    label: 'Restaurant thumb placeholder on its card',
+    fg: hex('#94a3b8'),
+    bg: hex('#0f172a'),
+    min: 3,
+  },
   { label: 'HUD meta text on the panel', fg: hex('#94a3b8'), bg: opaque('panel'), min: 4.5 },
   { label: 'HUD meta text on a card', fg: hex('#94a3b8'), bg: opaque('card'), min: 4.5 },
   { label: 'Tailwind cyan accent on the page', fg: hex('#22d3ee'), bg: hex('#070B14'), min: 4.5 },
   { label: 'Tailwind amber accent on the page', fg: hex('#fcd34d'), bg: hex('#070B14'), min: 4.5 },
-  { label: 'Tailwind emerald accent on the page', fg: hex('#6ee7b7'), bg: hex('#070B14'), min: 4.5 },
+  {
+    label: 'Tailwind emerald accent on the page',
+    fg: hex('#6ee7b7'),
+    bg: hex('#070B14'),
+    min: 4.5,
+  },
   { label: 'Tailwind rose accent on the page', fg: hex('#fda4af'), bg: hex('#070B14'), min: 4.5 },
-  { label: 'Tailwind slate body text on the page', fg: hex('#cbd5e1'), bg: hex('#070B14'), min: 4.5 },
+  {
+    label: 'Tailwind slate body text on the page',
+    fg: hex('#cbd5e1'),
+    bg: hex('#070B14'),
+    min: 4.5,
+  },
 ];
 
 console.log('DPM - Go! HUD contrast audit (WCAG 2.1)\n');
@@ -178,7 +274,7 @@ for (const pair of pairs) {
   if (!pass) failures += 1;
   const status = pass ? 'PASS' : 'FAIL';
   console.log(
-    `  ${status}  ${ratio.toFixed(2).padStart(5)}:1  (needs ${pair.min.toFixed(1)}:1)  ${pair.label}`
+    `  ${status}  ${ratio.toFixed(2).padStart(5)}:1  (needs ${pair.min.toFixed(1)}:1)  ${pair.label}`,
   );
 }
 

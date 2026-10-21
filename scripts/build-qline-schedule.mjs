@@ -88,10 +88,11 @@ function parseCsv(text) {
     rows.push(row);
   }
   if (rows.length === 0) return [];
-  const header = rows[0].map(h => h.replace(/^\uFEFF/, '').trim());
-  return rows.slice(1)
-    .filter(r => r.length > 1 || (r[0] ?? '').trim() !== '')
-    .map(r => Object.fromEntries(header.map((h, i) => [h, (r[i] ?? '').trim()])));
+  const header = rows[0].map((h) => h.replace(/^\uFEFF/, '').trim());
+  return rows
+    .slice(1)
+    .filter((r) => r.length > 1 || (r[0] ?? '').trim() !== '')
+    .map((r) => Object.fromEntries(header.map((h, i) => [h, (r[i] ?? '').trim()])));
 }
 
 async function unzip(bytes) {
@@ -131,7 +132,9 @@ async function unzip(bytes) {
       out.set(name, new TextDecoder().decode(entry.data));
       continue;
     }
-    const stream = new Blob([entry.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    const stream = new Blob([entry.data])
+      .stream()
+      .pipeThrough(new DecompressionStream('deflate-raw'));
     out.set(name, await new Response(stream).text());
   }
   return out;
@@ -161,29 +164,29 @@ async function main() {
   const stopTimeRows = read('stop_times.txt');
   const shapeRows = read('shapes.txt');
 
-  const stopById = new Map(stopRows.map(s => [s.stop_id, s]));
+  const stopById = new Map(stopRows.map((s) => [s.stop_id, s]));
   const stationByStopId = new Map();
   for (const stop of stopRows) {
     const stationId = STATION_BY_STOP_NAME[stripDirection(stop.stop_name)];
     if (stationId) stationByStopId.set(stop.stop_id, stationId);
   }
-  const tripService = new Map(tripRows.map(t => [t.trip_id, t.service_id]));
-  const tripDirection = new Map(tripRows.map(t => [t.trip_id, Number(t.direction_id ?? 0)]));
+  const tripService = new Map(tripRows.map((t) => [t.trip_id, t.service_id]));
+  const tripDirection = new Map(tripRows.map((t) => [t.trip_id, Number(t.direction_id ?? 0)]));
 
   // Calendar -------------------------------------------------------------
   const calendar = calendarRows
-    .filter(row => row.service_id)
-    .map(row => ({
+    .filter((row) => row.service_id)
+    .map((row) => ({
       id: row.service_id,
       days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         .map((day, index) => (row[day] === '1' ? index : -1))
-        .filter(index => index >= 0),
+        .filter((index) => index >= 0),
       start: row.start_date,
       end: row.end_date,
     }));
   const exceptions = calendarDateRows
-    .filter(row => row.service_id && row.date)
-    .map(row => ({ id: row.service_id, date: row.date, type: Number(row.exception_type ?? 1) }));
+    .filter((row) => row.service_id && row.date)
+    .map((row) => ({ id: row.service_id, date: row.date, type: Number(row.exception_type ?? 1) }));
 
   // Departures -----------------------------------------------------------
   /** serviceId -> stationId -> [{ seconds, direction }] */
@@ -211,10 +214,13 @@ async function main() {
   }
   for (const serviceId of Object.keys(departures)) {
     for (const stationId of Object.keys(departures[serviceId])) {
-      const pairs = departures[serviceId][stationId].map((seconds, index) => [seconds, directions[serviceId][stationId][index]]);
+      const pairs = departures[serviceId][stationId].map((seconds, index) => [
+        seconds,
+        directions[serviceId][stationId][index],
+      ]);
       pairs.sort((a, b) => a[0] - b[0]);
-      departures[serviceId][stationId] = pairs.map(p => p[0]);
-      directions[serviceId][stationId] = pairs.map(p => p[1]);
+      departures[serviceId][stationId] = pairs.map((p) => p[0]);
+      directions[serviceId][stationId] = pairs.map((p) => p[1]);
     }
   }
 
@@ -258,16 +264,21 @@ async function main() {
   const shapes = new Map();
   for (const row of shapeRows) {
     const list = shapes.get(row.shape_id) ?? [];
-    list.push({ sequence: Number(row.shape_pt_sequence), lat: Number(row.shape_pt_lat), lon: Number(row.shape_pt_lon) });
+    list.push({
+      sequence: Number(row.shape_pt_sequence),
+      lat: Number(row.shape_pt_lat),
+      lon: Number(row.shape_pt_lon),
+    });
     shapes.set(row.shape_id, list);
   }
-  const shapeList = [...shapes.values()].map(list =>
-    list.sort((a, b) => a.sequence - b.sequence).map(p => [p.lon, p.lat])
+  const shapeList = [...shapes.values()].map((list) =>
+    list.sort((a, b) => a.sequence - b.sequence).map((p) => [p.lon, p.lat]),
   );
   // The feed has one shape per direction: the northbound shape runs from
   // Congress St up to Grand Blvd, the southbound shape comes back down.
-  const northbound = shapeList.find(points => (points[0]?.[1] ?? 0) < 42.34) ?? shapeList[0] ?? [];
-  const southbound = shapeList.find(points => points !== northbound) ?? shapeList[1] ?? [];
+  const northbound =
+    shapeList.find((points) => (points[0]?.[1] ?? 0) < 42.34) ?? shapeList[0] ?? [];
+  const southbound = shapeList.find((points) => points !== northbound) ?? shapeList[1] ?? [];
 
   const output = {
     source: FEED_URL,
@@ -280,7 +291,11 @@ async function main() {
     headwayMinutes,
   };
 
-  writeFileSync(resolve(root, 'src/data/qlineSchedule.json'), `${JSON.stringify(output, null, 1)}\n`, 'utf8');
+  writeFileSync(
+    resolve(root, 'src/data/qlineSchedule.json'),
+    `${JSON.stringify(output, null, 1)}\n`,
+    'utf8',
+  );
 
   const shapeSource = `// Generated from the official QLINE GTFS feed. Do not edit by hand.
 // Run \`node scripts/build-qline-schedule.mjs\` to refresh.
@@ -294,16 +309,22 @@ export const qlineSouthboundShape: Coordinate[] = ${JSON.stringify(southbound)};
   writeFileSync(resolve(root, 'src/data/qlineShape.ts'), shapeSource, 'utf8');
 
   const services = calendar.length;
-  const trips = new Set(stopTimeRows.map(r => r.trip_id)).size;
-  console.log(`Wrote src/data/qlineSchedule.json (${services} services, ${trips} trips, ${segments.length} run times)`);
-  console.log(`Wrote src/data/qlineShape.ts (northbound ${northbound.length} pts, southbound ${southbound.length} pts)`);
+  const trips = new Set(stopTimeRows.map((r) => r.trip_id)).size;
+  console.log(
+    `Wrote src/data/qlineSchedule.json (${services} services, ${trips} trips, ${segments.length} run times)`,
+  );
+  console.log(
+    `Wrote src/data/qlineShape.ts (northbound ${northbound.length} pts, southbound ${southbound.length} pts)`,
+  );
   const windows = Object.entries(headwayMinutes);
   for (const [serviceId, headway] of windows.slice(0, 4)) {
-    console.log(`  ${serviceId}: headway ${headway.min}-${headway.max} min (median ${headway.median})`);
+    console.log(
+      `  ${serviceId}: headway ${headway.min}-${headway.max} min (median ${headway.median})`,
+    );
   }
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error(error);
   process.exit(1);
 });

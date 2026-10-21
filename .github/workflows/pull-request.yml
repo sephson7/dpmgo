@@ -1,0 +1,64 @@
+name: Pull request
+
+# Gates every pull request and every push to the main branch:
+#   lint -> format -> type check -> contrast audit -> tests -> build
+#
+# The build needs no secrets: the Mapbox token has a public fallback and the
+# Stripe and admin secrets are only read at request time on the server.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, types, tests, contrast and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npx prettier --check .
+
+      - name: Type check
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Contrast audit
+        run: npm run audit:contrast
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: The build must not change the generated route tree
+        run: |
+          if ! git diff --quiet -- src/routeTree.gen.ts; then
+            echo "::error::The build regenerated src/routeTree.gen.ts. Run 'npm run build' locally and commit the result."
+            git diff --stat -- src/routeTree.gen.ts
+            exit 1
+          fi

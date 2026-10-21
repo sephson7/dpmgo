@@ -22,11 +22,7 @@ const partsFormatter = new Intl.DateTimeFormat('en-US', {
 });
 
 export function detroitNow(now = new Date()): DetroitClock {
-  const parts = Object.fromEntries(
-    partsFormatter
-      .formatToParts(now)
-      .map(p => [p.type, p.value])
-  );
+  const parts = Object.fromEntries(partsFormatter.formatToParts(now).map((p) => [p.type, p.value]));
   const ymd = `${parts['year']}${parts['month']}${parts['day']}`;
   return {
     ymd,
@@ -38,9 +34,7 @@ export function detroitNow(now = new Date()): DetroitClock {
 /** Offset of the Detroit time zone from UTC at an instant, in milliseconds. */
 function zoneOffsetMs(date: Date): number {
   const parts = Object.fromEntries(
-    partsFormatter
-      .formatToParts(date)
-      .map(p => [p.type, p.value])
+    partsFormatter.formatToParts(date).map((p) => [p.type, p.value]),
   );
   const asUtc = Date.UTC(
     Number(parts['year']),
@@ -48,7 +42,7 @@ function zoneOffsetMs(date: Date): number {
     Number(parts['day']),
     Number(parts['hour']) % 24,
     Number(parts['minute']),
-    Number(parts['second'])
+    Number(parts['second']),
   );
   return asUtc - date.getTime();
 }
@@ -74,7 +68,10 @@ export function shiftDate(ymd: string, days: number): string {
 
 /** 0 = Monday ... 6 = Sunday for a YYYYMMDD date. */
 export function weekdayInDetroit(ymd: string): number {
-  return (new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(4, 6) - 1, +ymd.slice(6, 8))).getUTCDay() + 6) % 7;
+  return (
+    (new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(4, 6) - 1, +ymd.slice(6, 8))).getUTCDay() + 6) %
+    7
+  );
 }
 
 /** Formats minutes past midnight as a 12 hour clock label. */

@@ -12,10 +12,16 @@ export const Route = createFileRoute('/api/merchant-intake')({
         if (origin && host) {
           try {
             if (new URL(origin).host !== host) {
-              return Response.json({ error: 'Cross-origin requests are not allowed.' }, { status: 403 });
+              return Response.json(
+                { error: 'Cross-origin requests are not allowed.' },
+                { status: 403 },
+              );
             }
           } catch {
-            return Response.json({ error: 'Cross-origin requests are not allowed.' }, { status: 403 });
+            return Response.json(
+              { error: 'Cross-origin requests are not allowed.' },
+              { status: 403 },
+            );
           }
         }
 
@@ -30,7 +36,7 @@ export const Route = createFileRoute('/api/merchant-intake')({
         if (!parsed.ok) {
           return Response.json(
             { error: parsed.error, fieldErrors: parsed.fieldErrors ?? {} },
-            { status: 400 }
+            { status: 400 },
           );
         }
 

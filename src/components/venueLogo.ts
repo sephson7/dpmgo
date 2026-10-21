@@ -11,7 +11,11 @@ const diningImage = (id: string) => diningImages[`/src/assets/dining/${id}.jpg.a
  * Resolves the brand mark for a venue: the local photo when there is one,
  * otherwise the favicon of the venue's own domain.
  */
-export function getVenueLogo(venue: { id: string; url?: string; imageUrl?: string }): string | null {
+export function getVenueLogo(venue: {
+  id: string;
+  url?: string;
+  imageUrl?: string;
+}): string | null {
   if (venue.imageUrl) return venue.imageUrl;
   const local = diningImage(venue.id);
   if (local) return local;

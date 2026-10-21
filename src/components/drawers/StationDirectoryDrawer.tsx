@@ -41,25 +41,36 @@ export default function StationDirectoryDrawer({
           <div className="drawer-header-top">
             <div className="drawer-eyebrow">DETROIT TRANSIT</div>
             <DrawerClose asChild>
-              <button type="button" className="drawer-close-btn" aria-label="Close station directory">
+              <button
+                type="button"
+                className="drawer-close-btn"
+                aria-label="Close station directory"
+              >
                 <X size={18} />
               </button>
             </DrawerClose>
           </div>
           <DrawerTitle>Station Directory</DrawerTitle>
-          <DrawerDescription>Select any station across the People Mover and QLINE corridors.</DrawerDescription>
+          <DrawerDescription>
+            Select any station across the People Mover and QLINE corridors.
+          </DrawerDescription>
         </DrawerHeader>
         <div className="drawer-search-wrap">
           <label className="station-search">
             <Search size={15} />
             <input
               value={search}
-              onChange={e => onSearch(e.target.value)}
+              onChange={(e) => onSearch(e.target.value)}
               placeholder="Find a station..."
               aria-label="Filter station directory"
             />
             {search && (
-              <button type="button" onClick={() => onSearch('')} className="search-clear-btn" aria-label="Clear search">
+              <button
+                type="button"
+                onClick={() => onSearch('')}
+                className="search-clear-btn"
+                aria-label="Clear search"
+              >
                 <X size={13} />
               </button>
             )}

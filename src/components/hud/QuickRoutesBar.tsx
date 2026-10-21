@@ -37,7 +37,7 @@ export default function QuickRoutesBar({
           <Compass size={11} /> HOW DO I?
         </span>
         <div className="dpm-quick-nav-scroll">
-          {howDoIFlows.map(flow => {
+          {howDoIFlows.map((flow) => {
             const Icon = HOW_DO_I_ICONS[flow.id];
             return (
               <button
@@ -59,7 +59,7 @@ export default function QuickRoutesBar({
           <Navigation2 size={11} /> I’M GOING TO:
         </span>
         <div className="dpm-quick-nav-scroll">
-          {destinationShortcuts.map(dest => (
+          {destinationShortcuts.map((dest) => (
             <button
               key={dest.id}
               type="button"
