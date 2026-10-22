@@ -53,8 +53,16 @@ export function parseMerchantIntake(payload: unknown): IntakeResult {
   return { ok: false, error: 'Please check the highlighted fields.', fieldErrors };
 }
 
-/** Short receipt code the merchant can quote when they follow up. */
-export function intakeReceiptId(intake: MerchantIntake): string {
+/**
+ * Short receipt code the merchant can quote when they follow up. It only
+ * depends on the three things that identify the purchase, so a lead created
+ * from a paid session and one created from an intake get the same code.
+ */
+export function intakeReceiptId(intake: {
+  businessName: string;
+  stationId?: string | undefined;
+  slot: number;
+}): string {
   const seed = `${intake.businessName}|${intake.stationId || 'any'}|${intake.slot}`;
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {

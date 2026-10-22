@@ -32,4 +32,23 @@ describe('App routing', () => {
 
     expect(failedMatches(matches)).toEqual([]);
   });
+
+  it('loads the partner checkout without a loader error', async () => {
+    const matches = await loadAt('/partner');
+
+    expect(failedMatches(matches)).toEqual([]);
+  });
+
+  it('sends the old partner address to the partner checkout', async () => {
+    const router = createRouter({
+      routeTree,
+      context: { queryClient: new QueryClient() },
+      history: createMemoryHistory({ initialEntries: ['/pricing?station=fort-cass&slot=1'] }),
+    });
+    await router.load();
+
+    // Flyers printed before the partner page existed still land on it.
+    expect(router.state.location.pathname).toBe('/partner');
+    expect(router.state.location.search).toMatchObject({ station: 'fort-cass' });
+  });
 });

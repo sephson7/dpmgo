@@ -650,7 +650,7 @@ function OpenSlotCard({
         </p>
       </div>
       <a
-        href={`/pricing?slot=${slot}&station=${stationId}&name=${encodeURIComponent(stationName)}`}
+        href={`/partner?slot=${slot}&station=${stationId}&name=${encodeURIComponent(stationName)}`}
         className="unclaimed-btn"
       >
         CLAIM SLOT {slot} <ExternalLink size={12} />

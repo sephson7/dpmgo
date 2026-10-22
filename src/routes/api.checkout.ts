@@ -10,6 +10,7 @@ import {
   verifyCheckoutSession,
   type AnchorPlan,
 } from '@/lib/stripe';
+import { confirmPartnerPayment } from '@/lib/partnerCheckout';
 import { readServerSecret } from '@/lib/serverEnv';
 
 /** Rejects cross-site calls to the checkout endpoint. */
@@ -134,7 +135,22 @@ export const Route = createFileRoute('/api/checkout')({
         });
         try {
           const session = await retrieveCheckoutSession(fetch, { secretKey, sessionId });
-          return Response.json(verifyCheckoutSession(session, { priceIds }));
+          const verified = verifyCheckoutSession(session, { priceIds });
+          // The payment is confirmed here, so the lead and the confirmation
+          // email are created from a session Stripe says is paid. This is the
+          // fallback for the Stripe webhook: it runs the same idempotent
+          // path, so a buyer is never charged twice for the same session and
+          // never receives two confirmations.
+          const origin =
+            (await readServerSecret('PUBLIC_APP_URL', context)) ?? new URL(request.url).origin;
+          const confirmation = await confirmPartnerPayment(session, context, { priceIds, origin });
+          return Response.json({
+            ...verified,
+            receipt: confirmation?.receipt ?? null,
+            emailed: confirmation?.emailed ?? false,
+            email: confirmation?.email ?? verified.email,
+            ...(confirmation?.error ? { confirmationError: confirmation.error } : {}),
+          });
         } catch (error) {
           console.error('Stripe session lookup failed', error);
           return Response.json({ error: 'Unable to verify checkout.' }, { status: 502 });

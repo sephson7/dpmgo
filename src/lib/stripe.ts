@@ -54,7 +54,14 @@ export const SLOT_LABELS: Record<AnchorSlot, string> = {
   2: 'Rotating anchor slot',
 };
 
-/** The Stripe pricing table that backs the /pricing page. */
+/**
+ * The page a merchant lands on. The QR code on the sales flyer points here and
+ * Stripe sends the buyer back here after the payment, so the whole flow has
+ * one canonical address.
+ */
+export const PARTNER_PATH = '/partner';
+
+/** The Stripe pricing table that owns the published prices. */
 export const PRICING_TABLE_ID = 'prctbl_1UQ9Ky57MO63Hzo12cFECrWf';
 export const PRICING_TABLE_PUBLISHABLE_KEY =
   'pk_live_51UQ8Q957MO63Hzo1kKCL8z2xUtv75B87HNnp6Hd99EPMYlltLeUMNuCYUd1HhCoeFQT7G3irEuFkU7GiPedJ5Sek00Q16TKFlW';
@@ -65,11 +72,27 @@ export type CheckoutRequestBody = {
   plan?: AnchorPlan;
   placeId?: string;
   email?: string;
+  /** The merchant details the confirmation email and the lead are built from. */
+  businessName?: string;
+  contactName?: string;
+  phone?: string;
+  website?: string;
+  /** The rider perk the partner wants to run in the slot. */
+  deal?: string;
 };
 
 export type ParseResult = { ok: true; value: CheckoutRequestBody } | { ok: false; error: string };
 
 const STATION_ID_PATTERN = /^[a-z0-9-]{2,64}$/;
+const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/** A trimmed string of at most `max` characters, or undefined when it is empty. */
+function cleanText(value: unknown, max: number): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.slice(0, max);
+}
 
 /** Validates the payload coming from the browser. Prices are never trusted. */
 export function parseCheckoutRequest(payload: unknown): ParseResult {
@@ -85,9 +108,23 @@ export function parseCheckoutRequest(payload: unknown): ParseResult {
   if (slot !== 1 && slot !== 2) {
     return { ok: false, error: 'Slot must be 1 (annual) or 2 (rotating).' };
   }
+  // The merchant details are collected before the payment, because the
+  // confirmation email goes out the moment the payment is confirmed and it
+  // needs a recipient.
+  const businessName = cleanText(record['businessName'], 80);
+  if (!businessName || businessName.length < 2) {
+    return { ok: false, error: 'Enter the name of your restaurant or business.' };
+  }
+  const email = cleanText(record['email'], 120);
+  if (!email || !EMAIL_PATTERN.test(email)) {
+    return { ok: false, error: 'Enter a valid email address so we can send your confirmation.' };
+  }
   const plan = record['plan'];
-  const placeId = typeof record['placeId'] === 'string' ? record['placeId'].trim() : undefined;
-  const email = typeof record['email'] === 'string' ? record['email'].trim() : undefined;
+  const placeId = cleanText(record['placeId'], 64);
+  const contactName = cleanText(record['contactName'], 80);
+  const phone = cleanText(record['phone'], 30);
+  const website = cleanText(record['website'], 200);
+  const deal = cleanText(record['deal'], 160);
   return {
     ok: true,
     value: {
@@ -95,7 +132,12 @@ export function parseCheckoutRequest(payload: unknown): ParseResult {
       slot,
       ...(plan === 'monthly' || plan === 'annual' ? { plan } : {}),
       ...(placeId && STATION_ID_PATTERN.test(placeId) ? { placeId } : {}),
-      ...(email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? { email } : {}),
+      email,
+      businessName,
+      ...(contactName ? { contactName } : {}),
+      ...(phone ? { phone } : {}),
+      ...(website ? { website } : {}),
+      ...(deal ? { deal } : {}),
     },
   };
 }
@@ -108,6 +150,9 @@ export type StripeSession = {
   client_reference_id: string | null;
   metadata: Record<string, string>;
   amount_total?: number;
+  /** The address the buyer entered in the Stripe form. */
+  customer_email?: string | null;
+  customer_details?: { email?: string | null; name?: string | null } | null;
 };
 
 export type SessionFormOptions = {
@@ -144,24 +189,37 @@ export function buildSessionForm({
     form.set('line_items[0][price_data][product_data][name]', product.label);
   }
   const base = origin.replace(/\/+$/, '');
-  form.set('success_url', `${base}/pricing?session_id={CHECKOUT_SESSION_ID}`);
-  form.set('cancel_url', `${base}/pricing?canceled=1`);
+  form.set('success_url', `${base}${PARTNER_PATH}?session_id={CHECKOUT_SESSION_ID}`);
+  form.set('cancel_url', `${base}${PARTNER_PATH}?canceled=1`);
+  // The buyer can change the address, but it starts out filled in.
+  if (body.email) form.set('customer_email', body.email);
   // The session reference always carries the attribution, in both modes.
   form.set('client_reference_id', `${body.stationId}|${body.slot}|${plan}`);
   form.set('metadata[stationId]', body.stationId);
   form.set('metadata[slot]', String(body.slot));
   form.set('metadata[plan]', plan);
+  // The merchant details travel with the session, so the confirmation email
+  // and the lead can be built from the confirmed payment alone.
+  if (body.businessName) form.set('metadata[businessName]', body.businessName);
+  if (body.contactName) form.set('metadata[contactName]', body.contactName);
+  if (body.email) form.set('metadata[email]', body.email);
+  if (body.phone) form.set('metadata[phone]', body.phone);
+  if (body.website) form.set('metadata[website]', body.website);
+  if (body.deal) form.set('metadata[deal]', body.deal);
   if (priceId) {
     form.set('subscription_data[metadata][stationId]', body.stationId);
     form.set('subscription_data[metadata][slot]', String(body.slot));
     form.set('subscription_data[metadata][plan]', plan);
+    if (body.businessName) form.set('subscription_data[metadata][businessName]', body.businessName);
+    if (body.contactName) form.set('subscription_data[metadata][contactName]', body.contactName);
+    if (body.email) form.set('subscription_data[metadata][email]', body.email);
+    if (body.deal) form.set('subscription_data[metadata][deal]', body.deal);
   }
   if (pricingTableId) {
     // Kept for traceability only: the pricing table id is not a session parameter.
     form.set('metadata[pricingTableId]', pricingTableId);
   }
   if (body.placeId) form.set('metadata[placeId]', body.placeId);
-  if (body.email) form.set('metadata[email]', body.email);
   return form;
 }
 
@@ -338,7 +396,23 @@ export type VerifiedCheckout = {
   /** False when the purchased plan is not allowed for the slot that was bought. */
   slotPlanAllowed: boolean;
   amountTotal: number | null;
+  businessName: string | null;
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  deal: string | null;
 };
+
+/** The address the buyer used, wherever it was captured. */
+export function sessionEmail(session: StripeSession): string | null {
+  const candidate =
+    session.customer_details?.email?.trim() ||
+    session.customer_email?.trim() ||
+    session.metadata['email']?.trim() ||
+    '';
+  return EMAIL_PATTERN.test(candidate) ? candidate : null;
+}
 
 /** Turns a Stripe session into the receipt shown after checkout. */
 export function verifyCheckoutSession(
@@ -356,6 +430,10 @@ export function verifyCheckoutSession(
       ? metadataPlan
       : planFromSession(session, options?.priceIds);
   const paid = isPaidSession(session);
+  const text = (value: string | undefined) => {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  };
   return {
     paid,
     sessionId: session.id,
@@ -364,5 +442,66 @@ export function verifyCheckoutSession(
     plan,
     slotPlanAllowed: slot === null || plan === null ? true : slotAcceptsPlan(slot, plan),
     amountTotal: typeof session.amount_total === 'number' ? session.amount_total : null,
+    businessName: text(session.metadata['businessName']),
+    contactName: text(session.metadata['contactName']),
+    email: sessionEmail(session),
+    phone: text(session.metadata['phone']),
+    website: text(session.metadata['website']),
+    deal: text(session.metadata['deal']),
   };
+}
+
+/* ------------------------------------------------------------- webhooks */
+
+/** Hex HMAC-SHA256 of a payload, using the Web Crypto API. */
+async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  return Array.from(new Uint8Array(signature))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/** Compares two hex strings without leaking where they differ. */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let difference = 0;
+  for (let index = 0; index < a.length; index += 1) {
+    difference |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  }
+  return difference === 0;
+}
+
+/**
+ * Verifies a Stripe webhook signature over the raw request body.
+ *
+ * The body has to be the exact bytes Stripe signed, so it cannot be parsed
+ * before it is checked.
+ */
+export async function verifyStripeSignature(
+  rawBody: string,
+  header: string | null,
+  secret: string,
+  options?: { toleranceSeconds?: number; now?: number },
+): Promise<boolean> {
+  if (!header || !secret) return false;
+  const parts = header.split(',').map((part) => part.trim());
+  const timestamp = parts.find((part) => part.startsWith('t='))?.slice(2);
+  const signatures = parts.filter((part) => part.startsWith('v1=')).map((part) => part.slice(3));
+  if (!timestamp || signatures.length === 0) return false;
+
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds)) return false;
+  const now = options?.now ?? Math.floor(Date.now() / 1000);
+  if (Math.abs(now - seconds) > (options?.toleranceSeconds ?? 300)) return false;
+
+  const expected = await hmacSha256Hex(secret, `${timestamp}.${rawBody}`);
+  return signatures.some((candidate) => timingSafeEqual(expected, candidate));
 }

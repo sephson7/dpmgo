@@ -91,6 +91,15 @@ consist is standing on the platform.
 | Dialogs | `src/components/dialogs/` — `QuickNavDialog`, `LegalDialog`, `WalkthroughDialog` |
 | Shared hooks | `src/hooks/` — `useAnchorSlots` (the partner slots, one request for the strip and the drawer), `use-mobile` (the layout breakpoint) |
 
+The partner program lives on the server, because the price, the payment and the
+confirmation all have to be the server's business:
+
+| Area | Files |
+| --- | --- |
+| The partner page | `src/routes/partner.tsx` — the QR destination, `/pricing` redirects to it |
+| The checkout and the webhook | `src/routes/api.checkout.ts`, `src/routes/api.stripe/webhook.ts` |
+| The program itself | `src/lib/partnerCheckout.ts` (the closed loop), `src/lib/stripe.ts` (prices, metadata, signature), `src/lib/email.ts` (the confirmation), `src/lib/anchorStore.ts` (the leads and the slots) |
+
 **Two layouts, not one hidden one.** The phone and the desktop render
 different trees from the same state: the phone gets the Quick Routes dropdown,
 the bottom dock and the station directory drawer, the desktop gets the preset
@@ -149,10 +158,43 @@ and the launcher no longer steals any of it. iOS reports the installed app as
 both are treated as the installed app. The browser layout is untouched.
 
 ### 4. Partner Program & Admin Portal
-- **Stripe Checkout:** The partner page embeds the Stripe pricing table and can also start a server priced Checkout Session. Slot 1 is sold on the annual plan only, slot 2 on either plan, and the server decides the price.
-- **Anchor Slots:** Slot 1 of Fort / Cass is held by Lafayette Coney Island; every other slot shows a "Claim Slot" call to action.
-- **Partner Admin:** `/admin` (linked from the app footer) signs in, lists every merchant intake submission, and approves or rejects leads. Approving a lead writes the anchor slot assignment, which the station drawer picks up immediately.
-- **The store is Cloudflare KV.** The leads and the slot assignments live in a KV namespace (`ANCHOR_STORE`), so an approval survives a restart and every isolate sees the same records. Each lead and each slot is a separate key, so two approvals never overwrite each other. Locally, and on a runtime without the binding, the store falls back to a JSON file and then to memory.
+A restaurant merchant scans the QR code on a sales flyer, lands on **`/partner`**, picks the
+station and the anchor slot they want, tells us who they are, and pays. The program then owes
+them two things, and both happen the moment Stripe confirms the payment: a **lead in the partner
+portal** so the team has something to approve inside the promised 24 hours, and a **branded
+confirmation email** so they know the payment landed.
+
+- **One checkout, server priced:** the partner page starts a server priced Stripe Checkout Session.
+  Slot 1 is sold on the annual plan only, slot 2 on either plan, and the server decides the price
+  and rejects a mismatched purchase. The embedded Stripe pricing table was removed: it was not
+  server priced, so it could sell the monthly plan for the annual only slot 1.
+- **The merchant details are collected before the payment,** because the confirmation email goes
+  out the moment the payment is confirmed and it needs a recipient. The email is prefilled into
+  the Stripe form, so the buyer never types it twice.
+- **The lead comes from the payment,** not from a form the buyer can abandon: the station, the
+  slot, the plan, the business name and the perk all travel on the Stripe session.
+- **The confirmation is sent by the server, twice over.** A Stripe webhook
+  (`/api/stripe/webhook`) is the primary trigger, because a buyer who closes the tab before the
+  redirect finishes would otherwise leave a paid slot with no lead. The verification call after
+  the redirect is the fallback. Both run through the same idempotent path, and the lead records
+  that the confirmation has been sent, so **the merchant is never emailed twice** and never
+  receives two leads for one payment.
+- **The email is branded with the DPM - Go! logo** and says exactly this: *"Welcome to the DPM -
+  Go! Partnership Program! Please allow our team up to 24 hours to review and approve your Station
+  Anchor Slot!"* The transport is pluggable: a Cloudflare `SEND_EMAIL` binding, then Resend, then
+  your own webhook.
+- **Anchor Slots:** Slot 1 of Fort / Cass is held by Lafayette Coney Island; every other slot shows
+  a "Claim Slot" call to action that opens `/partner` with that station and slot already chosen.
+  A flyer can carry the same query string, so a sales rep can print a flyer for one station.
+- **Partner Admin:** `/admin` (linked from the app footer) signs in, lists every purchase, and
+  approves or rejects the leads. Approving a lead writes the anchor slot assignment, which the
+  station drawer picks up immediately. The admin list shows whether the confirmation email went
+  out, so a merchant who never got it can be followed up by hand.
+- **The store is Cloudflare KV.** The leads and the slot assignments live in a KV namespace
+  (`ANCHOR_STORE`), so an approval survives a restart and every isolate sees the same records.
+  Each lead and each slot are a separate key, so two approvals never overwrite each other.
+  Locally, and on a runtime without the binding, the store falls back to a JSON file and then to
+  memory.
 
 ---
 
@@ -171,16 +213,51 @@ STRIPE_SECRET_KEY=your_stripe_restricted_or_secret_key
 STRIPE_PRICING_TABLE_ID=prctbl_xxxxxxxxxxxx
 STRIPE_PRICE_ANNUAL=price_xxxxxxxxxxxx
 STRIPE_PRICE_MONTHLY=price_xxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxx
 ADMIN_USERNAME=choose-an-admin-user
 ADMIN_PASSWORD=choose-a-strong-password
 ADMIN_SESSION_SECRET=64_random_hex_characters
+PUBLIC_APP_URL=https://dpmgo.lovable.app
 ```
+
+The partner confirmation email needs a transport. The three are tried in order, so any one of
+them is enough:
+
+```env
+# 1. A Cloudflare Workers email binding (SEND_EMAIL) - free, native to the platform.
+# 2. Resend - a plain HTTPS call, no dependency, needs a verified sending domain.
+RESEND_API_KEY=re_xxxxxxxxxxxx
+# 3. Your own webhook - the payload is posted to your automation.
+PARTNER_EMAIL_WEBHOOK_URL=https://your-automation.example/hooks/partner-email
+# The sender and the logo the email shows.
+PARTNER_EMAIL_FROM=DPM - Go! Partnership <partnerships@dpmgo.lovable.app>
+PARTNER_EMAIL_LOGO_URL=https://dpmgo.lovable.app/icon-512.png
+```
+
+Without a transport the purchase is still recorded and the lead still lands in the portal, but
+the merchant is not emailed, and the admin list says so.
 
 The partner portal has **no default credentials**. If `ADMIN_USERNAME`,
 `ADMIN_PASSWORD` or `ADMIN_SESSION_SECRET` is missing, `/admin` and the
 `/api/admin/*` routes answer `503` and the portal stays closed. The session
 signing key is never derived from the password, so a leaked password cannot be
 turned into a forged session cookie.
+
+#### Setting up the Stripe webhook
+
+The webhook is what makes the loop closed: it is how the server learns a
+payment succeeded even when the buyer never comes back to the site.
+
+1. In Stripe, add an endpoint for `https://your-domain/api/stripe/webhook` and
+   subscribe it to `checkout.session.completed`.
+2. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+3. The endpoint only accepts a body that Stripe signed, and it reads the
+   session from Stripe rather than trusting the payload, so a forged call
+   cannot invent a purchase.
+
+The webhook is not the only path: the verification call after the redirect
+confirms the payment as well, so the flow still works if the webhook is not
+configured yet. Both paths are idempotent, so a merchant is emailed once.
 
 #### Setting up the portal
 

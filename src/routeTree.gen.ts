@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ApiAnchorSlotsRouteImport } from './routes/api.anchor-slots'
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
@@ -18,6 +19,7 @@ import { Route as ApiMerchantIntakeRouteImport } from './routes/api.merchant-int
 import { Route as ApiAdminLeadsRouteImport } from './routes/api.admin.leads'
 import { Route as ApiAdminLoginRouteImport } from './routes/api.admin.login'
 import { Route as ApiAdminLogoutRouteImport } from './routes/api.admin.logout'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -27,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -64,10 +71,16 @@ const ApiAdminLogoutRoute = ApiAdminLogoutRouteImport.update({
   path: '/api/admin/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/partner': typeof PartnerRoute
   '/pricing': typeof PricingRoute
   '/api/anchor-slots': typeof ApiAnchorSlotsRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -75,10 +88,12 @@ export interface FileRoutesByFullPath {
   '/api/admin/leads': typeof ApiAdminLeadsRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/partner': typeof PartnerRoute
   '/pricing': typeof PricingRoute
   '/api/anchor-slots': typeof ApiAnchorSlotsRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -86,11 +101,13 @@ export interface FileRoutesByTo {
   '/api/admin/leads': typeof ApiAdminLeadsRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/partner': typeof PartnerRoute
   '/pricing': typeof PricingRoute
   '/api/anchor-slots': typeof ApiAnchorSlotsRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -98,12 +115,14 @@ export interface FileRoutesById {
   '/api/admin/leads': typeof ApiAdminLeadsRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/partner'
     | '/pricing'
     | '/api/anchor-slots'
     | '/api/checkout'
@@ -111,10 +130,12 @@ export interface FileRouteTypes {
     | '/api/admin/leads'
     | '/api/admin/login'
     | '/api/admin/logout'
+    | '/api/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/partner'
     | '/pricing'
     | '/api/anchor-slots'
     | '/api/checkout'
@@ -122,10 +143,12 @@ export interface FileRouteTypes {
     | '/api/admin/leads'
     | '/api/admin/login'
     | '/api/admin/logout'
+    | '/api/stripe/webhook'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/partner'
     | '/pricing'
     | '/api/anchor-slots'
     | '/api/checkout'
@@ -133,11 +156,13 @@ export interface FileRouteTypes {
     | '/api/admin/leads'
     | '/api/admin/login'
     | '/api/admin/logout'
+    | '/api/stripe/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  PartnerRoute: typeof PartnerRoute
   PricingRoute: typeof PricingRoute
   ApiAnchorSlotsRoute: typeof ApiAnchorSlotsRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
@@ -145,6 +170,7 @@ export interface RootRouteChildren {
   ApiAdminLeadsRoute: typeof ApiAdminLeadsRoute
   ApiAdminLoginRoute: typeof ApiAdminLoginRoute
   ApiAdminLogoutRoute: typeof ApiAdminLogoutRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -161,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -212,12 +245,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminLogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  PartnerRoute: PartnerRoute,
   PricingRoute: PricingRoute,
   ApiAnchorSlotsRoute: ApiAnchorSlotsRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
@@ -225,6 +266,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminLeadsRoute: ApiAdminLeadsRoute,
   ApiAdminLoginRoute: ApiAdminLoginRoute,
   ApiAdminLogoutRoute: ApiAdminLogoutRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

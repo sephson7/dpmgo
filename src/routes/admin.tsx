@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2, Clock3, MapPin, ShieldCheck, Tag, X } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock3, Mail, MapPin, ShieldCheck, Tag, X } from 'lucide-react';
 import { peopleMoverStations, qlineStations } from '@/data/transit';
 
 type Lead = {
@@ -16,6 +16,12 @@ type Lead = {
   deal: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  /** When the confirmation email went out. */
+  receiptSentAt?: string;
+  /** Which transport delivered it. */
+  receiptTransport?: string;
+  /** The Stripe session the lead was paid for. */
+  sessionId?: string;
 };
 
 type Assignment = {
@@ -255,6 +261,22 @@ function AdminPortal() {
                         <Clock3 size={12} />
                         {new Date(lead.createdAt).toLocaleString()} · ref {lead.receipt}
                       </p>
+                      <p className="text-[11px] flex items-center gap-2">
+                        <Mail
+                          size={12}
+                          className={lead.receiptSentAt ? 'text-emerald-400' : 'text-amber-300'}
+                        />
+                        {lead.receiptSentAt ? (
+                          <span className="text-emerald-300">
+                            Confirmation sent {new Date(lead.receiptSentAt).toLocaleString()}
+                            {lead.receiptTransport ? ` via ${lead.receiptTransport}` : ''}
+                          </span>
+                        ) : (
+                          <span className="text-amber-300">
+                            No confirmation email sent yet — follow up with the merchant.
+                          </span>
+                        )}
+                      </p>
                       {lead.status === 'pending' && (
                         <div className="flex gap-2 pt-1">
                           <button
@@ -307,7 +329,7 @@ function AdminPortal() {
             </section>
 
             <a
-              href="/pricing"
+              href="/partner"
               className="inline-flex items-center gap-1 text-sm text-cyan-400 hover:underline"
             >
               Open the partner checkout page <ArrowRight size={13} />

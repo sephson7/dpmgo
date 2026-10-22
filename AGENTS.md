@@ -23,7 +23,12 @@
 - Compute vehicle bearings from the current simulation segment and use map-aligned symbols so train icons follow the track through camera rotation and pitch.
 - Keep station drawers to a strict two-slot architecture: slot 1 is an annual partner, slot 2 rotates. Slot holders are never repeated in the standard restaurant list.
 - Sell slot 1 on the annual plan only and slot 2 on either plan; the server owns the price and rejects mismatched purchases.
+- Keep the partner checkout server priced and never re-introduce a client side pricing table, because a table is not priced by the server and can sell the monthly plan for the annual only slot 1.
+- Create the partner lead from the confirmed payment, not from a form the buyer can abandon, so a paid slot always has something for the team to approve inside the promised 24 hours.
 - Never trust a query string for a completed payment: confirm the checkout session with Stripe before showing a receipt.
+- Send the partner confirmation from the server exactly once per Stripe session, and keep the webhook and the redirect on the same idempotent path, because a buyer can close the tab before the redirect finishes and must never be emailed twice.
+- Verify the Stripe webhook signature over the raw body and read the session back from Stripe, so a forged call cannot invent a purchase.
+- Collect the merchant email before the payment, because the confirmation goes out the moment the payment is confirmed and it needs a recipient.
 - Keep the partner portal records in the Cloudflare KV namespace, one key per lead and one key per slot, so two approvals never overwrite each other; keep the local file fallback for the runtimes without the binding.
 - Keep the compliance footer a short dock on a phone: below 480px the brand tagline and the `·` separators are dropped so the legal links pack into two rows, because the footer is the last thing on the screen and every pixel of it is taken from the map.
 - Keep the bottom dock in one wrapper, `.bottom-dock`, so the installed app can turn the launcher, the status strip and the footer into a single glass panel and float the launcher over the map; the browser layout keeps the soft bottom margin it needs for Safari's floating toolbar.

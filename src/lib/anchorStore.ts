@@ -27,6 +27,14 @@ export type AnchorLead = {
   status: AnchorLeadStatus;
   createdAt: string;
   approvedAt?: string;
+  /** The Stripe session this lead was paid for. One lead per session. */
+  sessionId?: string;
+  /** When the confirmation email went out. It is only ever sent once. */
+  receiptSentAt?: string;
+  /** Which transport delivered the confirmation. */
+  receiptTransport?: string;
+  /** What was actually charged, in cents. */
+  paidAmountCents?: number;
 };
 export type AnchorAssignment = {
   stationId: string;
@@ -244,6 +252,35 @@ export async function listLeads(context?: unknown): Promise<AnchorLead[]> {
 export async function addLead(lead: AnchorLead, context?: unknown): Promise<AnchorLead> {
   const store = await readStore(context);
   await writeStore({ ...store, leads: [lead, ...store.leads] }, context);
+
+  const kv = kvBinding(context);
+  if (kv) {
+    known.leads.set(lead.id, lead);
+    await kv.put(`${LEAD_PREFIX}${lead.id}`, JSON.stringify(lead));
+  }
+  return lead;
+}
+
+/**
+ * The lead that was created for a paid Stripe session. A confirmation is only
+ * sent once per session, so this is how a repeat delivery is stopped.
+ */
+export async function findLeadBySessionId(
+  sessionId: string,
+  context?: unknown,
+): Promise<AnchorLead | null> {
+  if (!sessionId) return null;
+  const store = await readStore(context);
+  return store.leads.find((lead) => lead.sessionId === sessionId) ?? null;
+}
+
+/** Writes a changed lead back to the store. */
+export async function updateLead(lead: AnchorLead, context?: unknown): Promise<AnchorLead> {
+  const store = await readStore(context);
+  await writeStore(
+    { ...store, leads: store.leads.map((item) => (item.id === lead.id ? lead : item)) },
+    context,
+  );
 
   const kv = kvBinding(context);
   if (kv) {
