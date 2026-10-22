@@ -21,7 +21,7 @@
  *    are never cached: they are personal, transactional or third party.
  */
 
-const VERSION = 'dpmgo-v1';
+const VERSION = 'dpmgo-v2';
 const SHELL_CACHE = `dpmgo-shell-${VERSION}`;
 const ASSET_CACHE = `dpmgo-assets-${VERSION}`;
 const FONT_CACHE = `dpmgo-fonts-${VERSION}`;

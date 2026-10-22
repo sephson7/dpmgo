@@ -37,13 +37,36 @@ function HomeRoute() {
     if (!import.meta.env.PROD) return;
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
 
+    // When a new release takes over from an older worker, reload once so the
+    // rider sees the new version instead of the cached one.
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let reloaded = false;
+    const onControllerChange = () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
+    let registration: ServiceWorkerRegistration | undefined;
     const register = () => {
       navigator.serviceWorker
         .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+        .then((reg) => {
+          registration = reg;
+          void reg.update();
+        })
         .catch(() => {
           // Offline support is a bonus, so a failed registration is not fatal.
         });
     };
+
+    // An installed app can stay open for days: check for a new release
+    // every time the rider comes back to it.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void registration?.update().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
     if (document.readyState === 'complete') {
       register();
