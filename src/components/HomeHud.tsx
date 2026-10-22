@@ -14,7 +14,8 @@ import {
   type HowDoIFlow,
   type Station,
 } from '@/data/transit';
-import { stationSchedule } from '@/data/schedule';
+import { stationSchedule, type StationSchedule } from '@/data/schedule';
+import { qlineServiceRunning, qlineStationSchedule, qlineStatus } from '@/data/qlineSchedule';
 import { moverDrawerArrivals } from '@/data/moverDrawerArrivals';
 import { canOfferRiderFeedback, RIDER_FEEDBACK_SESSION_KEY, type RiderFeedbackContext } from '@/data/riderFeedback';
 import { useStationAlert } from '@/hooks/useStationAlert';
@@ -285,10 +286,24 @@ export default function HomeHud() {
     setFeedbackContext(context);
     setFeedbackOpen(true);
   };
-  const tickerSchedule = useMemo(
-    () => stationSchedule(tickerStation.id, now),
-    [tickerStation.id, now],
-  );
+  const tickerSchedule = useMemo<StationSchedule>(() => {
+    if (tickerStation.line !== 'qline') return stationSchedule(tickerStation.id, now);
+    // QLINE stations follow the QLINE timetable and published hours, not the People Mover feed.
+    const running = qlineServiceRunning(now);
+    const trains = qlineStationSchedule(tickerStation.id, now).map((d) => ({
+      time: d.time,
+      minutes: d.minutes,
+      day: null,
+    }));
+    if (!running && trains.length === 0) {
+      const status = qlineStatus(now);
+      if (status.minutesToNext !== null) {
+        const opensAt = status.nextDepartureLabel.replace(/^OPENS /, '');
+        trains.push({ time: opensAt, minutes: status.minutesToNext, day: null });
+      }
+    }
+    return { running, trains, specialToday: false, specialDays: [] };
+  }, [tickerStation.id, tickerStation.line, now]);
 
   useEffect(() => {
     const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1450;
