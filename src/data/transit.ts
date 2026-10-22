@@ -717,6 +717,44 @@ const restaurantSeeds: RestaurantSeed[] = [
   ],
 ];
 
+/**
+ * Brand images each venue publishes on its own official website (its logo,
+ * app icon or social share photo), checked October 2026. Venues not listed
+ * publish nothing usable and keep the local image or their site icon.
+ * A partner who sends their own photo replaces their entry here.
+ */
+export const venueBrandImages: Record<string, string> = {
+  andiamo:
+    'https://andiamoitalia.com/wp-content/uploads/2021/01/cropped-logo-detroits-italian-180x180.png',
+  apparatus:
+    'https://detroitfoundationhotel.com/wp-content/uploads/2024/07/cropped-detroit-foundation-logo.png',
+  'baobab-fare':
+    'https://baobabfare.com/wp-content/uploads/2023/01/cropped-baobabfare-fav-180x180.jpeg',
+  'bar-pigalle':
+    'https://static1.squarespace.com/static/65cfbb3c98696e51f9e8bc30/t/65cfbb4098696e51f9e8bc9f/1706466815938/BarPigalleLogoWhite.png?format=500w',
+  bodega: 'https://bodegamkt.com/img/meta-thumb.jpg',
+  'brushpark-brunch': 'https://brushparkbrunch.com/wp-content/uploads/2026/05/IMG_4142.jpg',
+  chophouse: 'https://www.thelondonchophouse.com/wp-content/uploads/2021/06/LCH-flav.02.png',
+  cliffbells:
+    'https://cliffbells.com/wp-content/uploads/2023/09/cropped-cliff-bells-favicon-180x180.png',
+  fishbones: 'https://fishbonesusa.com/wp-content/uploads/2022/03/FB-Script_22-white.png',
+  'grey-ghost': 'https://greyghostdetroit.com/wp-content/uploads/2021/05/black-logo.png',
+  joemuer: 'https://joemuer.com/wp-content/uploads/2020/12/cropped-jm-favicon-192x192-1-180x180.png',
+  lumen:
+    'https://static1.squarespace.com/static/61e8a000095e8e461a873ccf/t/61f2cbcddcb5ba34467e592d/1643301837696/LUMEN+FULL+LOGO+web-01.png?format=500w',
+  mootz: 'https://static.spotapps.co/web/mootzpizzeria--com/apple-touch-icon.png',
+  parc: 'https://parcdetroit.com/wp-content/uploads/2025/10/parc-logo-1.webp',
+  pegasus:
+    'https://static1.squarespace.com/static/600b48ccf635e029087e792c/t/60229828d9e5491492073d82/1612879915151/PEGASUS_LOGO.png?format=500w',
+  sanmorello:
+    'https://images.getbento.com/UGOi7TqySxy9eeiaIcka_O1pSIMjGTa91IvpYzQ93_logo.png?w=600&fit=fill&auto=compress,format&cs=origin&h=600&bg=413d30&pad=100',
+  shillelagh: 'https://oldshillelagh.com/wp-content/uploads/2023/08/Old-Shillelagh-logo.jpg',
+  townhouse: 'https://townhousedetroit.com/wp-content/uploads/2025/12/social-share-townhouse.jpg',
+  whitney:
+    'https://static1.squarespace.com/static/6446b6f97b2cff4196401bb3/t/6446ba3e14ddb21aea8fbd4f/1768591015985/The-whiteny.png?format=500w',
+  wright: 'https://wrightdetroit.com/og-default.jpg',
+};
+
 export const restaurants: Place[] = restaurantSeeds.map(
   ([id, name, category, price, url, lng, lat]) => {
     // A place is a partner only while it holds a station slot.
