@@ -541,8 +541,15 @@ export default function StationDrawer({
         {/* Directions & Footer */}
         <div className="station-actions-row">
           <Button variant="hudActive" asChild className="directions-cta-btn">
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-              <Navigation2 size={16} /> WALKING DIRECTIONS <ExternalLink size={13} />
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setDirectionsOpened(true)}
+            >
+              {directionsOpened ? <Check size={16} /> : <Navigation2 size={16} />}{' '}
+              {directionsOpened ? 'DIRECTIONS OPENED' : 'WALKING DIRECTIONS'}{' '}
+              <ExternalLink size={13} />
             </a>
           </Button>
           <div className="coordinates-label">
@@ -554,9 +561,10 @@ export default function StationDrawer({
 
       <div className="detail-disclaimer">
         <Clock3 size={13} /> {isQLine
-          ? 'Arrivals calculated from published headway schedules.'
+          ? 'Departure times come from the published QLINE timetable.'
           : 'First arrival follows the simulated fleet. The second is a 15–20 minute planning window, not a confirmed departure.'}{' '}
-        Real-time agency telemetry currently unavailable from DTC. Vehicle markers are simulated.
+        No live agency feed is connected. Vehicle markers on the map are simulated. Partner
+        placements are marked Sponsored.
       </div>
     </div>
   );
@@ -576,6 +584,7 @@ function SponsorSlotCard({
   isPinned: boolean;
 }) {
   const thumb = getVenueLogo(place);
+  const [visited, setVisited] = useState(false);
   useEffect(() => {
     trackSlot(slot.stationId, slot.slot, 'view');
   }, [slot.stationId, slot.slot]);
@@ -586,6 +595,7 @@ function SponsorSlotCard({
         {slot.kind === 'annual'
           ? 'ANNUAL PARTNER'
           : `ROTATING PARTNER${slot.rotation ? ` · ${slot.rotation}` : ''}`}
+        <span className="sponsored-badge" aria-label="Paid placement">SPONSORED</span>
       </div>
       <div className="anchor-spot-box">
         <div className="anchor-spot-top">
@@ -615,23 +625,28 @@ function SponsorSlotCard({
           <button
             type="button"
             className={`anchor-action-btn ${isPinned ? 'active' : ''}`}
+            aria-pressed={isPinned}
             onClick={() => {
               if (!isPinned) trackSlot(slot.stationId, slot.slot, 'map');
               onRestaurant(place.id);
             }}
           >
             <MapPin size={14} />
-            <span>{isPinned ? 'UNTOGGLE 3D PIN' : 'SHOW ON 3D MAP'}</span>
+            <span>{isPinned ? 'PINNED · TAP TO CLEAR' : 'SHOW ON 3D MAP'}</span>
           </button>
           {place.url && (
             <a
               href={place.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="anchor-action-btn anchor-action-visit"
-              onClick={() => trackSlot(slot.stationId, slot.slot, 'visit')}
+              className={`anchor-action-btn anchor-action-visit ${visited ? 'is-opened' : ''}`}
+              onClick={() => {
+                trackSlot(slot.stationId, slot.slot, 'visit');
+                setVisited(true);
+              }}
             >
-              <span>MENU &amp; VISIT</span>
+              {visited ? <Check size={14} /> : null}
+              <span>{visited ? 'OPENED · VISIT AGAIN' : 'MENU & VISIT'}</span>
               <ExternalLink size={14} />
             </a>
           )}
