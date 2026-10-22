@@ -15,6 +15,8 @@ import {
   type Station,
 } from '@/data/transit';
 import { stationSchedule } from '@/data/schedule';
+import { moverDrawerArrivals } from '@/data/moverDrawerArrivals';
+import { canOfferRiderFeedback, RIDER_FEEDBACK_SESSION_KEY, type RiderFeedbackContext } from '@/data/riderFeedback';
 import { useStationAlert } from '@/hooks/useStationAlert';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -37,6 +39,7 @@ import StationDrawer from '@/components/drawers/StationDrawer';
 import LegalDialog, { type LegalDocument } from '@/components/dialogs/LegalDialog';
 import QuickNavDialog from '@/components/dialogs/QuickNavDialog';
 import WalkthroughDialog from '@/components/dialogs/WalkthroughDialog';
+import RiderFeedbackDialog from '@/components/dialogs/RiderFeedbackDialog';
 
 export default function HomeHud() {
   // The phone and the desktop render different layouts, so the phone never
@@ -62,6 +65,9 @@ export default function HomeHud() {
   const [manualOriginId, setManualOriginId] = useState<string | null>(null);
 
   const [isBoarded, setIsBoarded] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackPrompted, setFeedbackPrompted] = useState(false);
+  const [feedbackContext, setFeedbackContext] = useState<RiderFeedbackContext | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [followUser, setFollowUser] = useState(false);
 
@@ -254,6 +260,27 @@ export default function HomeHud() {
   }, [userPos, activeStations]);
 
   const tickerStation = selected ?? nearestStation;
+  const handleToggleBoarded = () => {
+    const boarding = !isBoarded;
+    setIsBoarded(boarding);
+    let alreadyPrompted = feedbackPrompted;
+    try {
+      alreadyPrompted ||= sessionStorage.getItem(RIDER_FEEDBACK_SESSION_KEY) === 'true';
+    } catch { /* In-memory guard still works if storage is blocked. */ }
+    const predictionAt = new Date();
+    const arrival = tickerStation.line === 'qline' ? null : moverDrawerArrivals(tickerStation.id, predictionAt)[0];
+    const context: RiderFeedbackContext | null = arrival?.source === 'simulation' ? {
+      stationId: tickerStation.id,
+      stationName: tickerStation.name,
+      predictedMinutes: arrival.minutes,
+      predictionAt: predictionAt.toISOString(),
+    } : null;
+    if (!canOfferRiderFeedback(boarding, alreadyPrompted, context)) return;
+    setFeedbackPrompted(true);
+    try { sessionStorage.setItem(RIDER_FEEDBACK_SESSION_KEY, 'true'); } catch { /* Guard remains in memory. */ }
+    setFeedbackContext(context);
+    setFeedbackOpen(true);
+  };
   const tickerSchedule = useMemo(
     () => stationSchedule(tickerStation.id, now),
     [tickerStation.id, now],
@@ -375,7 +402,7 @@ export default function HomeHud() {
           }
           layers={layers}
           isBoarded={isBoarded}
-          onToggleBoarded={() => setIsBoarded((v) => !v)}
+          onToggleBoarded={handleToggleBoarded}
           followUser={followUser}
           onToggleFollow={() => setFollowUser((v) => !v)}
           hasUserPosition={Boolean(userPos)}
@@ -475,6 +502,7 @@ export default function HomeHud() {
       />
 
       {/* Walkthrough & Onboarding Guide Dialog */}
+      <RiderFeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} context={feedbackContext} />
       <WalkthroughDialog
         open={walkthroughOpen}
         onDismiss={dismissWalkthrough}
