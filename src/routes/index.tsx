@@ -119,6 +119,8 @@ function HomeRoute() {
     return () => {
       observer.disconnect();
       window.removeEventListener('load', register);
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
