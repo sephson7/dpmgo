@@ -6,7 +6,7 @@ import { peopleMoverServiceRunning } from '@/data/schedule';
 import { parkedMoverTrains, simulatedMoverTrains, moverFleetElapsed } from '@/data/trainSimulation';
 import { parkedQlineTrain, scheduledQlineTrains } from '@/data/qlineSimulation';
 import { parkingGarages } from '@/data/parking';
-import { qlineNorthboundShape } from '@/data/qlineShape';
+import { qlineNorthboundShape, qlineSouthboundShape } from '@/data/qlineShape';
 import {
   peopleMoverShape,
   peopleMoverStations,
@@ -42,7 +42,13 @@ const route = (coordinates: Coordinate[]): GeoJSON.Feature<GeoJSON.LineString> =
 });
 // The QLINE alignment comes from the agency GTFS shape, so the line follows
 // the real Woodward Avenue track instead of straight hops between stops.
-const qPath = qlineNorthboundShape;
+// The corridor carries both directions: the northbound shape runs Congress
+// St -> Grand Blvd and the southbound shape runs back down, so both are
+// drawn and the returning streetcar is never off its track.
+const qlineRouteData: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [route(qlineNorthboundShape), route(qlineSouthboundShape)],
+};
 const routeData = (coordinates: Coordinate[]): GeoJSON.FeatureCollection => ({
   type: 'FeatureCollection',
   features: [route(coordinates)],
