@@ -1,4 +1,5 @@
 // Venue branding for the dining and sponsor cards in the station drawer.
+import { venueBrandImages } from '@/data/transit';
 
 const diningImages = import.meta.glob<{ url: string }>('/src/assets/dining/*.asset.json', {
   eager: true,
@@ -17,6 +18,8 @@ export function getVenueLogo(venue: {
   imageUrl?: string;
 }): string | null {
   if (venue.imageUrl) return venue.imageUrl;
+  const brand = venueBrandImages[venue.id];
+  if (brand) return brand;
   const local = diningImage(venue.id);
   if (local) return local;
   if (venue.url) {

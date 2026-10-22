@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { adminPortalConfigured, readAdminCookie, verifyAdminToken } from '@/lib/adminAuth';
+import { listSlotStats } from '@/lib/slotStats';
 import {
   addLead,
   assignSlot,
@@ -27,11 +28,15 @@ export const Route = createFileRoute('/api/admin/leads')({
         if (remaining === null) {
           return Response.json({ error: 'Not signed in.' }, { status: 401 });
         }
-        const [leads, assignments] = await Promise.all([
+        const [leads, assignments, stats] = await Promise.all([
           listLeads(context),
           listAssignments(context),
+          listSlotStats(context),
         ]);
-        return Response.json({ leads, assignments });
+        return Response.json(
+          { leads, assignments, stats },
+          { headers: { 'Cache-Control': 'no-store' } },
+        );
       },
 
       // Approves or rejects a lead, and assigns the anchor slot it paid for.

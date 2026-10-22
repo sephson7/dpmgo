@@ -28,6 +28,7 @@ import { qlineStatus, qlineStationSchedule } from '@/data/qlineSchedule';
 import { stationSchedule } from '@/data/schedule';
 import { getVenueLogo } from '@/components/venueLogo';
 import { useAnchorSlots } from '@/hooks/useAnchorSlots';
+import { trackSlot } from '@/hooks/trackSlot';
 
 export type StationDrawerProps = {
   station: Station;
@@ -569,6 +570,9 @@ function SponsorSlotCard({
   isPinned: boolean;
 }) {
   const thumb = getVenueLogo(place);
+  useEffect(() => {
+    trackSlot(slot.stationId, slot.slot, 'view');
+  }, [slot.stationId, slot.slot]);
   return (
     <div className="anchor-spot-wrapper">
       <div className="anchor-spot-eyebrow">
@@ -605,7 +609,10 @@ function SponsorSlotCard({
           <button
             type="button"
             className={`anchor-action-btn ${isPinned ? 'active' : ''}`}
-            onClick={() => onRestaurant(place.id)}
+            onClick={() => {
+              if (!isPinned) trackSlot(slot.stationId, slot.slot, 'map');
+              onRestaurant(place.id);
+            }}
           >
             <MapPin size={14} />
             <span>{isPinned ? 'UNTOGGLE 3D PIN' : 'SHOW ON 3D MAP'}</span>
@@ -616,6 +623,7 @@ function SponsorSlotCard({
               target="_blank"
               rel="noopener noreferrer"
               className="anchor-action-btn anchor-action-visit"
+              onClick={() => trackSlot(slot.stationId, slot.slot, 'visit')}
             >
               <span>MENU &amp; VISIT</span>
               <ExternalLink size={14} />
