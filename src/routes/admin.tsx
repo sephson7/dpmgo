@@ -52,6 +52,11 @@ export const Route = createFileRoute('/admin')({
   head: () => ({
     meta: [
       { title: 'Partner Admin | DPM - Go!' },
+      { name: 'description', content: 'Review paid station partnerships and sponsor reach for DPM - Go! Detroit.' },
+      { property: 'og:title', content: 'Partner Admin | DPM - Go!' },
+      { property: 'og:description', content: 'Review paid station partnerships and sponsor reach for DPM - Go! Detroit.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
       { name: 'robots', content: 'noindex, nofollow' },
     ],
   }),
