@@ -17,7 +17,11 @@ import {
 import { stationSchedule, type StationSchedule } from '@/data/schedule';
 import { qlineServiceRunning, qlineStationSchedule, qlineStatus } from '@/data/qlineSchedule';
 import { moverDrawerArrivals } from '@/data/moverDrawerArrivals';
-import { canOfferRiderFeedback, RIDER_FEEDBACK_SESSION_KEY, type RiderFeedbackContext } from '@/data/riderFeedback';
+import {
+  canOfferRiderFeedback,
+  RIDER_FEEDBACK_SESSION_KEY,
+  type RiderFeedbackContext,
+} from '@/data/riderFeedback';
 import { useStationAlert } from '@/hooks/useStationAlert';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -264,13 +268,17 @@ export default function HomeHud() {
   const tickerStation = selected ?? nearestStation;
   useEffect(() => {
     if (isBoarded) return;
-    const arrival = tickerStation.line === 'qline' ? null : moverDrawerArrivals(tickerStation.id, now)[0];
-    preBoardingEstimate.current = arrival?.source === 'simulation' ? {
-      stationId: tickerStation.id,
-      stationName: tickerStation.name,
-      predictedMinutes: arrival.minutes,
-      predictionAt: now.toISOString(),
-    } : null;
+    const arrival =
+      tickerStation.line === 'qline' ? null : moverDrawerArrivals(tickerStation.id, now)[0];
+    preBoardingEstimate.current =
+      arrival?.source === 'simulation'
+        ? {
+            stationId: tickerStation.id,
+            stationName: tickerStation.name,
+            predictedMinutes: arrival.minutes,
+            predictionAt: now.toISOString(),
+          }
+        : null;
   }, [isBoarded, tickerStation, now]);
   const handleToggleBoarded = () => {
     const boarding = !isBoarded;
@@ -278,11 +286,17 @@ export default function HomeHud() {
     let alreadyPrompted = feedbackPrompted;
     try {
       alreadyPrompted ||= sessionStorage.getItem(RIDER_FEEDBACK_SESSION_KEY) === 'true';
-    } catch { /* In-memory guard still works if storage is blocked. */ }
+    } catch {
+      /* In-memory guard still works if storage is blocked. */
+    }
     const context = preBoardingEstimate.current;
     if (!canOfferRiderFeedback(boarding, alreadyPrompted, context)) return;
     setFeedbackPrompted(true);
-    try { sessionStorage.setItem(RIDER_FEEDBACK_SESSION_KEY, 'true'); } catch { /* Guard remains in memory. */ }
+    try {
+      sessionStorage.setItem(RIDER_FEEDBACK_SESSION_KEY, 'true');
+    } catch {
+      /* Guard remains in memory. */
+    }
     setFeedbackContext(context);
     setFeedbackOpen(true);
   };
@@ -521,7 +535,11 @@ export default function HomeHud() {
       />
 
       {/* Walkthrough & Onboarding Guide Dialog */}
-      <RiderFeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} context={feedbackContext} />
+      <RiderFeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={setFeedbackOpen}
+        context={feedbackContext}
+      />
       <WalkthroughDialog
         open={walkthroughOpen}
         onDismiss={dismissWalkthrough}

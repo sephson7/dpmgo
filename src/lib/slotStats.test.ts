@@ -3,7 +3,14 @@ import { applySlotEvent, listSlotStats, recordSlotEvent, statsMonth } from './sl
 
 describe('sponsor slot reach', () => {
   it('counts each event type in its own column', () => {
-    const base = { stationId: 'times-square', slot: 1 as const, month: '2026-10', views: 0, mapTaps: 0, visits: 0 };
+    const base = {
+      stationId: 'times-square',
+      slot: 1 as const,
+      month: '2026-10',
+      views: 0,
+      mapTaps: 0,
+      visits: 0,
+    };
     const after = applySlotEvent(applySlotEvent(applySlotEvent(base, 'view'), 'map'), 'visit');
     expect(after).toMatchObject({ views: 1, mapTaps: 1, visits: 1 });
   });

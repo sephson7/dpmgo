@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { canOfferRiderFeedback, type RiderFeedbackContext } from './riderFeedback';
 
-const context: RiderFeedbackContext = { stationId: 'bricktown', stationName: 'Bricktown', predictedMinutes: 9, predictionAt: '2026-10-22T17:18:00Z' };
+const context: RiderFeedbackContext = {
+  stationId: 'bricktown',
+  stationName: 'Bricktown',
+  predictedMinutes: 9,
+  predictionAt: '2026-10-22T17:18:00Z',
+};
 describe('rider feedback eligibility', () => {
   it('only offers feedback after Boarded', () => {
     expect(canOfferRiderFeedback(false, false, context)).toBe(false);
@@ -11,7 +16,9 @@ describe('rider feedback eligibility', () => {
     expect(canOfferRiderFeedback(true, true, context)).toBe(false);
   });
   it('never asks about a QLINE or unknown station', () => {
-    expect(canOfferRiderFeedback(true, false, { ...context, stationId: 'qline-congress' })).toBe(false);
+    expect(canOfferRiderFeedback(true, false, { ...context, stationId: 'qline-congress' })).toBe(
+      false,
+    );
     expect(canOfferRiderFeedback(true, false, { ...context, stationId: 'unknown' })).toBe(false);
   });
   it('requires a captured valid prediction', () => {

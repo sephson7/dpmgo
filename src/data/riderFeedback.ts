@@ -15,8 +15,13 @@ export function canOfferRiderFeedback(
   alreadyPrompted: boolean,
   context: RiderFeedbackContext | null,
 ): boolean {
-  return isBoarded && !alreadyPrompted && context !== null &&
+  return (
+    isBoarded &&
+    !alreadyPrompted &&
+    context !== null &&
     peopleMoverStations.some((station) => station.id === context.stationId) &&
-    Number.isFinite(context.predictedMinutes) && context.predictedMinutes >= 0 &&
-    Number.isFinite(Date.parse(context.predictionAt));
+    Number.isFinite(context.predictedMinutes) &&
+    context.predictedMinutes >= 0 &&
+    Number.isFinite(Date.parse(context.predictionAt))
+  );
 }

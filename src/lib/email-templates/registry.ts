@@ -1,14 +1,14 @@
-import type { ComponentType } from 'react'
-import { template as partnerConfirmation } from './partner-confirmation'
-import type { PartnerConfirmationProps } from './partner-confirmation'
+import type { ComponentType } from 'react';
+import { template as partnerConfirmation } from './partner-confirmation';
+import type { PartnerConfirmationProps } from './partner-confirmation';
 
 export interface TemplateEntry {
-  component: ComponentType<PartnerConfirmationProps>
-  subject: string | ((data: PartnerConfirmationProps) => string)
-  displayName?: string
-  previewData?: PartnerConfirmationProps
+  component: ComponentType<PartnerConfirmationProps>;
+  subject: string | ((data: PartnerConfirmationProps) => string);
+  displayName?: string;
+  previewData?: PartnerConfirmationProps;
   /** Fixed recipient — overrides caller-provided recipientEmail when set. */
-  to?: string
+  to?: string;
 }
 
 /**
@@ -21,4 +21,4 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'partner-confirmation': partnerConfirmation,
-}
+};
