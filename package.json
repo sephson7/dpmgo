@@ -16,6 +16,7 @@
     "build:dpm": "node scripts/build-dpm-schedule.mjs",
     "build:transit": "npm run build:dpm && npm run build:qline",
     "audit:contrast": "node scripts/audit-contrast.mjs",
+    "audit:venues": "node scripts/audit-venues.mjs",
     "secrets:admin": "node scripts/set-admin-secrets.mjs",
     "setup:kv": "node scripts/setup-kv.mjs"
   },

@@ -1,0 +1,23 @@
+name: Monthly venue link audit
+
+# Checks every restaurant website and brand image in the station drawers.
+# A failed run means at least one link is broken; the run summary lists them.
+on:
+  schedule:
+    - cron: '0 13 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Audit venue links and images
+        run: node scripts/audit-venues.mjs
