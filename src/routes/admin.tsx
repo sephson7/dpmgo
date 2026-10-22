@@ -36,6 +36,15 @@ type Assignment = {
   assignedAt: string;
 };
 
+type SlotStatsRow = {
+  stationId: string;
+  slot: 1 | 2;
+  month: string;
+  views: number;
+  mapTaps: number;
+  visits: number;
+};
+
 const stationName = (id: string) =>
   [...peopleMoverStations, ...qlineStations].find((station) => station.id === id)?.name ?? id;
 
@@ -59,6 +68,7 @@ function AdminPortal() {
   const [busy, setBusy] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [stats, setStats] = useState<SlotStatsRow[]>([]);
 
   const load = useCallback(async () => {
     const response = await fetch('/api/admin/leads');
@@ -73,9 +83,14 @@ function AdminPortal() {
       return;
     }
     if (!response.ok) return;
-    const result = (await response.json()) as { leads?: Lead[]; assignments?: Assignment[] };
+    const result = (await response.json()) as {
+      leads?: Lead[];
+      assignments?: Assignment[];
+      stats?: SlotStatsRow[];
+    };
     setLeads(result.leads ?? []);
     setAssignments(result.assignments ?? []);
+    setStats(result.stats ?? []);
     setSignedIn(true);
   }, []);
 
@@ -323,6 +338,47 @@ function AdminPortal() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </section>
+
+            <section className="bg-slate-900/60 border border-cyan-500/30 rounded-2xl p-4 sm:p-6">
+              <h2 className="text-lg font-bold text-white mb-1">Sponsor slot reach</h2>
+              <p className="text-[11px] text-slate-400 mb-4">
+                Approximate monthly counts: riders who saw the card, tapped “Show on 3D map” and
+                opened the partner website. Use these for partner renewal reports.
+              </p>
+              {stats.length === 0 ? (
+                <p className="text-sm text-slate-400">No sponsor activity recorded yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-slate-300">
+                    <thead className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                      <tr>
+                        <th className="text-left py-1 pr-3">Month</th>
+                        <th className="text-left py-1 pr-3">Station · Slot</th>
+                        <th className="text-right py-1 pr-3">Views</th>
+                        <th className="text-right py-1 pr-3">Map taps</th>
+                        <th className="text-right py-1">Website</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.map((row) => (
+                        <tr
+                          key={`${row.stationId}-${row.slot}-${row.month}`}
+                          className="border-t border-slate-800"
+                        >
+                          <td className="py-1.5 pr-3 font-mono">{row.month}</td>
+                          <td className="py-1.5 pr-3">
+                            {stationName(row.stationId)} · {row.slot}
+                          </td>
+                          <td className="py-1.5 pr-3 text-right">{row.views}</td>
+                          <td className="py-1.5 pr-3 text-right">{row.mapTaps}</td>
+                          <td className="py-1.5 text-right">{row.visits}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </section>
