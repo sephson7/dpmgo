@@ -269,3 +269,7 @@
 .quick-nav-action-btn.alarm-btn:hover {
   background: #38bdf8;
 }
+.walkthrough-tabs { display: flex; gap: 6px; margin-top: 12px; }
+.walkthrough-tab { flex: 1; padding: 7px 8px; font: 700 10px var(--font-mono); letter-spacing: 0.6px; color: var(--muted-foreground); background: transparent; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+.walkthrough-tab[aria-selected="true"] { color: var(--primary); border-color: var(--primary); background: oklch(0.88 0.15 195 / 12%); }
+.install-now-btn { align-self: flex-start; gap: 6px; }
