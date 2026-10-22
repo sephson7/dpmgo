@@ -240,6 +240,29 @@ export async function sendPartnerConfirmationEmail(
   const html = partnerConfirmationHtml(details, logoUrl);
   const text = partnerConfirmationText(details);
 
+  // 0. Lovable managed email from the verified dpmgo.app sender domain.
+  if (await readServerSecret('LOVABLE_API_KEY', context)) {
+    try {
+      const { sendTemplateEmail } = await import('@/lib/email-templates/send-email');
+      const result = await sendTemplateEmail('partner-confirmation', details.to, {
+        templateData: {
+          businessName: details.businessName,
+          stationName: details.stationName,
+          slot: details.slot,
+          plan: details.plan,
+          receipt: details.receipt,
+          sessionId: details.sessionId,
+        },
+        idempotencyKey: `partner-confirmation-${details.sessionId}`,
+        replyTo: 'support@dpmgo.app',
+      });
+      if (result.sent) return { sent: true, transport: 'lovable-email' };
+      return { sent: false, transport: null, error: 'The recipient has unsubscribed or bounced.' };
+    } catch (error) {
+      console.error('Lovable email delivery failed', error);
+    }
+  }
+
   // 1. The Cloudflare email binding.
   const binding = emailBinding(context);
   if (binding) {
