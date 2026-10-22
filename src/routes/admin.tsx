@@ -83,6 +83,23 @@ function AdminPortal() {
     load().finally(() => setChecking(false));
   }, [load]);
 
+  // Poll for new paid purchases while signed in, so a confirmed payment shows
+  // up for review without a manual reload.
+  useEffect(() => {
+    if (!signedIn) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load();
+    }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [signedIn, load]);
+
+  const pendingCount = leads.filter((lead) => lead.status === 'pending').length;
+  useEffect(() => {
+    document.title = pendingCount
+      ? `(${pendingCount}) Partner Admin | DPM - Go!`
+      : 'Partner Admin | DPM - Go!';
+  }, [pendingCount]);
+
   const signIn = async (event: React.FormEvent) => {
     event.preventDefault();
     setBusy(true);
@@ -212,7 +229,14 @@ function AdminPortal() {
           <div className="w-full space-y-6">
             <section className="bg-slate-900/60 border border-cyan-500/30 rounded-2xl p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white">Merchant intake leads</h2>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  Merchant intake leads
+                  {pendingCount > 0 && (
+                    <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border text-amber-300 border-amber-500/40 bg-amber-950/30">
+                      {pendingCount} awaiting review
+                    </span>
+                  )}
+                </h2>
                 <button
                   type="button"
                   onClick={signOut}
