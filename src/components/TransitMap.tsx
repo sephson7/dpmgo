@@ -764,10 +764,6 @@ export default function TransitMap({
   }, [userPosition, followUser]);
 
   return (
-    <div
-      ref={container}
-      className="h-full w-full"
-      aria-label="Map of Detroit transit stops"
-    />
+    <div ref={container} className="h-full w-full" aria-label="Map of Detroit transit stops" />
   );
 }

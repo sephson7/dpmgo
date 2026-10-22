@@ -4,7 +4,9 @@
 import { readFile, appendFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../src/data/transit.ts', import.meta.url), 'utf8');
-const urls = [...new Set([...source.matchAll(/['"`](https?:\/\/[^'"`\s]+)['"`]/g)].map((m) => m[1]))];
+const urls = [
+  ...new Set([...source.matchAll(/['"`](https?:\/\/[^'"`\s]+)['"`]/g)].map((m) => m[1])),
+];
 
 const HEADERS = {
   'user-agent':
@@ -15,19 +17,33 @@ const HEADERS = {
 async function check(url) {
   for (const method of ['HEAD', 'GET']) {
     try {
-      const res = await fetch(url, { method, headers: HEADERS, redirect: 'follow', signal: AbortSignal.timeout(15000) });
+      const res = await fetch(url, {
+        method,
+        headers: HEADERS,
+        redirect: 'follow',
+        signal: AbortSignal.timeout(15000),
+      });
       res.body?.cancel?.();
-      if (res.ok) return { url, ok: true, status: res.status, redirected: res.redirected ? res.url : null };
+      if (res.ok)
+        return { url, ok: true, status: res.status, redirected: res.redirected ? res.url : null };
       // Many sites reject HEAD; retry once with GET before calling it broken.
-      if (method === 'GET' || ![403, 405, 501].includes(res.status)) return { url, ok: res.status === 403, status: res.status, note: res.status === 403 ? 'blocked bots, check by hand' : '' };
+      if (method === 'GET' || ![403, 405, 501].includes(res.status))
+        return {
+          url,
+          ok: res.status === 403,
+          status: res.status,
+          note: res.status === 403 ? 'blocked bots, check by hand' : '',
+        };
     } catch (err) {
-      if (method === 'GET') return { url, ok: false, status: 'ERR', note: err.cause?.code ?? err.name };
+      if (method === 'GET')
+        return { url, ok: false, status: 'ERR', note: err.cause?.code ?? err.name };
     }
   }
 }
 
 const results = [];
-for (let i = 0; i < urls.length; i += 8) results.push(...(await Promise.all(urls.slice(i, i + 8).map(check))));
+for (let i = 0; i < urls.length; i += 8)
+  results.push(...(await Promise.all(urls.slice(i, i + 8).map(check))));
 
 const broken = results.filter((r) => !r.ok);
 const flagged = results.filter((r) => r.ok && r.note);
@@ -38,5 +54,6 @@ const lines = [
   ...flagged.map((r) => `- CHECK (${r.status} ${r.note}): ${r.url}`),
 ];
 console.log(lines.join('\n'));
-if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+if (process.env.GITHUB_STEP_SUMMARY)
+  await appendFile(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
 process.exit(broken.length ? 1 : 0);

@@ -739,7 +739,8 @@ export const venueBrandImages: Record<string, string> = {
     'https://cliffbells.com/wp-content/uploads/2023/09/cropped-cliff-bells-favicon-180x180.png',
   fishbones: 'https://fishbonesusa.com/wp-content/uploads/2022/03/FB-Script_22-white.png',
   'grey-ghost': 'https://greyghostdetroit.com/wp-content/uploads/2021/05/black-logo.png',
-  joemuer: 'https://joemuer.com/wp-content/uploads/2020/12/cropped-jm-favicon-192x192-1-180x180.png',
+  joemuer:
+    'https://joemuer.com/wp-content/uploads/2020/12/cropped-jm-favicon-192x192-1-180x180.png',
   lumen:
     'https://static1.squarespace.com/static/61e8a000095e8e461a873ccf/t/61f2cbcddcb5ba34467e592d/1643301837696/LUMEN+FULL+LOGO+web-01.png?format=500w',
   mootz: 'https://static.spotapps.co/web/mootzpizzeria--com/apple-touch-icon.png',

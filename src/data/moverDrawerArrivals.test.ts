@@ -15,7 +15,9 @@ describe('People Mover drawer arrivals', () => {
   it('keeps the first estimate synchronized with the simulated fleet', () => {
     for (const station of peopleMoverStations) {
       const next = getNextTrainForStation(station.id, moverFleetElapsed(now.getTime()));
-      expect(moverDrawerArrivals(station.id, now)[0]?.minutes).toBe(Math.ceil(next.totalSeconds / 60));
+      expect(moverDrawerArrivals(station.id, now)[0]?.minutes).toBe(
+        Math.ceil(next.totalSeconds / 60),
+      );
       expect(moverDrawerArrivals(station.id, now)[0]?.source).toBe('simulation');
     }
   });
@@ -23,7 +25,12 @@ describe('People Mover drawer arrivals', () => {
   it('shows a 15–20 minute second planning window rather than a 25 minute prediction', () => {
     for (let minute = 0; minute < 60; minute += 1) {
       const second = moverDrawerArrivals('bricktown', new Date(now.getTime() + minute * 60000))[1];
-      expect(second).toEqual({ time: '15–20 MIN', minutes: 15, note: 'Planning window · Not live', source: 'planning' });
+      expect(second).toEqual({
+        time: '15–20 MIN',
+        minutes: 15,
+        note: 'Planning window · Not live',
+        source: 'planning',
+      });
     }
   });
 

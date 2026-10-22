@@ -28,12 +28,16 @@ export function moverDrawerArrivals(stationId: string, now = new Date()): MoverD
     return [];
   }
   const clock = detroitNow(now);
-  const arrivals: MoverDrawerArrival[] = [{
-    time: formatClockMinutes((clock.seconds + next.totalSeconds) / 60),
-    minutes: Math.ceil(next.totalSeconds / 60),
-    note: next.atPlatform ? 'Due at platform · Simulated' : `In ~${Math.ceil(next.totalSeconds / 60)} min · Simulated`,
-    source: 'simulation',
-  }];
+  const arrivals: MoverDrawerArrival[] = [
+    {
+      time: formatClockMinutes((clock.seconds + next.totalSeconds) / 60),
+      minutes: Math.ceil(next.totalSeconds / 60),
+      note: next.atPlatform
+        ? 'Due at platform · Simulated'
+        : `In ~${Math.ceil(next.totalSeconds / 60)} min · Simulated`,
+      source: 'simulation',
+    },
+  ];
 
   // Do not advertise a window that extends past the official service close.
   if (now.getTime() + 20 * 60 * 1000 < window.end) {

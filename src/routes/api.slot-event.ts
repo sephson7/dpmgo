@@ -26,7 +26,12 @@ export const Route = createFileRoute('/api/slot-event')({
           return new Response(null, { status: 400 });
         }
         try {
-          await recordSlotEvent(parsed.data.stationId, parsed.data.slot, parsed.data.event, context);
+          await recordSlotEvent(
+            parsed.data.stationId,
+            parsed.data.slot,
+            parsed.data.event,
+            context,
+          );
         } catch (error) {
           console.error('slot event failed', error);
         }

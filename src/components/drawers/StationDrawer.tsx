@@ -281,7 +281,11 @@ export default function StationDrawer({
           <span className="timetable-heading">
             {isQLine || !sched.running ? 'NEXT TRAINS · SCHEDULED' : 'NEXT TRAINS · ESTIMATED'}
           </span>
-          {isQLine || !sched.running ? <span className="timetable-subheading">OFFICIAL TIMETABLE</span> : <ArrivalEstimateNote />}
+          {isQLine || !sched.running ? (
+            <span className="timetable-subheading">OFFICIAL TIMETABLE</span>
+          ) : (
+            <ArrivalEstimateNote />
+          )}
         </div>
 
         {isQLine ? (
@@ -355,9 +359,7 @@ export default function StationDrawer({
                 </div>
                 <div className="timetable-time-col">
                   <div className="timetable-primary-time">{train.time}</div>
-                  <div className="timetable-day-note">
-                    {train.note}
-                  </div>
+                  <div className="timetable-day-note">{train.note}</div>
                 </div>
                 {train.minutes > 0 && train.minutes <= 10 && (
                   <span className="timetable-pill-due">APPROACHING</span>
@@ -579,7 +581,8 @@ export default function StationDrawer({
       </div>
 
       <div className="detail-disclaimer">
-        <Clock3 size={13} /> {isQLine
+        <Clock3 size={13} />{' '}
+        {isQLine
           ? 'Departure times come from the published QLINE timetable.'
           : 'First arrival follows the simulated fleet. The second is a 15–20 minute planning window, not a confirmed departure.'}{' '}
         No live agency feed is connected. Vehicle markers on the map are simulated. Partner
@@ -614,7 +617,9 @@ function SponsorSlotCard({
         {slot.kind === 'annual'
           ? 'ANNUAL PARTNER'
           : `ROTATING PARTNER${slot.rotation ? ` · ${slot.rotation}` : ''}`}
-        <span className="sponsored-badge" aria-label="Paid placement">SPONSORED</span>
+        <span className="sponsored-badge" aria-label="Paid placement">
+          SPONSORED
+        </span>
       </div>
       <div className="anchor-spot-box">
         <div className="anchor-spot-top">

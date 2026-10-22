@@ -60,7 +60,9 @@ export default function InstallGuide() {
   if (installed) {
     return (
       <div className="walkthrough-step">
-        <div className="walkthrough-step-icon"><CheckCircle2 size={18} /></div>
+        <div className="walkthrough-step-icon">
+          <CheckCircle2 size={18} />
+        </div>
         <div className="walkthrough-step-content">
           <div className="walkthrough-step-title">You're all set</div>
           <p className="walkthrough-step-desc">DPM - Go! is already on your home screen.</p>
@@ -70,14 +72,64 @@ export default function InstallGuide() {
   }
 
   const iosSteps = [
-    { icon: Share, title: '1. Tap Share', desc: <>In Safari, tap the <strong>Share</strong> button (the square with an arrow) at the bottom of the screen.</> },
-    { icon: PlusSquare, title: '2. Add to Home Screen', desc: <>Scroll down and tap <strong>Add to Home Screen</strong>.</> },
-    { icon: CheckCircle2, title: '3. Tap Add', desc: <>Tap <strong>Add</strong> in the top corner. The DPM - Go! icon appears on your home screen.</> },
+    {
+      icon: Share,
+      title: '1. Tap Share',
+      desc: (
+        <>
+          In Safari, tap the <strong>Share</strong> button (the square with an arrow) at the bottom
+          of the screen.
+        </>
+      ),
+    },
+    {
+      icon: PlusSquare,
+      title: '2. Add to Home Screen',
+      desc: (
+        <>
+          Scroll down and tap <strong>Add to Home Screen</strong>.
+        </>
+      ),
+    },
+    {
+      icon: CheckCircle2,
+      title: '3. Tap Add',
+      desc: (
+        <>
+          Tap <strong>Add</strong> in the top corner. The DPM - Go! icon appears on your home
+          screen.
+        </>
+      ),
+    },
   ];
   const androidSteps = [
-    { icon: MoreVertical, title: '1. Open the menu', desc: <>In Chrome, tap the <strong>three dots</strong> in the top right corner.</> },
-    { icon: PlusSquare, title: '2. Add to Home screen', desc: <>Tap <strong>Add to Home screen</strong> or <strong>Install app</strong>.</> },
-    { icon: CheckCircle2, title: '3. Confirm', desc: <>Tap <strong>Install</strong>. The DPM - Go! icon appears on your home screen.</> },
+    {
+      icon: MoreVertical,
+      title: '1. Open the menu',
+      desc: (
+        <>
+          In Chrome, tap the <strong>three dots</strong> in the top right corner.
+        </>
+      ),
+    },
+    {
+      icon: PlusSquare,
+      title: '2. Add to Home screen',
+      desc: (
+        <>
+          Tap <strong>Add to Home screen</strong> or <strong>Install app</strong>.
+        </>
+      ),
+    },
+    {
+      icon: CheckCircle2,
+      title: '3. Confirm',
+      desc: (
+        <>
+          Tap <strong>Install</strong>. The DPM - Go! icon appears on your home screen.
+        </>
+      ),
+    },
   ];
   const steps = platform === 'ios' ? iosSteps : androidSteps;
 
@@ -88,7 +140,13 @@ export default function InstallGuide() {
       </p>
 
       {promptEvent && (
-        <Button type="button" variant="hudActive" size="sm" onClick={install} className="install-now-btn">
+        <Button
+          type="button"
+          variant="hudActive"
+          size="sm"
+          onClick={install}
+          className="install-now-btn"
+        >
           <Download size={14} /> Install DPM - Go!
         </Button>
       )}
@@ -102,7 +160,9 @@ export default function InstallGuide() {
 
       {steps.map(({ icon: Icon, title, desc }) => (
         <div className="walkthrough-step" key={title}>
-          <div className="walkthrough-step-icon"><Icon size={18} /></div>
+          <div className="walkthrough-step-icon">
+            <Icon size={18} />
+          </div>
           <div className="walkthrough-step-content">
             <div className="walkthrough-step-title">{title}</div>
             <p className="walkthrough-step-desc">{desc}</p>
