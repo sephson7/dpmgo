@@ -1,5 +1,5 @@
 # DPM - Go! roadmap
-- [ ] Repair GitHub dependency installation failure and check subsequent verification gates.
+- [x] Repair GitHub dependency installation failure; clean-install dry run, lint, format, contrast and 117 tests pass locally. Next remote run remains unverified.
 - [x] Add estimate disclosure and once-per-session Boarded question; verify phone/desktop and preserve footer layout.
 - [ ] Enable durable anonymous rider feedback collection (blocked by Lovable Cloud provisioning incident; answers explicitly not saved).
 - [x] Build interactive satellite map, route layers, and simulated moving vehicles.
