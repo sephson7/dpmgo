@@ -26,6 +26,7 @@ import {
 import { nearbyParking } from '@/data/parking';
 import { qlineStatus, qlineStationSchedule } from '@/data/qlineSchedule';
 import { stationSchedule } from '@/data/schedule';
+import { moverDrawerArrivals } from '@/data/moverDrawerArrivals';
 import { getVenueLogo } from '@/components/venueLogo';
 import { useAnchorSlots } from '@/hooks/useAnchorSlots';
 import { trackSlot } from '@/hooks/trackSlot';
@@ -155,11 +156,15 @@ export default function StationDrawer({
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const t = window.setInterval(() => setNow(new Date()), 30000);
+    const t = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(t);
   }, []);
 
   const sched = stationSchedule(station.id, now);
+  const moverArrivals = useMemo(
+    () => (isQLine ? [] : moverDrawerArrivals(station.id, now)),
+    [isQLine, station.id, now],
+  );
   const qline = useMemo(() => qlineStatus(now), [now]);
   const qlineDepartures = useMemo(
     () => (isQLine ? qlineStationSchedule(station.id, now) : []),
@@ -268,8 +273,12 @@ export default function StationDrawer({
       {/* Scheduled Timetable Section */}
       <div className="timetable-section">
         <div className="timetable-header">
-          <span className="timetable-heading">NEXT TRAINS · SCHEDULED</span>
-          <span className="timetable-subheading">OFFICIAL TIMETABLE</span>
+          <span className="timetable-heading">
+            {isQLine || !sched.running ? 'NEXT TRAINS · SCHEDULED' : 'NEXT TRAINS · ESTIMATED'}
+          </span>
+          <span className="timetable-subheading">
+            {isQLine || !sched.running ? 'OFFICIAL TIMETABLE' : 'NOT LIVE'}
+          </span>
         </div>
 
         {isQLine ? (
@@ -334,9 +343,9 @@ export default function StationDrawer({
               </div>
             </div>
           )
-        ) : sched.trains.length > 0 ? (
+        ) : moverArrivals.length > 0 ? (
           <div className="timetable-rows">
-            {sched.trains.slice(0, 3).map((train, i) => (
+            {moverArrivals.map((train, i) => (
               <div key={i} className="timetable-row">
                 <div className="timetable-clock-box">
                   <Clock3 size={18} />
@@ -344,13 +353,7 @@ export default function StationDrawer({
                 <div className="timetable-time-col">
                   <div className="timetable-primary-time">{train.time}</div>
                   <div className="timetable-day-note">
-                    {train.minutes <= 0
-                      ? 'Due at platform'
-                      : train.minutes <= 15
-                        ? `In ~${train.minutes} min`
-                        : train.day
-                          ? train.day
-                          : 'Scheduled run'}
+                    {train.note}
                   </div>
                 </div>
                 {train.minutes > 0 && train.minutes <= 10 && (
@@ -361,7 +364,9 @@ export default function StationDrawer({
           </div>
         ) : (
           <div className="timetable-empty">
-            Service currently closed. Next service begins tomorrow at 6:00 AM.
+            {sched.running
+              ? 'Service ending · No further estimates available.'
+              : 'No upcoming service in the current timetable.'}
           </div>
         )}
       </div>
@@ -549,8 +554,10 @@ export default function StationDrawer({
       </div>
 
       <div className="detail-disclaimer">
-        <Clock3 size={13} /> Arrivals calculated from published headway schedules. Real-time agency
-        telemetry currently unavailable from DTC. Vehicle markers are simulated.
+        <Clock3 size={13} /> {isQLine
+          ? 'Arrivals calculated from published headway schedules.'
+          : 'First arrival follows the simulated fleet. The second is a 15–20 minute planning window, not a confirmed departure.'}{' '}
+        Real-time agency telemetry currently unavailable from DTC. Vehicle markers are simulated.
       </div>
     </div>
   );
