@@ -52,6 +52,8 @@ describe('confirming a partner payment', () => {
   beforeEach(() => {
     vi.resetModules();
     delete process.env['PARTNER_EMAIL_WEBHOOK_URL'];
+    // These tests exercise the fallback transports, never the live sender.
+    vi.stubEnv('LOVABLE_API_KEY', '');
   });
 
   it('records the lead and sends the confirmation', async () => {
