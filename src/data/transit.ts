@@ -752,7 +752,6 @@ export const venueBrandImages: Record<string, string> = {
   townhouse: 'https://townhousedetroit.com/wp-content/uploads/2025/12/social-share-townhouse.jpg',
   whitney:
     'https://static1.squarespace.com/static/6446b6f97b2cff4196401bb3/t/6446ba3e14ddb21aea8fbd4f/1768591015985/The-whiteny.png?format=500w',
-  wright: 'https://wrightdetroit.com/og-default.jpg',
 };
 
 export const restaurants: Place[] = restaurantSeeds.map(
