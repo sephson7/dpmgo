@@ -106,8 +106,13 @@ export default function TransitMap({
     );
 
     let frame = 0;
-    const addLine = (id: string, coordinates: Coordinate[], color: string, width: number) => {
-      map.addSource(id, { type: 'geojson', data: routeData(coordinates) });
+    const addLine = (
+      id: string,
+      data: GeoJSON.FeatureCollection,
+      color: string,
+      width: number,
+    ) => {
+      map.addSource(id, { type: 'geojson', data });
       map.addLayer({
         id,
         type: 'line',
@@ -159,8 +164,8 @@ export default function TransitMap({
       }
 
       // Transit Lines
-      addLine('mover-line', peopleMoverShape, '#00f0ff', 4);
-      addLine('qline-line', qPath, '#ffbb70', 3.5);
+      addLine('mover-line', routeData(peopleMoverShape), '#00f0ff', 4);
+      addLine('qline-line', qlineRouteData, '#ffbb70', 3.5);
 
       // People Mover Station Markers
       map.addSource('stations', {
