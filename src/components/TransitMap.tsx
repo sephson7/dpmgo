@@ -78,7 +78,7 @@ export default function TransitMap({
 
     const map = new mapboxgl.Map({
       container: container.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [-83.0458, 42.3314],
       zoom: 15.5,
       pitch: 50,
@@ -767,7 +767,7 @@ export default function TransitMap({
     <div
       ref={container}
       className="h-full w-full"
-      aria-label="Satellite map of Detroit transit stops"
+      aria-label="Map of Detroit transit stops"
     />
   );
 }
