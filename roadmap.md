@@ -13,4 +13,4 @@
 - [x] Add opt-in user location tracking to the map.
 - [x] Show two rectangular simulated trains with realistic loop timing and official schedule-hours gating.
 - [x] Slightly enlarge train icons, align them to the track, and verify the browser experience.
-- [ ] Show two People Mover estimates with the second 15–20 minutes out; preserve drawer controls and verify desktop/mobile rendering.
+- [x] Show two People Mover estimates with the second 15–20 minutes out; preserve drawer controls and verify desktop/mobile rendering.
