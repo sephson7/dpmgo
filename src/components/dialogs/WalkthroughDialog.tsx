@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Bell, Clock3, Compass, LocateFixed, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import InstallGuide from '@/components/dialogs/InstallGuide';
 
 export type WalkthroughDialogProps = {
   open: boolean;
@@ -10,13 +12,17 @@ export type WalkthroughDialogProps = {
   onDontShowAgainChange: (value: boolean) => void;
 };
 
-/** The first run guide for riders. */
+/** The first run guide for riders, with an Add to Home Screen tab. */
 export default function WalkthroughDialog({
   open,
   onDismiss,
   dontShowAgain,
   onDontShowAgainChange,
 }: WalkthroughDialogProps) {
+  const [tab, setTab] = useState<'guide' | 'install'>('guide');
+  useEffect(() => {
+    if (open) setTab('guide');
+  }, [open]);
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onDismiss(false)}>
       <DialogContent className="walkthrough-dialog">
@@ -30,9 +36,20 @@ export default function WalkthroughDialog({
             Your lightweight companion for navigating the Detroit People Mover &amp; QLINE transit
             corridors.
           </DialogDescription>
+          <div className="walkthrough-tabs" role="tablist">
+            <button type="button" role="tab" className="walkthrough-tab" aria-selected={tab === 'guide'} onClick={() => setTab('guide')}>
+              HOW IT WORKS
+            </button>
+            <button type="button" role="tab" className="walkthrough-tab" aria-selected={tab === 'install'} onClick={() => setTab('install')}>
+              ADD TO HOME SCREEN
+            </button>
+          </div>
         </div>
 
-        <div className="walkthrough-body">
+        {tab === 'install' ? (
+          <div className="walkthrough-body" role="tabpanel"><InstallGuide /></div>
+        ) : (
+        <div className="walkthrough-body" role="tabpanel">
           <div className="walkthrough-step">
             <div className="walkthrough-step-icon">
               <Compass size={18} />
@@ -99,6 +116,7 @@ export default function WalkthroughDialog({
             </div>
           </div>
         </div>
+        )}
 
         <div className="walkthrough-footer">
           <label className="walkthrough-opt-out">
