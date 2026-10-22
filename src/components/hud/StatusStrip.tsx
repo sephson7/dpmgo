@@ -16,7 +16,7 @@ export default function StatusStrip({ mapReady }: StatusStripProps) {
         <span className="status-divider">/</span>
         <span>{mapReady ? 'MAP ONLINE' : 'LOADING MAP'}</span>
       </div>
-      <ArrivalEstimateNote />
+      <span className="max-w-md"><ArrivalEstimateNote /></span>
     </div>
   );
 }

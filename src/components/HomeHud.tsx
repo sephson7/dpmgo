@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import {
   allTransitStations,
@@ -68,6 +68,7 @@ export default function HomeHud() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackPrompted, setFeedbackPrompted] = useState(false);
   const [feedbackContext, setFeedbackContext] = useState<RiderFeedbackContext | null>(null);
+  const preBoardingEstimate = useRef<RiderFeedbackContext | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [followUser, setFollowUser] = useState(false);
 
@@ -260,6 +261,16 @@ export default function HomeHud() {
   }, [userPos, activeStations]);
 
   const tickerStation = selected ?? nearestStation;
+  useEffect(() => {
+    if (isBoarded) return;
+    const arrival = tickerStation.line === 'qline' ? null : moverDrawerArrivals(tickerStation.id, now)[0];
+    preBoardingEstimate.current = arrival?.source === 'simulation' ? {
+      stationId: tickerStation.id,
+      stationName: tickerStation.name,
+      predictedMinutes: arrival.minutes,
+      predictionAt: now.toISOString(),
+    } : null;
+  }, [isBoarded, tickerStation, now]);
   const handleToggleBoarded = () => {
     const boarding = !isBoarded;
     setIsBoarded(boarding);
@@ -267,14 +278,7 @@ export default function HomeHud() {
     try {
       alreadyPrompted ||= sessionStorage.getItem(RIDER_FEEDBACK_SESSION_KEY) === 'true';
     } catch { /* In-memory guard still works if storage is blocked. */ }
-    const predictionAt = new Date();
-    const arrival = tickerStation.line === 'qline' ? null : moverDrawerArrivals(tickerStation.id, predictionAt)[0];
-    const context: RiderFeedbackContext | null = arrival?.source === 'simulation' ? {
-      stationId: tickerStation.id,
-      stationName: tickerStation.name,
-      predictedMinutes: arrival.minutes,
-      predictionAt: predictionAt.toISOString(),
-    } : null;
+    const context = preBoardingEstimate.current;
     if (!canOfferRiderFeedback(boarding, alreadyPrompted, context)) return;
     setFeedbackPrompted(true);
     try { sessionStorage.setItem(RIDER_FEEDBACK_SESSION_KEY, 'true'); } catch { /* Guard remains in memory. */ }
