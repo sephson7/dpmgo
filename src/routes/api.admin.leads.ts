@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { adminPortalConfigured, readAdminCookie, verifyAdminToken } from '@/lib/adminAuth';
-import { listSlotStats, type SlotStats } from '@/lib/slotStats';
-export type { SlotStats };
+import { listSlotStats } from '@/lib/slotStats';
 import {
   addLead,
   assignSlot,
