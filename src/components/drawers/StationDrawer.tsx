@@ -3,6 +3,7 @@ import {
   Accessibility,
   Bell,
   BellOff,
+  Check,
   Clock3,
   Compass,
   ExternalLink,
@@ -56,6 +57,9 @@ export default function StationDrawer({
   const [priceFilter, setPriceFilter] = useState<'all' | '$' | '$$' | '$$$+'>('all');
   const [maxMinutes, setMaxMinutes] = useState<number | 'all'>('all');
   const [lateNightOnly, setLateNightOnly] = useState(false);
+  // Visual confirmation that a link was opened; resets when the drawer closes.
+  const [openedSites, setOpenedSites] = useState<Set<string>>(() => new Set());
+  const [directionsOpened, setDirectionsOpened] = useState(false);
 
   const isQLine = station.line === 'qline';
 
@@ -458,7 +462,17 @@ export default function StationDrawer({
               <div
                 key={r.id}
                 className={`restaurant-row-card ${restaurantId === r.id ? 'is-selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={restaurantId === r.id}
+                aria-label={`Show ${r.name} on the map`}
                 onClick={() => onRestaurant(r.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onRestaurant(r.id);
+                  }
+                }}
               >
                 <div className="restaurant-thumb-box">
                   {getVenueLogo(r) ? (
@@ -470,6 +484,7 @@ export default function StationDrawer({
                 <div className="restaurant-info-box">
                   <div className="restaurant-name-header">
                     <span className="restaurant-name">{r.name}</span>
+                    {restaurantId === r.id && <span className="restaurant-pinned-tag">ON MAP</span>}
                   </div>
                   <div className="restaurant-meta-line">
                     {r.category} · {r.walkMiles.toFixed(2)} mi · ~{r.walkMinutes} min walk
@@ -482,11 +497,15 @@ export default function StationDrawer({
                     href={r.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="restaurant-external-link"
-                    onClick={(e) => e.stopPropagation()}
-                    aria-label={`Open ${r.name} menu`}
+                    className={`restaurant-external-link ${openedSites.has(r.id) ? 'is-opened' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenedSites((prev) => new Set(prev).add(r.id));
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    aria-label={`Open ${r.name} website`}
                   >
-                    <ExternalLink size={16} />
+                    {openedSites.has(r.id) ? <Check size={16} /> : <ExternalLink size={16} />}
                   </a>
                 </div>
               </div>
