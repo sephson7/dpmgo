@@ -4,6 +4,7 @@ import StationDirectory from '@/components/StationDirectory';
 import { parkingGarages } from '@/data/parking';
 import { type Station } from '@/data/transit';
 import HomeStrip from './HomeStrip';
+import ArrivalEstimateNote from '@/components/dialogs/ArrivalEstimateNote';
 import type { MapLayers, TickerState } from './types';
 
 export type StationDirectoryPanelProps = {
@@ -138,7 +139,7 @@ export default function StationDirectoryPanel({
           <span>
             <span className="tiny-diamond" /> INTERACTIVE PLATFORMS
           </span>
-          <span>SIMULATED VEHICLES</span>
+          <ArrivalEstimateNote />
         </div>
       )}
     </aside>

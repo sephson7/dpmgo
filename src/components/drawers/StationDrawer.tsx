@@ -30,6 +30,7 @@ import { moverDrawerArrivals } from '@/data/moverDrawerArrivals';
 import { getVenueLogo } from '@/components/venueLogo';
 import { useAnchorSlots } from '@/hooks/useAnchorSlots';
 import { trackSlot } from '@/hooks/trackSlot';
+import ArrivalEstimateNote from '@/components/dialogs/ArrivalEstimateNote';
 
 export type StationDrawerProps = {
   station: Station;
@@ -276,9 +277,7 @@ export default function StationDrawer({
           <span className="timetable-heading">
             {isQLine || !sched.running ? 'NEXT TRAINS · SCHEDULED' : 'NEXT TRAINS · ESTIMATED'}
           </span>
-          <span className="timetable-subheading">
-            {isQLine || !sched.running ? 'OFFICIAL TIMETABLE' : 'NOT LIVE'}
-          </span>
+          {isQLine || !sched.running ? <span className="timetable-subheading">OFFICIAL TIMETABLE</span> : <ArrivalEstimateNote />}
         </div>
 
         {isQLine ? (

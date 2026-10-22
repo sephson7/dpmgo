@@ -1,5 +1,6 @@
 import { RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ArrivalEstimateNote from '@/components/dialogs/ArrivalEstimateNote';
 
 export type MapChromeProps = {
   /** True when the parking layer is on, so the legend can list it. */
@@ -43,7 +44,7 @@ export default function MapChrome({ parking, onReset }: MapChromeProps) {
           <i className="legend-line warm-line" /> QLINE
         </span>
         <span>
-          <i className="legend-vehicle" /> SIMULATED VEHICLE
+          <i className="legend-vehicle" /> <ArrivalEstimateNote />
         </span>
         {parking && (
           <span>
