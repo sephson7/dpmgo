@@ -1,11 +1,12 @@
 import type { ComponentType } from 'react'
 import { template as partnerConfirmation } from './partner-confirmation'
+import type { PartnerConfirmationProps } from './partner-confirmation'
 
 export interface TemplateEntry {
-  component: ComponentType<any>
-  subject: string | ((data: Record<string, any>) => string)
+  component: ComponentType<PartnerConfirmationProps>
+  subject: string | ((data: PartnerConfirmationProps) => string)
   displayName?: string
-  previewData?: Record<string, any>
+  previewData?: PartnerConfirmationProps
   /** Fixed recipient — overrides caller-provided recipientEmail when set. */
   to?: string
 }

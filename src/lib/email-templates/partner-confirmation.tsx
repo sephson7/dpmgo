@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Body, Container, Heading, Head, Hr, Html, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
-interface Props {
+export interface PartnerConfirmationProps {
   businessName?: string
   stationName?: string
   slot?: 1 | 2
@@ -11,7 +11,7 @@ interface Props {
   sessionId?: string
 }
 
-const PartnerConfirmation = ({ businessName, stationName, slot, plan, receipt, sessionId }: Props) => (
+const PartnerConfirmation = ({ businessName, stationName, slot, plan, receipt, sessionId }: PartnerConfirmationProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your DPM - Go! Station Anchor Slot payment is confirmed</Preview>
