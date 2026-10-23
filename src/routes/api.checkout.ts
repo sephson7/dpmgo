@@ -150,6 +150,7 @@ export const Route = createFileRoute('/api/checkout')({
         });
         const priceId = priceIds[plan];
 
+        const purchase = parsed.value;
         try {
           const session = await createCheckoutSession(fetch, {
             secretKey,
@@ -160,8 +161,8 @@ export const Route = createFileRoute('/api/checkout')({
           });
           await putCheckoutHold(
             {
-              stationId: parsed.value.stationId,
-              slot: parsed.value.slot,
+              stationId: purchase.stationId,
+              slot: purchase.slot,
               sessionId: session.id,
               expiresAt: new Date(Date.now() + CHECKOUT_HOLD_MINUTES * 60_000).toISOString(),
             },
