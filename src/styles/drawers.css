@@ -10,6 +10,7 @@
 @media (max-width: 480px) {
   .restaurant-row-card:has(.venue-directions-link) { flex-wrap: wrap; }
   .restaurant-row-card:has(.venue-directions-link) .restaurant-info-box { flex: 1; min-width: 160px; }
+  .restaurant-row-card:has(.venue-directions-link) .restaurant-meta-line { white-space: normal; overflow: visible; line-height: 1.4; }
   .restaurant-row-card:has(.venue-directions-link) .restaurant-actions-box { margin-left: auto; flex-direction: row; align-items: center; }
   .anchor-btn-grid:has(.venue-directions-link) { grid-template-columns: 44px minmax(0, 1fr); }
   .anchor-btn-grid:has(.venue-directions-link) .anchor-action-visit { grid-column: 1 / -1; }
