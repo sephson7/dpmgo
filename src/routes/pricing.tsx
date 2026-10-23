@@ -9,6 +9,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
  * a flyer that names a station still arrives with that station selected.
  */
 export const Route = createFileRoute('/pricing')({
+  staticData: { sitemap: false },
   beforeLoad: ({ location }) => {
     // The raw search string is carried over, so a flyer that names a station
     // still arrives with that station selected.

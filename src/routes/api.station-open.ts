@@ -6,6 +6,7 @@ import { recordDrawerOpen } from '@/lib/stationStats';
 const schema = z.object({ stationId: z.string().regex(/^[a-z0-9-]{2,64}$/) });
 
 export const Route = createFileRoute('/api/station-open')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       // Public, write-only counter for station drawer opens. Accepts only a

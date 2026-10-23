@@ -52,6 +52,7 @@ const stationName = (id: string) =>
   [...peopleMoverStations, ...qlineStations].find((station) => station.id === id)?.name ?? id;
 
 export const Route = createFileRoute('/admin')({
+  staticData: { sitemap: "exclude-subtree" },
   head: () => ({
     meta: [
       { title: 'Partner Admin | DPM - Go!' },

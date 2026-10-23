@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import HomeHud from '@/components/HomeHud';
 
 export const Route = createFileRoute('/')({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: 'DPM - Go! | Detroit Transit Map' },
