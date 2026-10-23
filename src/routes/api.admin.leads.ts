@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { adminPortalConfigured, readAdminCookie, verifyAdminToken } from '@/lib/adminAuth';
 import { listSlotStats } from '@/lib/slotStats';
+import { listDrawerOpens } from '@/lib/stationStats';
 import {
   addLead,
   assignSlot,
@@ -34,13 +35,14 @@ export const Route = createFileRoute('/api/admin/leads')({
         if (remaining === null) {
           return Response.json({ error: 'Not signed in.' }, { status: 401 });
         }
-        const [leads, assignments, stats] = await Promise.all([
+        const [leads, assignments, stats, stationOpens] = await Promise.all([
           listLeads(context),
           listAssignments(context),
           listSlotStats(context),
+          listDrawerOpens(context),
         ]);
         return Response.json(
-          { leads, assignments, stats },
+          { leads, assignments, stats, stationOpens },
           { headers: { 'Cache-Control': 'no-store' } },
         );
       },

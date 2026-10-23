@@ -17,6 +17,7 @@ import { Route as ApiAnchorSlotsRouteImport } from './routes/api.anchor-slots'
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiMerchantIntakeRouteImport } from './routes/api.merchant-intake'
 import { Route as ApiSlotEventRouteImport } from './routes/api.slot-event'
+import { Route as ApiStationOpenRouteImport } from './routes/api.station-open'
 import { Route as ApiAdminLeadsRouteImport } from './routes/api.admin.leads'
 import { Route as ApiAdminLoginRouteImport } from './routes/api.admin.login'
 import { Route as ApiAdminLogoutRouteImport } from './routes/api.admin.logout'
@@ -63,6 +64,11 @@ const ApiSlotEventRoute = ApiSlotEventRouteImport.update({
   path: '/api/slot-event',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStationOpenRoute = ApiStationOpenRouteImport.update({
+  id: '/api/station-open',
+  path: '/api/station-open',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminLeadsRoute = ApiAdminLeadsRouteImport.update({
   id: '/api/admin/leads',
   path: '/api/admin/leads',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/merchant-intake': typeof ApiMerchantIntakeRoute
   '/api/slot-event': typeof ApiSlotEventRoute
+  '/api/station-open': typeof ApiStationOpenRoute
   '/api/admin/leads': typeof ApiAdminLeadsRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/merchant-intake': typeof ApiMerchantIntakeRoute
   '/api/slot-event': typeof ApiSlotEventRoute
+  '/api/station-open': typeof ApiStationOpenRoute
   '/api/admin/leads': typeof ApiAdminLeadsRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/merchant-intake': typeof ApiMerchantIntakeRoute
   '/api/slot-event': typeof ApiSlotEventRoute
+  '/api/station-open': typeof ApiStationOpenRoute
   '/api/admin/leads': typeof ApiAdminLeadsRoute
   '/api/admin/login': typeof ApiAdminLoginRoute
   '/api/admin/logout': typeof ApiAdminLogoutRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/api/merchant-intake'
     | '/api/slot-event'
+    | '/api/station-open'
     | '/api/admin/leads'
     | '/api/admin/login'
     | '/api/admin/logout'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/api/merchant-intake'
     | '/api/slot-event'
+    | '/api/station-open'
     | '/api/admin/leads'
     | '/api/admin/login'
     | '/api/admin/logout'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/api/merchant-intake'
     | '/api/slot-event'
+    | '/api/station-open'
     | '/api/admin/leads'
     | '/api/admin/login'
     | '/api/admin/logout'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiMerchantIntakeRoute: typeof ApiMerchantIntakeRoute
   ApiSlotEventRoute: typeof ApiSlotEventRoute
+  ApiStationOpenRoute: typeof ApiStationOpenRoute
   ApiAdminLeadsRoute: typeof ApiAdminLeadsRoute
   ApiAdminLoginRoute: typeof ApiAdminLoginRoute
   ApiAdminLogoutRoute: typeof ApiAdminLogoutRoute
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSlotEventRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/station-open': {
+      id: '/api/station-open'
+      path: '/api/station-open'
+      fullPath: '/api/station-open'
+      preLoaderRoute: typeof ApiStationOpenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/leads': {
       id: '/api/admin/leads'
       path: '/api/admin/leads'
@@ -305,6 +325,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiMerchantIntakeRoute: ApiMerchantIntakeRoute,
   ApiSlotEventRoute: ApiSlotEventRoute,
+  ApiStationOpenRoute: ApiStationOpenRoute,
   ApiAdminLeadsRoute: ApiAdminLeadsRoute,
   ApiAdminLoginRoute: ApiAdminLoginRoute,
   ApiAdminLogoutRoute: ApiAdminLogoutRoute,

@@ -31,6 +31,7 @@ import { moverDrawerArrivals } from '@/data/moverDrawerArrivals';
 import { getVenueLogo } from '@/components/venueLogo';
 import { useAnchorSlots } from '@/hooks/useAnchorSlots';
 import { trackSlot } from '@/hooks/trackSlot';
+import { trackDrawerOpen } from '@/hooks/analyticsOptOut';
 import ArrivalEstimateNote from '@/components/dialogs/ArrivalEstimateNote';
 import RiderReportSummary from '@/components/drawers/RiderReportSummary';
 import VenueDirections from '@/components/drawers/VenueDirections';
@@ -80,6 +81,10 @@ export default function StationDrawer({
   // The home strip opens the drawer straight onto the sponsor card. The
   // drawer slides in first, so the scroll waits until the card is laid out
   // and then sticks.
+  useEffect(() => {
+    trackDrawerOpen(station.id);
+  }, [station.id]);
+
   useEffect(() => {
     if (!focusPartner) return;
     let frame = 0;
