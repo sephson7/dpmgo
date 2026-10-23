@@ -114,6 +114,7 @@ function AdminPortal() {
 
   useEffect(() => {
     load().finally(() => setChecking(false));
+    setExcluded(isAnalyticsExcluded());
   }, [load]);
 
   // Poll for new paid purchases while signed in, so a confirmed payment shows
