@@ -1,4 +1,7 @@
 # DPM - Go! roadmap
+- [x] Repair current GitHub lint/format checks and npm lock mismatch; lint, format, contrast, 142 tests and install dry-run pass locally; remote GitHub run awaits publishing.
+- [x] Add same-path stale-cache cleanup and preview guards; map, Quick Routes, station drawer and install guide checked on phone; existing-device cleanup awaits publishing.
+- [ ] Restore generated offline caching after the cache-cleanup release reaches returning devices (requires a later release).
 - [x] Add privacy-safe station/day rider summaries without changing predictions; suppress percentages below five definite responses.
 - [x] Add one-tap walking directions for restaurant listings and known sponsor venues; verify phone/desktop links and map pin actions.
 - [x] Highlight the nearest station once on local GPS acquisition without interrupting manual navigation; verify drawer stays closed and subsequent fixes do not reframe.

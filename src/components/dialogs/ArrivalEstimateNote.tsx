@@ -35,8 +35,10 @@ export default function ArrivalEstimateNote() {
           yet used to calculate arrivals. Check station displays for current information.
         </p>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          <strong>Do not rely on DPM - Go! for the last train of the night, time-critical trips or
-          your safety.</strong>{' '}
+          <strong>
+            Do not rely on DPM - Go! for the last train of the night, time-critical trips or your
+            safety.
+          </strong>{' '}
           Plan extra time near closing, confirm service with station displays or DTC staff, and in
           an emergency call 911.
         </p>

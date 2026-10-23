@@ -106,12 +106,7 @@ export default function TransitMap({
     );
 
     let frame = 0;
-    const addLine = (
-      id: string,
-      data: GeoJSON.FeatureCollection,
-      color: string,
-      width: number,
-    ) => {
+    const addLine = (id: string, data: GeoJSON.FeatureCollection, color: string, width: number) => {
       map.addSource(id, { type: 'geojson', data });
       map.addLayer({
         id,
