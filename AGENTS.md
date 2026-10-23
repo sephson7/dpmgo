@@ -35,7 +35,8 @@
 - Find Worker configs through `scripts/lib/worker-config.mjs`, covering both `.output/server` and `dist/server`, so environment-specific paths never break publishing.
 - Keep secrets in `.env.local` (gitignored) or the deployment environment; never in `import.meta.env` or a tracked file.
 - Share partner email props across components, previews and sends to avoid unchecked `any` data.
-- Keep the offline service worker in `public/sw.js` honest about what it caches: the app shell, the stylesheets, the station datasets and the icons are cached, and the partner portal, the Stripe checkout, the slot API and the map tiles never are, because they are personal, transactional or third party.
+- Keep `/sw.js` as a same-path cache-cleanup worker for one release before restoring offline with `vite-plugin-pwa` generateSW; a single guarded browser wrapper must refuse dev, iframe and Lovable previews, so returning devices discard stale app chunks without disturbing messaging workers.
+- Exclude platform-generated integrations from lint and formatting, while retaining all checks for application code, because regenerated files do not follow the project's formatter.
 - Protect an annual placement's station slot for 12 months from approval in `src/lib/slotExclusivity.ts`, enforced by both the checkout and the admin approval, so a competitor can never displace an annual partner mid-term.
 - Require acceptance of the current version in `src/data/merchantAgreement.ts` before checkout, store the version on the Stripe session and lead, and repeat the terms in the confirmation email, so every merchant has a copy of exactly what they agreed to.
 - Hold a station slot for 30 minutes once a checkout starts, and block resale while a paid purchase awaits review, in `src/lib/slotExclusivity.ts` and `src/routes/api.checkout.ts`, so two merchants can never pay for the same slot.

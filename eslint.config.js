@@ -6,7 +6,8 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', '.output', '.vinxi'] },
+  // Generated integrations are platform-owned; lint all application code as usual.
+  { ignores: ['dist', '.output', '.vinxi', 'src/integrations/supabase/**'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

@@ -21,3 +21,6 @@ src/components/ui
 # Generated transit data.
 src/data/dpmSchedule.json
 src/data/qlineSchedule.json
+
+# Lovable-managed integration files are regenerated outside the formatter.
+src/integrations/supabase
