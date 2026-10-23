@@ -1,4 +1,7 @@
 # DPM - Go! roadmap
+- [ ] Repair current GitHub lint/format checks without changing application behavior; verify locally.
+- [ ] Retire stale app caches at the deployed worker path and prevent workers in previews; verify rider flows.
+- [ ] Restore generated offline caching after the cache-cleanup release reaches returning devices (requires a later release).
 - [x] Add privacy-safe station/day rider summaries without changing predictions; suppress percentages below five definite responses.
 - [x] Add one-tap walking directions for restaurant listings and known sponsor venues; verify phone/desktop links and map pin actions.
 - [x] Highlight the nearest station once on local GPS acquisition without interrupting manual navigation; verify drawer stays closed and subsequent fixes do not reframe.
