@@ -40,3 +40,5 @@
 - Keep secrets in `.env.local` (gitignored) or the deployment environment; never in `import.meta.env` or a tracked file.
 - Share partner email props across components, previews and sends to avoid unchecked `any` data.
 - Keep the offline service worker in `public/sw.js` honest about what it caches: the app shell, the stylesheets, the station datasets and the icons are cached, and the partner portal, the Stripe checkout, the slot API and the map tiles never are, because they are personal, transactional or third party.
+- Protect an annual placement's station slot for 12 months from approval in `src/lib/slotExclusivity.ts`, enforced by both the checkout and the admin approval, so a competitor can never displace an annual partner mid-term.
+- Require acceptance of the current version in `src/data/merchantAgreement.ts` before checkout, store the version on the Stripe session and lead, and repeat the terms in the confirmation email, so every merchant has a copy of exactly what they agreed to.
