@@ -18,6 +18,11 @@
 // is told the message was not delivered, so nothing is silently lost.
 
 import { readServerSecret } from '@/lib/serverEnv';
+import {
+  MERCHANT_AGREEMENT_TERMS,
+  MERCHANT_AGREEMENT_TITLE,
+  MERCHANT_AGREEMENT_VERSION,
+} from '@/data/merchantAgreement';
 
 export type AnchorPlan = 'monthly' | 'annual';
 
@@ -80,6 +85,21 @@ export const PARTNER_EMAIL_SUBJECT = 'Welcome to the DPM - Go! Partnership Progr
 export const PARTNER_EMAIL_HEADLINE = 'Welcome to the DPM - Go! Partnership Program!';
 export const PARTNER_EMAIL_PROMISE =
   'Please allow our team up to 24 hours to review and approve your Station Anchor Slot!';
+
+function agreementHtml(): string {
+  const items = MERCHANT_AGREEMENT_TERMS.map(
+    (term) =>
+      `<li style="margin:0 0 8px;color:#b9c7d6;font:400 12px/1.6 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;">${escapeHtml(term)}</li>`,
+  ).join('');
+  return `
+            <tr>
+              <td style="padding:0 0 22px;">
+                <p style="margin:0 0 8px;color:#00f0ff;font:700 11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;">${escapeHtml(MERCHANT_AGREEMENT_TITLE)}</p>
+                <p style="margin:0 0 10px;color:#8fa3b8;font:400 12px/1.6 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;">You accepted version ${escapeHtml(MERCHANT_AGREEMENT_VERSION)} before payment. Keep this email as your copy.</p>
+                <ol style="margin:0;padding-left:18px;">${items}</ol>
+              </td>
+            </tr>`;
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -163,7 +183,7 @@ export function partnerConfirmationHtml(details: PartnerEmailDetails, logoUrl: s
                   ${rowHtml}
                 </table>
               </td>
-            </tr>
+            </tr>${agreementHtml()}
             <tr>
               <td align="center" style="padding-bottom:22px;">
                 <p style="margin:0;color:#8fa3b8;font:400 13px/1.6 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;">We are preparing your custom 3D map pin and your rider perk banner. Keep your receipt code handy if you need to reach us.</p>
@@ -203,6 +223,9 @@ export function partnerConfirmationText(details: PartnerEmailDetails): string {
     `Plan: ${planLabel(details.plan)}`,
     `Receipt: ${details.receipt}`,
     `Payment reference: ${details.sessionId}`,
+    '',
+    `${MERCHANT_AGREEMENT_TITLE} (version ${MERCHANT_AGREEMENT_VERSION}, accepted before payment)`,
+    ...MERCHANT_AGREEMENT_TERMS.map((term, index) => `${index + 1}. ${term}`),
     '',
     `Open the DPM - Go! map: ${origin}`,
     '',

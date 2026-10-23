@@ -21,9 +21,15 @@ const validBody = {
   deal: '10% off with People Mover ride proof',
   agreementAccepted: true,
   agreementVersion: MERCHANT_AGREEMENT_VERSION,
+  agreementAcceptedAt: '2026-10-23T12:00:00.000Z',
 };
 
 describe('the partner checkout request', () => {
+  it('refuses a purchase without the merchant agreement', () => {
+    expect(parseCheckoutRequest({ ...validBody, agreementAccepted: false }).ok).toBe(false);
+    expect(parseCheckoutRequest({ ...validBody, agreementVersion: 'old' }).ok).toBe(false);
+  });
+
   it('accepts a complete merchant', () => {
     const parsed = parseCheckoutRequest(validBody);
     expect(parsed.ok).toBe(true);

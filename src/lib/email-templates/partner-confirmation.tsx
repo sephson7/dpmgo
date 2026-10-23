@@ -11,6 +11,11 @@ import {
   Text,
 } from '@react-email/components';
 import type { TemplateEntry } from './registry';
+import {
+  MERCHANT_AGREEMENT_TERMS,
+  MERCHANT_AGREEMENT_TITLE,
+  MERCHANT_AGREEMENT_VERSION,
+} from '../../data/merchantAgreement';
 
 export interface PartnerConfirmationProps {
   businessName?: string;
@@ -60,6 +65,18 @@ const PartnerConfirmation = ({
           </Text>
           {receipt && <Text style={row}>Reference: {receipt}</Text>}
           {sessionId && <Text style={small}>Payment ID: {sessionId}</Text>}
+        </Section>
+        <Section>
+          <Text style={agreementTitle}>{MERCHANT_AGREEMENT_TITLE}</Text>
+          <Text style={small}>
+            You accepted version {MERCHANT_AGREEMENT_VERSION} before payment. Keep this email as
+            your copy.
+          </Text>
+          {MERCHANT_AGREEMENT_TERMS.map((term, index) => (
+            <Text key={index} style={small}>
+              {index + 1}. {term}
+            </Text>
+          ))}
         </Section>
         <Hr style={hr} />
         <Text style={small}>
@@ -111,3 +128,4 @@ const small = {
   whiteSpace: 'pre-line' as const,
 };
 const hr = { borderColor: '#e5e7eb', margin: '20px 0' };
+const agreementTitle = { color: '#0891b2', fontSize: '13px', fontWeight: 700, margin: '16px 0 4px' };

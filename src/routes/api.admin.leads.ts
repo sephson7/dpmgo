@@ -10,6 +10,7 @@ import {
   type AnchorAssignment,
   type AnchorLeadStatus,
 } from '@/lib/anchorStore';
+import { activeExclusiveHold, exclusiveTermEnd, formatTermEnd, termEndForPlan } from '@/lib/slotExclusivity';
 
 const STATION_ID_PATTERN = /^[a-z0-9-]{2,64}$/;
 
@@ -92,6 +93,22 @@ export const Route = createFileRoute('/api/admin/leads')({
           (typeof payload.businessName === 'string' && payload.businessName.trim()) ||
           lead.businessName;
 
+        // Never let an approval displace an annual partner mid-term.
+        const hold = activeExclusiveHold(await listAssignments(context), stationId, slot);
+        if (hold && hold.leadId !== leadId) {
+          const end = exclusiveTermEnd(hold);
+          return Response.json(
+            {
+              error: `Slot ${slot} is held by ${hold.businessName} under an annual term${
+                end ? ` through ${formatTermEnd(end)}` : ''
+              }. Assign this buyer a different station or slot, or reject and refund.`,
+            },
+            { status: 409 },
+          );
+        }
+
+        const now = new Date();
+        const termEndsAt = termEndForPlan(lead.plan, now);
         const assignment: AnchorAssignment = {
           stationId,
           slot,
@@ -106,7 +123,8 @@ export const Route = createFileRoute('/api/admin/leads')({
             ? { rotation: payload.rotation.trim() }
             : {}),
           leadId,
-          assignedAt: new Date().toISOString(),
+          assignedAt: now.toISOString(),
+          ...(termEndsAt ? { termEndsAt } : {}),
         };
         const saved = await assignSlot(assignment, context);
         const updated = await setLeadStatus(leadId, 'approved', context);
