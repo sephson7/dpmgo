@@ -262,6 +262,9 @@ async function stripeRequest(
   return response.json();
 }
 
+/** How long a started checkout holds its station slot. */
+export const CHECKOUT_HOLD_MINUTES = 30;
+
 export async function createCheckoutSession(
   fetchImpl: typeof fetch,
   options: {
@@ -280,6 +283,8 @@ export async function createCheckoutSession(
     ...(options.priceId ? { priceId: options.priceId } : {}),
     ...(options.pricingTableId ? { pricingTableId: options.pricingTableId } : {}),
   });
+  // Stripe's minimum session life is 30 minutes; it matches the slot hold.
+  form.set('expires_at', String(Math.floor(Date.now() / 1000) + CHECKOUT_HOLD_MINUTES * 60 + 60));
   return (await stripeRequest(fetchImpl, options.secretKey, '/checkout/sessions', {
     method: 'POST',
     body: form,

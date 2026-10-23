@@ -61,11 +61,19 @@ export default function RiderFeedbackDialog({
               Anonymous: only the station, your answer and the estimate are saved.
             </p>
             <div className="grid grid-cols-3 gap-2">
-              <Button variant="hudActive" disabled={state === 'saving'} onClick={() => submit('yes')}>
+              <Button
+                variant="hudActive"
+                disabled={state === 'saving'}
+                onClick={() => submit('yes')}
+              >
                 <Check size={14} />
                 Yes
               </Button>
-              <Button variant="hudOutline" disabled={state === 'saving'} onClick={() => submit('no')}>
+              <Button
+                variant="hudOutline"
+                disabled={state === 'saving'}
+                onClick={() => submit('no')}
+              >
                 <X size={14} />
                 No
               </Button>

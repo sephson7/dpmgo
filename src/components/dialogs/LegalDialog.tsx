@@ -47,6 +47,15 @@ export default function LegalDialog({ document, onOpenChange }: LegalDialogProps
                 delays, service interruptions, or missed connections.
               </p>
               <p>
+                <strong>No Reliance &amp; Personal Safety:</strong> DPM - Go! is a supplementary
+                planning aid, not an official, emergency or safety service. Do not rely on it for
+                the last train of the night, time-critical travel, accessibility needs or personal
+                safety. Riders are responsible for confirming service with station displays and
+                agency staff, and for their own travel decisions. Motorcity Automated Systems, LLC
+                is not liable for missed trips, stranded riders, detours, weather or other service
+                changes. In an emergency, call 911.
+              </p>
+              <p>
                 <strong>Third-Party Venues:</strong> Restaurant walking metrics, menus, and external
                 links are provided for convenience. Motorcity Automated Systems, LLC does not
                 operate or endorse third-party establishments.

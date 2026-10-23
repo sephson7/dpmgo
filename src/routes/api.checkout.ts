@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import {
+  CHECKOUT_HOLD_MINUTES,
   PRICING_TABLE_ID,
   createCheckoutSession,
   parseCheckoutRequest,
@@ -12,8 +13,19 @@ import {
 } from '@/lib/stripe';
 import { confirmPartnerPayment } from '@/lib/partnerCheckout';
 import { readServerSecret } from '@/lib/serverEnv';
-import { listAssignments } from '@/lib/anchorStore';
-import { activeExclusiveHold, exclusiveTermEnd, formatTermEnd } from '@/lib/slotExclusivity';
+import {
+  listAssignments,
+  listCheckoutHolds,
+  listLeads,
+  putCheckoutHold,
+} from '@/lib/anchorStore';
+import {
+  activeCheckoutHold,
+  activeExclusiveHold,
+  exclusiveTermEnd,
+  formatTermEnd,
+  pendingPurchase,
+} from '@/lib/slotExclusivity';
 import { findStation } from '@/data/transit';
 
 /** Rejects cross-site calls to the checkout endpoint. */
@@ -88,6 +100,37 @@ export const Route = createFileRoute('/api/checkout')({
           );
         }
 
+        // Concurrency: a paid purchase awaiting review, or another buyer
+        // mid-checkout, holds the slot so it can never be sold twice.
+        const slotLabel = `Slot ${parsed.value.slot} at ${
+          findStation(parsed.value.stationId)?.name ?? 'this station'
+        }`;
+        if (pendingPurchase(await listLeads(context), parsed.value.stationId, parsed.value.slot)) {
+          return Response.json(
+            {
+              error: `${slotLabel} has a paid purchase awaiting review. Please choose another station or slot.`,
+            },
+            { status: 409 },
+          );
+        }
+        const liveHold = activeCheckoutHold(
+          await listCheckoutHolds(context),
+          parsed.value.stationId,
+          parsed.value.slot,
+        );
+        if (liveHold) {
+          const minutes = Math.max(
+            1,
+            Math.ceil((new Date(liveHold.expiresAt).getTime() - Date.now()) / 60_000),
+          );
+          return Response.json(
+            {
+              error: `${slotLabel} is being purchased by another business right now. Try again in about ${minutes} minutes or choose another slot.`,
+            },
+            { status: 409 },
+          );
+        }
+
         const origin =
           (await readServerSecret('PUBLIC_APP_URL', context)) ?? new URL(request.url).origin;
         const pricingTableId =
@@ -107,6 +150,7 @@ export const Route = createFileRoute('/api/checkout')({
         });
         const priceId = priceIds[plan];
 
+        const purchase = parsed.value;
         try {
           const session = await createCheckoutSession(fetch, {
             secretKey,
@@ -115,6 +159,15 @@ export const Route = createFileRoute('/api/checkout')({
             ...(priceId ? { priceId } : {}),
             pricingTableId,
           });
+          await putCheckoutHold(
+            {
+              stationId: purchase.stationId,
+              slot: purchase.slot,
+              sessionId: session.id,
+              expiresAt: new Date(Date.now() + CHECKOUT_HOLD_MINUTES * 60_000).toISOString(),
+            },
+            context,
+          );
           return Response.json({
             url: session.url,
             sessionId: session.id,
