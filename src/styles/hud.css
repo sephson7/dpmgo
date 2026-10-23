@@ -72,7 +72,7 @@
 .compliance-footer span:not(.footer-end) { color: var(--primary); }
 .mobile-station-trigger { display: none !important; }
 .legend-vehicle { width: 16px; height: 8px; border-radius: 1px; }
-.brand-logo { width: 52px; height: 52px; border-radius: 12px; object-fit: contain; background: rgba(7, 19, 27, 0.6); box-shadow: 0 0 18px oklch(0.88 0.15 195 / 30%); }
+.brand-logo { width: 52px; height: 52px; border-radius: 12px; object-fit: contain; filter: drop-shadow(0 0 8px oklch(0.88 0.15 195 / 30%)); }
 .compliance-footer { gap: 16px; flex-wrap: wrap; }
 .compliance-footer nav { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; column-gap: 12px; row-gap: 2px; }
 .compliance-footer nav a, .compliance-footer nav button { color: var(--primary); font: 500 9px var(--font-mono); text-decoration: none; height: auto; padding: 0; display: inline-flex; gap: 3px; align-items: center; white-space: nowrap; }
