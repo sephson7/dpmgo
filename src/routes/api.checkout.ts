@@ -36,6 +36,7 @@ function isAllowedOrigin(request: Request): boolean {
 }
 
 export const Route = createFileRoute('/api/checkout')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       // Create a Checkout Session for a station anchor slot.

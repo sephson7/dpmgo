@@ -75,10 +75,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+      { name: 'google-site-verification', content: '9ORtDo3NY9ruJlfjYFXLgu68sPnXqqJMG5Qk7YLpbmE' },
+      { property: 'og:site_name', content: 'DPM - Go!' },
       { title: 'DPM - Go!' },
       {
         name: 'description',
@@ -100,6 +103,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: 'stylesheet',
         href: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap',
+      },
+    ],
+    scripts: [
+      {
+        type: 'application/ld+json',
+        children: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          '@id': 'https://dpmgo.app/#website',
+          url: 'https://dpmgo.app/',
+          name: 'DPM - Go!',
+          publisher: { '@type': 'Organization', name: 'Motorcity Automated Systems' },
+          inLanguage: 'en-US',
+        }),
       },
     ],
   }),

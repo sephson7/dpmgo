@@ -21,6 +21,7 @@ import {
 const STATION_ID_PATTERN = /^[a-z0-9-]{2,64}$/;
 
 export const Route = createFileRoute('/api/admin/leads')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       // Lists the merchant intake leads and the assigned anchor slots.

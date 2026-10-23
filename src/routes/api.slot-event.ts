@@ -10,6 +10,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute('/api/slot-event')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       // Public, write-only counter for sponsor slot reach. It accepts only a

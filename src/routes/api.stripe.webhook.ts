@@ -17,6 +17,7 @@ import { retrieveCheckoutSession, verifyStripeSignature } from '@/lib/stripe';
  * has been sent, so a webhook and a redirect cannot both email the merchant.
  */
 export const Route = createFileRoute('/api/stripe/webhook')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request, context }) => {

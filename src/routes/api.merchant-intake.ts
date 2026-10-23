@@ -4,6 +4,7 @@ import { addLead, type AnchorLead } from '@/lib/anchorStore';
 import { readServerSecret } from '@/lib/serverEnv';
 
 export const Route = createFileRoute('/api/merchant-intake')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request, context }) => {

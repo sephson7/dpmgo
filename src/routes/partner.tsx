@@ -33,6 +33,7 @@ import { activeExclusiveHold, exclusiveTermEnd, formatTermEnd } from '../lib/slo
  * moment Stripe confirms the session, and it needs a recipient.
  */
 export const Route = createFileRoute('/partner')({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: 'Station Anchor Partnership | DPM - Go!' },
@@ -49,7 +50,10 @@ export const Route = createFileRoute('/partner')({
       },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
+      { name: 'robots', content: 'noindex, follow' },
+      { property: 'og:url', content: 'https://dpmgo.app/partner' },
     ],
+    links: [{ rel: 'canonical', href: 'https://dpmgo.app/partner' }],
   }),
   component: PartnerPage,
 });

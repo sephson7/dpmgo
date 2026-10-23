@@ -3,6 +3,7 @@ import { listAssignments } from '@/lib/anchorStore';
 import { exclusiveTermEnd } from '@/lib/slotExclusivity';
 
 export const Route = createFileRoute('/api/anchor-slots')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       // Public read of the anchor slots that an admin has assigned.

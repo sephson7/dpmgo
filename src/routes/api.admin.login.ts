@@ -8,6 +8,7 @@ import {
 import { readServerSecret } from '@/lib/serverEnv';
 
 export const Route = createFileRoute('/api/admin/login')({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request, context }) => {

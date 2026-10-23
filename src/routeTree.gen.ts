@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiAnchorSlotsRouteImport } from './routes/api.anchor-slots'
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiMerchantIntakeRouteImport } from './routes/api.merchant-intake'
@@ -42,6 +43,11 @@ const PartnerRoute = PartnerRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAnchorSlotsRoute = ApiAnchorSlotsRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/partner': typeof PartnerRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/anchor-slots': typeof ApiAnchorSlotsRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/merchant-intake': typeof ApiMerchantIntakeRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/partner': typeof PartnerRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/anchor-slots': typeof ApiAnchorSlotsRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/merchant-intake': typeof ApiMerchantIntakeRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/partner': typeof PartnerRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/anchor-slots': typeof ApiAnchorSlotsRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/merchant-intake': typeof ApiMerchantIntakeRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/partner'
     | '/pricing'
+    | '/sitemap.xml'
     | '/api/anchor-slots'
     | '/api/checkout'
     | '/api/merchant-intake'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/partner'
     | '/pricing'
+    | '/sitemap.xml'
     | '/api/anchor-slots'
     | '/api/checkout'
     | '/api/merchant-intake'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/partner'
     | '/pricing'
+    | '/sitemap.xml'
     | '/api/anchor-slots'
     | '/api/checkout'
     | '/api/merchant-intake'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   PartnerRoute: typeof PartnerRoute
   PricingRoute: typeof PricingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiAnchorSlotsRoute: typeof ApiAnchorSlotsRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiMerchantIntakeRoute: typeof ApiMerchantIntakeRoute
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/anchor-slots': {
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   PartnerRoute: PartnerRoute,
   PricingRoute: PricingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiAnchorSlotsRoute: ApiAnchorSlotsRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiMerchantIntakeRoute: ApiMerchantIntakeRoute,
