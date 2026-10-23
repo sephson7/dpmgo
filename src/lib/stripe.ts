@@ -1,3 +1,4 @@
+import { MERCHANT_AGREEMENT_VERSION } from '@/data/merchantAgreement';
 // Server-side Stripe integration for station anchor slots.
 // The secret key never leaves the server: the browser asks for a Checkout
 // Session, the server decides the price and the metadata.
@@ -79,6 +80,9 @@ export type CheckoutRequestBody = {
   website?: string;
   /** The rider perk the partner wants to run in the slot. */
   deal?: string;
+  /** The merchant agreement version the buyer accepted before paying. */
+  agreementVersion: string;
+  agreementAcceptedAt: string;
 };
 
 export type ParseResult = { ok: true; value: CheckoutRequestBody } | { ok: false; error: string };
@@ -119,6 +123,13 @@ export function parseCheckoutRequest(payload: unknown): ParseResult {
   if (!email || !EMAIL_PATTERN.test(email)) {
     return { ok: false, error: 'Enter a valid email address so we can send your confirmation.' };
   }
+  // The merchant agreement is accepted before the payment, on the current wording.
+  if (
+    record['agreementAccepted'] !== true ||
+    record['agreementVersion'] !== MERCHANT_AGREEMENT_VERSION
+  ) {
+    return { ok: false, error: 'Please review and accept the merchant agreement to continue.' };
+  }
   const plan = record['plan'];
   const placeId = cleanText(record['placeId'], 64);
   const contactName = cleanText(record['contactName'], 80);
@@ -138,6 +149,8 @@ export function parseCheckoutRequest(payload: unknown): ParseResult {
       ...(phone ? { phone } : {}),
       ...(website ? { website } : {}),
       ...(deal ? { deal } : {}),
+      agreementVersion: MERCHANT_AGREEMENT_VERSION,
+      agreementAcceptedAt: new Date().toISOString(),
     },
   };
 }
@@ -206,6 +219,8 @@ export function buildSessionForm({
   if (body.phone) form.set('metadata[phone]', body.phone);
   if (body.website) form.set('metadata[website]', body.website);
   if (body.deal) form.set('metadata[deal]', body.deal);
+  form.set('metadata[agreementVersion]', body.agreementVersion);
+  form.set('metadata[agreementAcceptedAt]', body.agreementAcceptedAt);
   if (priceId) {
     form.set('subscription_data[metadata][stationId]', body.stationId);
     form.set('subscription_data[metadata][slot]', String(body.slot));
@@ -214,6 +229,7 @@ export function buildSessionForm({
     if (body.contactName) form.set('subscription_data[metadata][contactName]', body.contactName);
     if (body.email) form.set('subscription_data[metadata][email]', body.email);
     if (body.deal) form.set('subscription_data[metadata][deal]', body.deal);
+    form.set('subscription_data[metadata][agreementVersion]', body.agreementVersion);
   }
   if (pricingTableId) {
     // Kept for traceability only: the pricing table id is not a session parameter.

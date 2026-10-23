@@ -98,6 +98,12 @@ export async function confirmPartnerPayment(
     createdAt: new Date().toISOString(),
     sessionId: session.id,
     ...(typeof verified.amountTotal === 'number' ? { paidAmountCents: verified.amountTotal } : {}),
+    ...(session.metadata['agreementVersion']
+      ? { agreementVersion: session.metadata['agreementVersion'] }
+      : {}),
+    ...(session.metadata['agreementAcceptedAt']
+      ? { agreementAcceptedAt: session.metadata['agreementAcceptedAt'] }
+      : {}),
   };
 
   if (!existing) await addLead(lead, context);

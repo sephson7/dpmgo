@@ -12,6 +12,9 @@ import {
 } from '@/lib/stripe';
 import { confirmPartnerPayment } from '@/lib/partnerCheckout';
 import { readServerSecret } from '@/lib/serverEnv';
+import { listAssignments } from '@/lib/anchorStore';
+import { activeExclusiveHold, exclusiveTermEnd, formatTermEnd } from '@/lib/slotExclusivity';
+import { findStation } from '@/data/transit';
 
 /** Rejects cross-site calls to the checkout endpoint. */
 function isAllowedOrigin(request: Request): boolean {
@@ -63,6 +66,25 @@ export const Route = createFileRoute('/api/checkout')({
               error: `Slot ${parsed.value.slot} can only be purchased on the ${allowed.join(' or ')} plan.`,
             },
             { status: 400 },
+          );
+        }
+
+        // An annual partner's exclusive term protects the slot from resale.
+        const hold = activeExclusiveHold(
+          await listAssignments(context),
+          parsed.value.stationId,
+          parsed.value.slot,
+        );
+        if (hold) {
+          const end = exclusiveTermEnd(hold);
+          const station = findStation(parsed.value.stationId)?.name ?? 'this station';
+          return Response.json(
+            {
+              error: `Slot ${parsed.value.slot} at ${station} is reserved by an annual partner${
+                end ? ` through ${formatTermEnd(end)}` : ''
+              }. Please choose another station or slot.`,
+            },
+            { status: 409 },
           );
         }
 
