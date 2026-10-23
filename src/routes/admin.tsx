@@ -2,6 +2,9 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowRight, CheckCircle2, Clock3, Mail, MapPin, ShieldCheck, Tag, X } from 'lucide-react';
 import { peopleMoverStations, qlineStations } from '@/data/transit';
+import { isAnalyticsExcluded, setAnalyticsExcluded } from '@/hooks/analyticsOptOut';
+
+type StationOpens = { stationId: string; month: string; opens: number };
 
 type Lead = {
   id: string;
@@ -80,6 +83,8 @@ function AdminPortal() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [stats, setStats] = useState<SlotStatsRow[]>([]);
+  const [stationOpens, setStationOpens] = useState<StationOpens[]>([]);
+  const [excluded, setExcluded] = useState(false);
 
   const load = useCallback(async () => {
     const response = await fetch('/api/admin/leads');
@@ -98,10 +103,12 @@ function AdminPortal() {
       leads?: Lead[];
       assignments?: Assignment[];
       stats?: SlotStatsRow[];
+      stationOpens?: StationOpens[];
     };
     setLeads(result.leads ?? []);
     setAssignments(result.assignments ?? []);
     setStats(result.stats ?? []);
+    setStationOpens(result.stationOpens ?? []);
     setSignedIn(true);
   }, []);
 
@@ -349,6 +356,61 @@ function AdminPortal() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </section>
+
+            <section className="bg-slate-900/60 border border-cyan-500/30 rounded-2xl p-4 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+                <h2 className="text-lg font-bold text-white">Station drawer traffic</h2>
+                <label className="flex items-center gap-2 text-xs text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={excluded}
+                    onChange={(e) => {
+                      setAnalyticsExcluded(e.target.checked);
+                      setExcluded(e.target.checked);
+                    }}
+                  />
+                  Exclude this device from counts
+                </label>
+              </div>
+              <p className="text-[11px] text-slate-400 mb-4">
+                Approximate monthly rider sessions that opened each station drawer (once per
+                station per session). Devices signed in here are excluded automatically.
+              </p>
+              {stationOpens.length === 0 ? (
+                <p className="text-sm text-slate-400">No station activity recorded yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-slate-300">
+                    <thead className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                      <tr>
+                        <th className="text-left py-1 pr-3">Month</th>
+                        <th className="text-left py-1 pr-3">#</th>
+                        <th className="text-left py-1 pr-3">Station</th>
+                        <th className="text-right py-1">Opens</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stationOpens.map((row, i) => {
+                        const rank =
+                          stationOpens.slice(0, i + 1).filter((r) => r.month === row.month)
+                            .length;
+                        return (
+                          <tr
+                            key={`${row.stationId}-${row.month}`}
+                            className="border-t border-slate-800"
+                          >
+                            <td className="py-1.5 pr-3 font-mono">{row.month}</td>
+                            <td className="py-1.5 pr-3">{rank}</td>
+                            <td className="py-1.5 pr-3">{stationName(row.stationId)}</td>
+                            <td className="py-1.5 text-right">{row.opens}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </section>
