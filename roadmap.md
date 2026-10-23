@@ -1,7 +1,10 @@
 # DPM - Go! roadmap
+- [x] Add privacy-safe station/day rider summaries without changing predictions; suppress percentages below five definite responses.
+- [x] Add one-tap walking directions for restaurant listings and known sponsor venues; verify phone/desktop links and map pin actions.
+- [x] Highlight the nearest station once on local GPS acquisition without interrupting manual navigation; verify drawer stays closed and subsequent fixes do not reframe.
 - [x] Repair GitHub dependency installation failure; clean-install dry run, lint, format, contrast and 117 tests pass locally. Next remote run remains unverified.
 - [x] Add estimate disclosure and once-per-session Boarded question; verify phone/desktop and preserve footer layout.
-- [ ] Enable durable anonymous rider feedback collection (blocked by Lovable Cloud provisioning incident; answers explicitly not saved).
+- [x] Enable durable anonymous rider feedback collection with insert-only public access.
 - [x] Build interactive satellite map, route layers, and simulated moving vehicles.
 - [x] Add all 13 stations with drawers and local restaurant links.
 - [x] Add transit toggles, Detroit events and sports links, and compliance footer.

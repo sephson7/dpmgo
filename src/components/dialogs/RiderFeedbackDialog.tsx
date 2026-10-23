@@ -31,6 +31,7 @@ export default function RiderFeedbackDialog({
       predicted_at: context.predictionAt,
     });
     setState(error ? 'failed' : 'saved');
+    if (!error) window.dispatchEvent(new CustomEvent('dpm-rider-feedback-saved'));
   }
 
   const done = state === 'saved' || state === 'failed';
