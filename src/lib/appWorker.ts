@@ -23,8 +23,7 @@ export function refusesAppWorker(
   const domain = labels.slice(-2).join('.');
   return (
     ['lovable.app', 'gpt-eng.com', 'gptengineer.run'].includes(domain) &&
-    (/^(?:id-preview|preview)(?:-[a-z0-9]+)?--.+$/.test(label) ||
-      /^project--.+-dev$/.test(label))
+    (/^(?:id-preview|preview)(?:-[a-z0-9]+)?--.+$/.test(label) || /^project--.+-dev$/.test(label))
   );
 }
 
