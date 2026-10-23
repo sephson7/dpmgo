@@ -17,7 +17,10 @@ describe('initial GPS framing does not interrupt navigation', () => {
     localStorage.setItem('dpmgo_walkthrough_seen', 'true');
     vi.stubGlobal('navigator', {
       geolocation: {
-        watchPosition: vi.fn((callback: PositionCallback) => { locate = callback; return 1; }),
+        watchPosition: vi.fn((callback: PositionCallback) => {
+          locate = callback;
+          return 1;
+        }),
         clearWatch: vi.fn(),
       },
     });
@@ -30,7 +33,11 @@ describe('initial GPS framing does not interrupt navigation', () => {
   const fix = (index: number) => {
     const station = peopleMoverStations[index];
     if (!station || !locate) throw new Error('Missing GPS test setup');
-    act(() => locate?.({ coords: { longitude: station.coordinate[0], latitude: station.coordinate[1] } } as GeolocationPosition));
+    act(() =>
+      locate?.({
+        coords: { longitude: station.coordinate[0], latitude: station.coordinate[1] },
+      } as GeolocationPosition),
+    );
   };
   it('frames only once and never opens a station drawer', async () => {
     const events: Event[] = [];
@@ -43,7 +50,9 @@ describe('initial GPS framing does not interrupt navigation', () => {
       fix(4);
       expect(events).toHaveLength(1);
       expect(container.querySelector('.detail-drawer')).toBeNull();
-    } finally { window.removeEventListener('dpm-map-flyto', listener); }
+    } finally {
+      window.removeEventListener('dpm-map-flyto', listener);
+    }
   });
   it('does not reframe after the rider touches the interface', () => {
     const listener = vi.fn();
@@ -53,6 +62,8 @@ describe('initial GPS framing does not interrupt navigation', () => {
       fireEvent.pointerDown(document.body);
       fix(0);
       expect(listener).not.toHaveBeenCalled();
-    } finally { window.removeEventListener('dpm-map-flyto', listener); }
+    } finally {
+      window.removeEventListener('dpm-map-flyto', listener);
+    }
   });
 });
