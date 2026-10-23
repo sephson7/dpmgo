@@ -35,3 +35,27 @@ describe('exclusive annual term', () => {
     expect(activeExclusiveHold([slot2], 'times-square', 2, new Date('2026-09-01'))).not.toBeNull();
   });
 });
+
+import { activeCheckoutHold, pendingPurchase } from '@/lib/slotExclusivity';
+
+describe('checkout concurrency', () => {
+  const hold = {
+    stationId: 'bricktown',
+    slot: 1 as const,
+    sessionId: 'cs_1',
+    expiresAt: '2026-10-23T12:30:00.000Z',
+  };
+  it('blocks a second buyer while a checkout is under 30 minutes old', () => {
+    expect(
+      activeCheckoutHold([hold], 'bricktown', 1, new Date('2026-10-23T12:10:00Z')),
+    ).not.toBeNull();
+  });
+  it('releases the slot once the checkout expires', () => {
+    expect(activeCheckoutHold([hold], 'bricktown', 1, new Date('2026-10-23T12:31:00Z'))).toBeNull();
+  });
+  it('blocks a sale while a paid purchase awaits review, not after rejection', () => {
+    const lead = { stationId: 'bricktown', slot: 1 as const, status: 'pending', sessionId: 'cs_1' };
+    expect(pendingPurchase([lead], 'bricktown', 1)).not.toBeNull();
+    expect(pendingPurchase([{ ...lead, status: 'rejected' }], 'bricktown', 1)).toBeNull();
+  });
+});

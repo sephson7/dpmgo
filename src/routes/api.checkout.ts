@@ -158,12 +158,6 @@ export const Route = createFileRoute('/api/checkout')({
             ...(priceId ? { priceId } : {}),
             pricingTableId,
           });
-          return Response.json({
-            url: session.url,
-            sessionId: session.id,
-            plan,
-            slot: parsed.value.slot,
-          });
           await putCheckoutHold(
             {
               stationId: parsed.value.stationId,
@@ -173,6 +167,12 @@ export const Route = createFileRoute('/api/checkout')({
             },
             context,
           );
+          return Response.json({
+            url: session.url,
+            sessionId: session.id,
+            plan,
+            slot: parsed.value.slot,
+          });
         } catch (error) {
           console.error('Stripe session creation failed', error);
           return Response.json({ error: 'Unable to start checkout.' }, { status: 502 });

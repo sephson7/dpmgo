@@ -9,7 +9,7 @@
 // JSON file and then to memory, so nothing breaks before the namespace is set
 // up.
 
-import type { CheckoutHold } from "@/lib/slotExclusivity";
+import type { CheckoutHold } from '@/lib/slotExclusivity';
 
 export type AnchorLeadStatus = 'pending' | 'approved' | 'rejected';
 

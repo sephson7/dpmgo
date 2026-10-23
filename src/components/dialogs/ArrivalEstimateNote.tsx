@@ -31,9 +31,14 @@ export default function ArrivalEstimateNote() {
           Detroit Transit Corporation (DTC) is not connected to DPM - Go!.
         </DialogDescription>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Vehicle positions on the map are simulated. Rider feedback collection is temporarily
-          unavailable; reports are not currently used to calculate arrivals. Check station displays
-          for current information.
+          Vehicle positions on the map are simulated. Rider feedback is saved anonymously but is not
+          yet used to calculate arrivals. Check station displays for current information.
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          <strong>Do not rely on DPM - Go! for the last train of the night, time-critical trips or
+          your safety.</strong>{' '}
+          Plan extra time near closing, confirm service with station displays or DTC staff, and in
+          an emergency call 911.
         </p>
       </DialogContent>
     </Dialog>
