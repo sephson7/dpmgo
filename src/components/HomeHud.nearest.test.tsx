@@ -5,7 +5,7 @@ import HomeHud from './HomeHud';
 import { peopleMoverStations } from '@/data/transit';
 
 vi.mock('@/components/hud/MapStage', () => ({
-  default: ({ onReady }: { onReady: (ready: boolean) => void }) => {
+  default: function MockMapStage({ onReady }: { onReady: (ready: boolean) => void }) {
     useEffect(() => onReady(true), [onReady]);
     return null;
   },
@@ -54,13 +54,14 @@ describe('initial GPS framing does not interrupt navigation', () => {
       window.removeEventListener('dpm-map-flyto', listener);
     }
   });
-  it('does not reframe after the rider touches the interface', () => {
+  it('does not reframe after the rider touches the interface', async () => {
     const listener = vi.fn();
     window.addEventListener('dpm-map-flyto', listener);
     try {
       render(<HomeHud />);
       fireEvent.pointerDown(document.body);
       fix(0);
+      await act(async () => {});
       expect(listener).not.toHaveBeenCalled();
     } finally {
       window.removeEventListener('dpm-map-flyto', listener);
