@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { walkingDirectionsUrl, usesAppleMaps } from '@/data/walkingDirections';
 import type { Coordinate } from '@/data/transit';
 
-export default function VenueDirections({ name, coordinate }: { name: string; coordinate: Coordinate }) {
+export default function VenueDirections({
+  name,
+  coordinate,
+}: {
+  name: string;
+  coordinate: Coordinate;
+}) {
   const [apple, setApple] = useState(false);
   useEffect(() => {
     setApple(usesAppleMaps(navigator.userAgent, navigator.maxTouchPoints));

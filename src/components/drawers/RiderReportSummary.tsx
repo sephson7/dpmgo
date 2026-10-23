@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { riderSummaryStats, type RiderSummary } from '@/data/riderSummary';
 
 export default function RiderReportSummary({ stationId }: { stationId: string }) {
-  const [result, setResult] = useState<{ stationId: string; summary: RiderSummary | null } | null>(null);
+  const [result, setResult] = useState<{ stationId: string; summary: RiderSummary | null } | null>(
+    null,
+  );
   useEffect(() => {
     let active = true;
     let inFlight = false;
@@ -12,7 +14,9 @@ export default function RiderReportSummary({ stationId }: { stationId: string })
       if (inFlight) return;
       inFlight = true;
       try {
-        const { data, error } = await supabase.rpc('rider_report_summary', { p_station_id: stationId });
+        const { data, error } = await supabase.rpc('rider_report_summary', {
+          p_station_id: stationId,
+        });
         if (active) setResult(error ? null : { stationId, summary: data?.[0] ?? null });
       } catch {
         if (active) setResult(null);
@@ -37,10 +41,14 @@ export default function RiderReportSummary({ stationId }: { stationId: string })
     <div className="rider-report-summary">
       <div className="flex items-center gap-2 text-xs text-primary">
         <Users size={14} className="shrink-0" />
-        <span>{stats ? `${stats.percent}% reported on time · today` : 'Not enough rider reports today'}</span>
+        <span>
+          {stats ? `${stats.percent}% reported on time · today` : 'Not enough rider reports today'}
+        </span>
       </div>
       <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
-        {stats ? `${stats.definite} Yes/No answers at this station${stats.unsure ? ` · ${stats.unsure} unsure, excluded` : ''}. ` : ''}
+        {stats
+          ? `${stats.definite} Yes/No answers at this station${stats.unsure ? ` · ${stats.unsure} unsure, excluded` : ''}. `
+          : ''}
         Anonymous, unverified self-reports · not live tracking or a change to estimates.
       </p>
     </div>

@@ -14,7 +14,7 @@
 - Keep the People Mover station order in the agency counter-clockwise direction starting at Times Square, because the loop is served in one direction only; never route a rider backwards around the loop.
 - Render Mapbox only after browser hydration because Mapbox GL depends on browser APIs during module evaluation.
 - Label animated vehicle positions as simulations until a verified live transit feed is connected, to avoid misleading riders.
-- Use shared estimate disclosure and session-scoped boarding feedback eligibility; save answers anonymously to the insert-only `rider_feedback` table and never claim they calibrate estimates until a calibration step actually uses them.
+- Keep raw rider feedback insert-only and boarding feedback session-scoped; publish only station/day aggregates above a minimum definite-answer threshold, never claim reports calibrate estimates.
 - Drive the People Mover simulation along the agency GTFS shape and use platform coordinates as its dwell points.
 - Keep fleet timing in a pure simulation module and gate People Mover movement through the shared GTFS service calendar, including after-midnight trips, so movement cannot imply off-hours service.
 - Keep People Mover drawer estimates in a browser-safe pure module: the first uses the shared fleet clock, while a clearly labeled follow-up planning window is distinct from vehicle predictions and omitted near service close, so presentation limits never falsify fleet positions or agency departures.
@@ -25,8 +25,7 @@
 - Place the QLINE streetcar with the published timetable, not a free running cycle: reconstruct the trips from the feed's per-stop departure times, index them by the canonical station order because the feed lists a service's stops in that service's own order, and roll the published daily pattern forward once the feed calendar expires.
 - Compute vehicle bearings from the current simulation segment and use map-aligned symbols so train icons follow the track through camera rotation and pitch.
 - Keep station drawers to a strict two-slot architecture: slot 1 is an annual partner, slot 2 rotates. Slot holders are never repeated in the standard restaurant list.
-- Sell slot 1 on the annual plan only and slot 2 on either plan; the server owns the price and rejects mismatched purchases.
-- Keep the partner checkout server priced and never re-introduce a client side pricing table, because a table is not priced by the server and can sell the monthly plan for the annual only slot 1.
+- Server-price checkout; slot 1 is annual-only, slot 2 allows either plan. Reject mismatches and never restore client pricing tables.
 - Create the partner lead from the confirmed payment, not from a form the buyer can abandon, so a paid slot always has something for the team to approve inside the promised 24 hours.
 - Never trust a query string for a completed payment: confirm the checkout session with Stripe before showing a receipt.
 - Send the partner confirmation from the server exactly once per Stripe session, and keep the webhook and the redirect on the same idempotent path, because a buyer can close the tab before the redirect finishes and must never be emailed twice.
@@ -40,3 +39,5 @@
 - Protect an annual placement's station slot for 12 months from approval in `src/lib/slotExclusivity.ts`, enforced by both the checkout and the admin approval, so a competitor can never displace an annual partner mid-term.
 - Require acceptance of the current version in `src/data/merchantAgreement.ts` before checkout, store the version on the Stripe session and lead, and repeat the terms in the confirmation email, so every merchant has a copy of exactly what they agreed to.
 - Hold a station slot for 30 minutes once a checkout starts, and block resale while a paid purchase awaits review, in `src/lib/slotExclusivity.ts` and `src/routes/api.checkout.ts`, so two merchants can never pay for the same slot.
+- Use a shared browser-safe walking URL helper with explicit walking mode and iOS detection; omit directions for sponsors without verified venue coordinates.
+- Keep the one-time local GPS frame separate from drawer selection and manual origins; yield to rider interaction so automatic framing never interrupts navigation.

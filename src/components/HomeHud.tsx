@@ -203,7 +203,9 @@ export default function HomeHud() {
 
   // Any rider interaction takes precedence over the automatic first-location frame.
   useEffect(() => {
-    const markManual = () => { manuallyNavigated.current = true; };
+    const markManual = () => {
+      manuallyNavigated.current = true;
+    };
     document.addEventListener('pointerdown', markManual, { capture: true, once: true });
     document.addEventListener('keydown', markManual, { capture: true, once: true });
     return () => {
@@ -262,13 +264,22 @@ export default function HomeHud() {
   useEffect(() => {
     if (!userPos || !mapReady || autoSnapAttempted.current) return;
     autoSnapAttempted.current = true;
-    if (manuallyNavigated.current || selectedId || activeShortcut || activeHowDoI || followUser) return;
+    if (manuallyNavigated.current || selectedId || activeShortcut || activeHowDoI || followUser)
+      return;
     const station = localNearestStation(userPos, activeStations);
     if (!station) return;
     setAutoNearestId(station.id);
-    window.dispatchEvent(new CustomEvent('dpm-map-flyto', {
-      detail: { center: station.coordinate, zoom: 16, pitch: 50, bearing: -20, targetName: `Nearest station · ${station.name}` },
-    }));
+    window.dispatchEvent(
+      new CustomEvent('dpm-map-flyto', {
+        detail: {
+          center: station.coordinate,
+          zoom: 16,
+          pitch: 50,
+          bearing: -20,
+          targetName: `Nearest station · ${station.name}`,
+        },
+      }),
+    );
   }, [userPos, mapReady, selectedId, activeShortcut, activeHowDoI, followUser, activeStations]);
 
   // Announce the selected stop for screen reader users. The map pins are
