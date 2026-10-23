@@ -22,20 +22,23 @@ export const Route = createFileRoute('/')({
       { property: 'og:url', content: 'https://dpmgo.app/' },
     ],
     links: [{ rel: 'canonical', href: 'https://dpmgo.app/' }],
-    scripts: [{
-      type: 'application/ld+json',
-      children: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'WebApplication',
-        name: 'DPM - Go!',
-        url: 'https://dpmgo.app/',
-        applicationCategory: 'TravelApplication',
-        operatingSystem: 'Web browser',
-        description: 'Independent Detroit People Mover and QLINE station guide with estimated arrivals, nearby dining and walking directions. Vehicle positions are simulated, not live tracking.',
-        isAccessibleForFree: true,
-        publisher: { '@type': 'Organization', name: 'Motorcity Automated Systems' },
-      }),
-    }],
+    scripts: [
+      {
+        type: 'application/ld+json',
+        children: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebApplication',
+          name: 'DPM - Go!',
+          url: 'https://dpmgo.app/',
+          applicationCategory: 'TravelApplication',
+          operatingSystem: 'Web browser',
+          description:
+            'Independent Detroit People Mover and QLINE station guide with estimated arrivals, nearby dining and walking directions. Vehicle positions are simulated, not live tracking.',
+          isAccessibleForFree: true,
+          publisher: { '@type': 'Organization', name: 'Motorcity Automated Systems' },
+        }),
+      },
+    ],
   }),
   component: HomeRoute,
 });
