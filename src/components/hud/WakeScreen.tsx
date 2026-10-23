@@ -1,4 +1,4 @@
-import logo from '@/assets/dpm-go-logo.jpg.asset.json';
+import logo from '@/assets/dpm-go-logo-clean.png.asset.json';
 
 /** The launch screen that covers the map while it initialises. */
 export default function WakeScreen() {

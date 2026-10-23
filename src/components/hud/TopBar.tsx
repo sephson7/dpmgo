@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { sportsTeams } from '@/data/transit';
-import logo from '@/assets/dpm-go-logo.jpg.asset.json';
+import logo from '@/assets/dpm-go-logo-clean.png.asset.json';
 
 export type TopBarProps = {
   /** Opens the downtown activities or a sports panel. */

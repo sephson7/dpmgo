@@ -72,14 +72,14 @@
 .compliance-footer span:not(.footer-end) { color: var(--primary); }
 .mobile-station-trigger { display: none !important; }
 .legend-vehicle { width: 16px; height: 8px; border-radius: 1px; }
-.brand-logo { width: 52px; height: 52px; border-radius: 12px; object-fit: contain; background: rgba(7, 19, 27, 0.6); box-shadow: 0 0 18px oklch(0.88 0.15 195 / 30%); }
+.brand-logo { width: 52px; height: 52px; border-radius: 12px; object-fit: contain; filter: drop-shadow(0 0 8px oklch(0.88 0.15 195 / 30%)); }
 .compliance-footer { gap: 16px; flex-wrap: wrap; }
 .compliance-footer nav { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; column-gap: 12px; row-gap: 2px; }
 .compliance-footer nav a, .compliance-footer nav button { color: var(--primary); font: 500 9px var(--font-mono); text-decoration: none; height: auto; padding: 0; display: inline-flex; gap: 3px; align-items: center; white-space: nowrap; }
 .compliance-footer nav a:hover, .compliance-footer nav button:hover { text-decoration: underline; }
 .wake-screen { position: fixed; z-index: 100; inset: 0; display: grid; place-content: center; justify-items: center; gap: 30px; background: var(--background); pointer-events: auto; animation: wake-exit .42s ease-in 1.12s both; }
 .wake-content { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.wake-logo { display: block; width: clamp(168px, 42vw, 320px); aspect-ratio: 1; object-fit: cover; border: 1px solid var(--border); box-shadow: 0 0 50px oklch(0.88 0.15 195 / 18%); animation: wake-logo-in .8s ease-out both; }
+.wake-logo { display: block; width: clamp(168px, 42vw, 320px); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 0 28px oklch(0.88 0.15 195 / 22%)); animation: wake-logo-in .8s ease-out both; }
 .homepage-ticker-hud {
   margin-top: 10px;
   padding: 8px 10px;
