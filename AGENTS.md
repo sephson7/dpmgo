@@ -14,7 +14,7 @@
 - Keep the People Mover station order in the agency counter-clockwise direction starting at Times Square, because the loop is served in one direction only; never route a rider backwards around the loop.
 - Render Mapbox only after browser hydration because Mapbox GL depends on browser APIs during module evaluation.
 - Label animated vehicle positions as simulations until a verified live transit feed is connected, to avoid misleading riders.
-- Use shared estimate disclosure and session-scoped boarding feedback eligibility; keep collection explicitly unavailable until durable storage is connected, so unsaved answers never imply rider-calibrated predictions.
+- Use shared estimate disclosure and session-scoped boarding feedback eligibility; save answers anonymously to the insert-only `rider_feedback` table and never claim they calibrate estimates until a calibration step actually uses them.
 - Drive the People Mover simulation along the agency GTFS shape and use platform coordinates as its dwell points.
 - Keep fleet timing in a pure simulation module and gate People Mover movement through the shared GTFS service calendar, including after-midnight trips, so movement cannot imply off-hours service.
 - Keep People Mover drawer estimates in a browser-safe pure module: the first uses the shared fleet clock, while a clearly labeled follow-up planning window is distinct from vehicle predictions and omitted near service close, so presentation limits never falsify fleet positions or agency departures.
