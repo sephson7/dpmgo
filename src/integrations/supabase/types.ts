@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      rider_feedback: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          predicted_at: string
+          predicted_minutes: number
+          station_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          predicted_at: string
+          predicted_minutes: number
+          station_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          predicted_at?: string
+          predicted_minutes?: number
+          station_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
