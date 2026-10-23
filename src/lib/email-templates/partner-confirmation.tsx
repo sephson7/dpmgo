@@ -128,4 +128,9 @@ const small = {
   whiteSpace: 'pre-line' as const,
 };
 const hr = { borderColor: '#e5e7eb', margin: '20px 0' };
-const agreementTitle = { color: '#0891b2', fontSize: '13px', fontWeight: 700, margin: '16px 0 4px' };
+const agreementTitle = {
+  color: '#0891b2',
+  fontSize: '13px',
+  fontWeight: 700,
+  margin: '16px 0 4px',
+};

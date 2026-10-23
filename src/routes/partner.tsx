@@ -17,6 +17,12 @@ import {
 } from 'lucide-react';
 import { findStation, peopleMoverStations, qlineStations } from '../data/transit';
 import { plansAllowedForSlot, type AnchorPlan } from '../lib/stripe';
+import {
+  MERCHANT_AGREEMENT_TERMS,
+  MERCHANT_AGREEMENT_TITLE,
+  MERCHANT_AGREEMENT_VERSION,
+} from '../data/merchantAgreement';
+import { activeExclusiveHold, exclusiveTermEnd, formatTermEnd } from '../lib/slotExclusivity';
 
 /**
  * The partner checkout.
@@ -53,7 +59,10 @@ type CheckoutState = 'idle' | 'verifying' | 'paid' | 'failed';
 type AnchorAssignment = {
   stationId: string;
   slot: 1 | 2;
+  kind: 'annual' | 'rotating';
+  assignedAt: string;
   businessName: string;
+  termEndsAt?: string;
 };
 
 type Verification = {
@@ -98,6 +107,7 @@ function PartnerPage() {
   const [website, setWebsite] = useState('');
   const [perkOffer, setPerkOffer] = useState('');
   const [assignments, setAssignments] = useState<AnchorAssignment[]>([]);
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
 
   const isSuccess = checkoutState === 'paid';
   const allStations = useMemo(() => [...peopleMoverStations, ...qlineStations], []);
@@ -186,6 +196,12 @@ function PartnerPage() {
     () => assignments.find((item) => item.stationId === stationId && item.slot === slot),
     [assignments, stationId, slot],
   );
+  // An annual partner's term keeps the slot off the market until it ends.
+  const exclusiveHold = useMemo(
+    () => (stationId ? activeExclusiveHold(assignments, stationId, slot) : null),
+    [assignments, stationId, slot],
+  );
+  const exclusiveEnd = exclusiveHold ? exclusiveTermEnd(exclusiveHold) : null;
 
   const startCheckout = async () => {
     if (!stationId) {
@@ -198,6 +214,16 @@ function PartnerPage() {
     }
     if (!email.trim()) {
       setCheckoutError('Enter an email address so we can send your confirmation.');
+      return;
+    }
+    if (exclusiveHold) {
+      setCheckoutError(
+        'This slot is reserved by an annual partner. Choose another station or slot.',
+      );
+      return;
+    }
+    if (!agreementAccepted) {
+      setCheckoutError('Please review and accept the merchant agreement to continue.');
       return;
     }
     setCheckoutBusy(true);
@@ -216,6 +242,8 @@ function PartnerPage() {
           phone: phone.trim(),
           website: website.trim(),
           deal: perkOffer.trim(),
+          agreementAccepted,
+          agreementVersion: MERCHANT_AGREEMENT_VERSION,
         }),
       });
       const result = (await response.json()) as { url?: string; error?: string };
@@ -450,12 +478,21 @@ function PartnerPage() {
                     : 'Slot 2 accepts both options.'}
                 </span>
               </div>
-              {currentHolder && (
+              {exclusiveHold ? (
                 <p className="text-[11px] text-amber-200/90 border border-amber-500/25 bg-amber-950/20 rounded-lg px-3 py-2">
-                  Slot {slot} at {stationName || 'this station'} is currently held by{' '}
-                  <strong>{currentHolder.businessName}</strong>. A new purchase takes the slot over
-                  once our team approves it.
+                  Slot {slot} at {stationName || 'this station'} is reserved by{' '}
+                  <strong>{exclusiveHold.businessName}</strong> under an exclusive annual term
+                  {exclusiveEnd ? ` through ${formatTermEnd(exclusiveEnd)}` : ''}. Please choose
+                  another station or slot.
                 </p>
+              ) : (
+                currentHolder && (
+                  <p className="text-[11px] text-amber-200/90 border border-amber-500/25 bg-amber-950/20 rounded-lg px-3 py-2">
+                    Slot {slot} at {stationName || 'this station'} is currently held by{' '}
+                    <strong>{currentHolder.businessName}</strong>. A new purchase takes the slot
+                    over once our team approves it.
+                  </p>
+                )
               )}
             </div>
 
@@ -569,6 +606,34 @@ function PartnerPage() {
               </div>
             </div>
 
+            <div className="w-full max-w-3xl mb-6 bg-slate-900/60 border border-cyan-500/30 rounded-2xl p-4 sm:p-5">
+              <p className="text-xs font-mono uppercase tracking-wider text-cyan-300 mb-1">
+                4 · Merchant agreement
+              </p>
+              <details className="mb-3 rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2">
+                <summary className="cursor-pointer text-xs text-cyan-200">
+                  Read the {MERCHANT_AGREEMENT_TITLE} (version {MERCHANT_AGREEMENT_VERSION})
+                </summary>
+                <ol className="mt-2 list-decimal pl-5 space-y-1.5 text-[11px] text-slate-300 max-h-64 overflow-y-auto">
+                  {MERCHANT_AGREEMENT_TERMS.map((term) => (
+                    <li key={term}>{term}</li>
+                  ))}
+                </ol>
+              </details>
+              <label className="flex items-start gap-2 text-xs text-slate-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreementAccepted}
+                  onChange={(e) => setAgreementAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-cyan-400"
+                />
+                <span>
+                  I have read and agree to the merchant agreement. A copy is included in the
+                  confirmation email.
+                </span>
+              </label>
+            </div>
+
             <div className="w-full max-w-3xl mb-6 bg-cyan-950/30 border border-cyan-500/30 rounded-xl p-4 flex items-start gap-3">
               <Clock size={18} className="text-cyan-400 shrink-0 mt-0.5" />
               <p className="text-xs md:text-sm text-cyan-100">
@@ -581,7 +646,7 @@ function PartnerPage() {
             <button
               type="button"
               onClick={startCheckout}
-              disabled={checkoutBusy}
+              disabled={checkoutBusy || Boolean(exclusiveHold) || !agreementAccepted}
               className="w-full max-w-3xl py-3 rounded-lg bg-cyan-500 text-slate-950 font-bold text-xs tracking-wider uppercase hover:bg-cyan-400 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60"
             >
               {checkoutBusy

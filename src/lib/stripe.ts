@@ -124,7 +124,10 @@ export function parseCheckoutRequest(payload: unknown): ParseResult {
     return { ok: false, error: 'Enter a valid email address so we can send your confirmation.' };
   }
   // The merchant agreement is accepted before the payment, on the current wording.
-  if (record['agreementAccepted'] !== true || record['agreementVersion'] !== MERCHANT_AGREEMENT_VERSION) {
+  if (
+    record['agreementAccepted'] !== true ||
+    record['agreementVersion'] !== MERCHANT_AGREEMENT_VERSION
+  ) {
     return { ok: false, error: 'Please review and accept the merchant agreement to continue.' };
   }
   const plan = record['plan'];

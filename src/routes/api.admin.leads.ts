@@ -10,7 +10,12 @@ import {
   type AnchorAssignment,
   type AnchorLeadStatus,
 } from '@/lib/anchorStore';
-import { activeExclusiveHold, exclusiveTermEnd, formatTermEnd, termEndForPlan } from '@/lib/slotExclusivity';
+import {
+  activeExclusiveHold,
+  exclusiveTermEnd,
+  formatTermEnd,
+  termEndForPlan,
+} from '@/lib/slotExclusivity';
 
 const STATION_ID_PATTERN = /^[a-z0-9-]{2,64}$/;
 
