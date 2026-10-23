@@ -30,7 +30,7 @@ describe('exclusive annual term', () => {
       ...annual,
       slot: 2 as const,
       kind: 'rotating' as const,
-      termEndsAt: termEndForPlan('annual', new Date('2026-01-15T12:00:00.000Z')),
+      termEndsAt: termEndForPlan('annual', new Date('2026-01-15T12:00:00.000Z')) ?? '',
     };
     expect(activeExclusiveHold([slot2], 'times-square', 2, new Date('2026-09-01'))).not.toBeNull();
   });
