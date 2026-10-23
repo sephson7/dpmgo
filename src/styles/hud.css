@@ -79,7 +79,7 @@
 .compliance-footer nav a:hover, .compliance-footer nav button:hover { text-decoration: underline; }
 .wake-screen { position: fixed; z-index: 100; inset: 0; display: grid; place-content: center; justify-items: center; gap: 30px; background: var(--background); pointer-events: auto; animation: wake-exit .42s ease-in 1.12s both; }
 .wake-content { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.wake-logo { display: block; width: clamp(168px, 42vw, 320px); aspect-ratio: 1; object-fit: cover; border: 1px solid var(--border); box-shadow: 0 0 50px oklch(0.88 0.15 195 / 18%); animation: wake-logo-in .8s ease-out both; }
+.wake-logo { display: block; width: clamp(168px, 42vw, 320px); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 0 28px oklch(0.88 0.15 195 / 22%)); animation: wake-logo-in .8s ease-out both; }
 .homepage-ticker-hud {
   margin-top: 10px;
   padding: 8px 10px;
