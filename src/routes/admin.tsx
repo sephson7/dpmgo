@@ -391,8 +391,8 @@ function AdminPortal() {
                 </label>
               </div>
               <p className="text-[11px] text-slate-400 mb-4">
-                Approximate monthly rider sessions that opened each station drawer (once per
-                station per session). Devices signed in here are excluded automatically.
+                Approximate monthly rider sessions that opened each station drawer (once per station
+                per session). Devices signed in here are excluded automatically.
               </p>
               {stationOpens.length === 0 ? (
                 <p className="text-sm text-slate-400">No station activity recorded yet.</p>
@@ -409,9 +409,9 @@ function AdminPortal() {
                     </thead>
                     <tbody>
                       {stationOpens.map((row, i) => {
-                        const rank =
-                          stationOpens.slice(0, i + 1).filter((r) => r.month === row.month)
-                            .length;
+                        const rank = stationOpens
+                          .slice(0, i + 1)
+                          .filter((r) => r.month === row.month).length;
                         return (
                           <tr
                             key={`${row.stationId}-${row.month}`}

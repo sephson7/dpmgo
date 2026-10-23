@@ -16,10 +16,16 @@ describe('app cache cleanup boundaries', () => {
       'example.lovableproject.com',
       'example.lovableproject-dev.com',
       'example.beta.lovable.dev',
-    ]) expect(refusesAppWorker(true, host, false, '')).toBe(true);
+    ])
+      expect(refusesAppWorker(true, host, false, '')).toBe(true);
   });
   it('keeps published and custom domains eligible', () => {
-    for (const host of ['dpmgo.app', 'www.dpmgo.app', 'dpmgo.lovable.app', 'preview-v2--shop.example.com']) {
+    for (const host of [
+      'dpmgo.app',
+      'www.dpmgo.app',
+      'dpmgo.lovable.app',
+      'preview-v2--shop.example.com',
+    ]) {
       expect(refusesAppWorker(true, host, false, '')).toBe(false);
     }
   });

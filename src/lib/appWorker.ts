@@ -16,7 +16,8 @@ export function refusesAppWorker(
     ['lovableproject.com', 'lovableproject-dev.com', 'beta.lovable.dev'].some(
       (domain) => host === domain || host.endsWith(`.${domain}`),
     )
-  ) return true;
+  )
+    return true;
   const labels = host.split('.');
   const domain = labels.slice(-2).join('.');
   return (

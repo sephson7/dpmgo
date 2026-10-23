@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from 'react';
 
 import appCss from '../styles.css?url';
 import { reportLovableError } from '../lib/lovable-error-reporting';
+import { retireAppWorker } from '../lib/appWorker';
 
 function NotFoundComponent() {
   return (
@@ -124,6 +125,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    // Cache cleanup must also reach installed users opening partner/admin links.
+    void retireAppWorker().catch(() => {});
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

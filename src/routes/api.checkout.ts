@@ -13,12 +13,7 @@ import {
 } from '@/lib/stripe';
 import { confirmPartnerPayment } from '@/lib/partnerCheckout';
 import { readServerSecret } from '@/lib/serverEnv';
-import {
-  listAssignments,
-  listCheckoutHolds,
-  listLeads,
-  putCheckoutHold,
-} from '@/lib/anchorStore';
+import { listAssignments, listCheckoutHolds, listLeads, putCheckoutHold } from '@/lib/anchorStore';
 import {
   activeCheckoutHold,
   activeExclusiveHold,
