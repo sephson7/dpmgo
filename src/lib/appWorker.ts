@@ -19,11 +19,12 @@ export function refusesAppWorker(
   )
     return true;
   const labels = host.split('.');
+  const label = labels[0] ?? '';
   const domain = labels.slice(-2).join('.');
   return (
     ['lovable.app', 'gpt-eng.com', 'gptengineer.run'].includes(domain) &&
-    (/^(?:id-preview|preview)(?:-[a-z0-9]+)?--.+$/.test(labels[0]) ||
-      /^project--.+-dev$/.test(labels[0]))
+    (/^(?:id-preview|preview)(?:-[a-z0-9]+)?--.+$/.test(label) ||
+      /^project--.+-dev$/.test(label))
   );
 }
 
