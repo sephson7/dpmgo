@@ -1,6 +1,6 @@
 # DPM - Go! roadmap
-- [ ] Strengthen SEO metadata, canonical URLs and sitemap without changing the rider UI.
-- [ ] Finish Google Search Console connection, verification and sitemap submission; request publishing approval for required changes.
+- [x] Strengthen SEO metadata, canonical URLs, structured data and route-aware sitemap without changing the rider UI; 145 tests pass and preview sitemap verified; publishing requested.
+- [ ] Finish Google Search Console verification and sitemap submission: linked account works; Google tag added; waiting for requested deployment to serve the tag and sitemap at dpmgo.app before verifying and submitting.
 - [x] Repair current GitHub lint/format checks and npm lock mismatch; lint, format, contrast, 142 tests and install dry-run pass locally; remote GitHub run awaits publishing.
 - [x] Add same-path stale-cache cleanup and preview guards; map, Quick Routes, station drawer and install guide checked on phone; existing-device cleanup awaits publishing.
 - [ ] Restore generated offline caching after the cache-cleanup release reaches returning devices (requires a later release).
