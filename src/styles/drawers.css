@@ -2,6 +2,18 @@
    THE STATION DRAWERS
    Wayfinding, timetables, sponsor slots and the dining list.
    ========================================================================== */
+.rider-report-summary { margin: 0 27px 16px; border-left: 2px solid var(--primary); padding: 4px 0 4px 10px; }
+.venue-directions-link { flex: none; width: 44px; height: 44px; min-width: 44px; }
+.restaurant-actions-box { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.anchor-btn-grid:has(.venue-directions-link) { grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; }
+.anchor-btn-grid .venue-directions-link { height: 100%; min-height: 44px; }
+@media (max-width: 480px) {
+  .restaurant-row-card:has(.venue-directions-link) { flex-wrap: wrap; }
+  .restaurant-row-card:has(.venue-directions-link) .restaurant-info-box { flex: 1; min-width: 160px; }
+  .restaurant-row-card:has(.venue-directions-link) .restaurant-actions-box { margin-left: auto; flex-direction: row; align-items: center; }
+  .anchor-btn-grid:has(.venue-directions-link) { grid-template-columns: 44px minmax(0, 1fr); }
+  .anchor-btn-grid:has(.venue-directions-link) .anchor-action-visit { grid-column: 1 / -1; }
+}
 .empty-search { padding: 20px; color: var(--muted-foreground); font-size: 12px; }
 .station-drawer, .detail-drawer { background: var(--panel); border: 1px solid var(--border); backdrop-filter: blur(30px); color: var(--foreground); max-height: min(85dvh, 690px); padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -15px 80px oklch(0 0 0 / 55%); }
 .station-drawer { max-width: 550px; margin: auto; }

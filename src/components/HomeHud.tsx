@@ -24,6 +24,7 @@ import {
 } from '@/data/riderFeedback';
 import { useStationAlert } from '@/hooks/useStationAlert';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { localNearestStation } from '@/data/nearestStation';
 
 import AlarmBanner from '@/components/hud/AlarmBanner';
 import ComplianceFooter from '@/components/hud/ComplianceFooter';
@@ -76,6 +77,9 @@ export default function HomeHud() {
   const preBoardingEstimate = useRef<RiderFeedbackContext | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [followUser, setFollowUser] = useState(false);
+  const [autoNearestId, setAutoNearestId] = useState<string | null>(null);
+  const autoSnapAttempted = useRef(false);
+  const manuallyNavigated = useRef(false);
 
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [dontShowWalkthroughAgain, setDontShowWalkthroughAgain] = useState(true);
@@ -157,6 +161,8 @@ export default function HomeHud() {
   // restaurant pin and the selected station) and fly back to the default
   // downtown overview.
   const handleResetMap = () => {
+    manuallyNavigated.current = true;
+    setAutoNearestId(null);
     setRestaurantId(null);
     setSelectedId(null);
     setActiveShortcut(null);
@@ -192,6 +198,17 @@ export default function HomeHud() {
     return () => {
       cancelled = true;
       navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+
+  // Any rider interaction takes precedence over the automatic first-location frame.
+  useEffect(() => {
+    const markManual = () => { manuallyNavigated.current = true; };
+    document.addEventListener('pointerdown', markManual, { capture: true, once: true });
+    document.addEventListener('keydown', markManual, { capture: true, once: true });
+    return () => {
+      document.removeEventListener('pointerdown', markManual, true);
+      document.removeEventListener('keydown', markManual, true);
     };
   }, []);
 
@@ -241,6 +258,18 @@ export default function HomeHud() {
   }, [peopleMover, qline]);
 
   const selected = allTransitStations.find((station) => station.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!userPos || !mapReady || autoSnapAttempted.current) return;
+    autoSnapAttempted.current = true;
+    if (manuallyNavigated.current || selectedId || activeShortcut || activeHowDoI || followUser) return;
+    const station = localNearestStation(userPos, activeStations);
+    if (!station) return;
+    setAutoNearestId(station.id);
+    window.dispatchEvent(new CustomEvent('dpm-map-flyto', {
+      detail: { center: station.coordinate, zoom: 16, pitch: 50, bearing: -20, targetName: `Nearest station · ${station.name}` },
+    }));
+  }, [userPos, mapReady, selectedId, activeShortcut, activeHowDoI, followUser, activeStations]);
 
   // Announce the selected stop for screen reader users. The map pins are
   // drawn on a canvas, so the station directory is the accessible route.
@@ -326,6 +355,8 @@ export default function HomeHud() {
   }, []);
 
   const openStation = (id: string) => {
+    manuallyNavigated.current = true;
+    setAutoNearestId(null);
     setRestaurantId(null);
     if (stationListOpen) {
       setStationListOpen(false);
@@ -447,7 +478,7 @@ export default function HomeHud() {
           <StationDirectoryPanel
             stations={activeStations}
             filtered={filtered}
-            selectedId={selectedId}
+            selectedId={selectedId ?? autoNearestId}
             onSelect={openStation}
             search={search}
             onSearch={setSearch}
@@ -495,7 +526,7 @@ export default function HomeHud() {
         onOpenChange={setStationListOpen}
         stations={activeStations}
         filtered={filtered}
-        selectedId={selectedId}
+        selectedId={selectedId ?? autoNearestId}
         onSelect={openStation}
         search={search}
         onSearch={setSearch}

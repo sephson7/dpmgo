@@ -32,6 +32,8 @@ import { getVenueLogo } from '@/components/venueLogo';
 import { useAnchorSlots } from '@/hooks/useAnchorSlots';
 import { trackSlot } from '@/hooks/trackSlot';
 import ArrivalEstimateNote from '@/components/dialogs/ArrivalEstimateNote';
+import RiderReportSummary from '@/components/drawers/RiderReportSummary';
+import VenueDirections from '@/components/drawers/VenueDirections';
 
 export type StationDrawerProps = {
   station: Station;
@@ -377,6 +379,7 @@ export default function StationDrawer({
       </div>
 
       {/* Station Anchor & Dining Section */}
+      {!isQLine && <RiderReportSummary stationId={station.id} />}
       <div className="dining-block">
         <div className="dining-section-header">
           <span className="dining-section-title">STATION ANCHOR &amp; DINING</span>
@@ -495,6 +498,7 @@ export default function StationDrawer({
                 </div>
                 <div className="restaurant-actions-box">
                   <span className="restaurant-price-indicator">{r.price}</span>
+                  <VenueDirections name={r.name} coordinate={r.coordinate} />
                   <a
                     href={r.url}
                     target="_blank"
@@ -646,6 +650,9 @@ function SponsorSlotCard({
         )}
 
         <div className="anchor-btn-grid">
+          {restaurants.some((restaurant) => restaurant.id === place.id) && (
+            <VenueDirections name={place.name} coordinate={place.coordinate} />
+          )}
           <button
             type="button"
             className={`anchor-action-btn ${isPinned ? 'active' : ''}`}
