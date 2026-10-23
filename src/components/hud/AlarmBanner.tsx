@@ -28,7 +28,7 @@ export default function AlarmBanner({
           ? `ARRIVING AT ${target.name.toUpperCase()}!`
           : `STOP ALARM: ${target.name} (~${distanceMiles?.toFixed(2) ?? '...'} mi)`}
       </span>
-      <button type="button" onClick={onCancel} className="alarm-cancel-btn" title="Cancel alert">
+      <button type="button" onClick={onCancel} className="alarm-cancel-btn" title="Cancel alert" aria-label="Cancel alert">
         <BellOff size={13} />
       </button>
     </div>

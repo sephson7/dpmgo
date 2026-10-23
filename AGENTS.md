@@ -42,3 +42,4 @@
 - Hold a station slot for 30 minutes once a checkout starts, and block resale while a paid purchase awaits review, in `src/lib/slotExclusivity.ts` and `src/routes/api.checkout.ts`, so two merchants can never pay for the same slot.
 - Use a shared browser-safe walking URL helper with explicit walking mode and iOS detection; omit directions for sponsors without verified venue coordinates.
 - Keep the one-time local GPS frame separate from drawer selection and manual origins; yield to rider interaction so automatic framing never interrupts navigation.
+- Derive sitemap URLs from required route decisions; exclude checkout, redirects, admin and APIs, and omit invented lastmod dates.

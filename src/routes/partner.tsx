@@ -50,7 +50,10 @@ export const Route = createFileRoute('/partner')({
       },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
+      { name: 'robots', content: 'noindex, follow' },
+      { property: 'og:url', content: 'https://dpmgo.app/partner' },
     ],
+    links: [{ rel: 'canonical', href: 'https://dpmgo.app/partner' }],
   }),
   component: PartnerPage,
 });
