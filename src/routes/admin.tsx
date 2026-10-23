@@ -117,6 +117,20 @@ function AdminPortal() {
     setExcluded(isAnalyticsExcluded());
   }, [load]);
 
+  // The first sign-in on a device excludes it from rider counts; the toggle
+  // can turn it back on afterwards.
+  useEffect(() => {
+    if (!signedIn) return;
+    try {
+      if (localStorage.getItem('dpmgo_admin_device')) return;
+      localStorage.setItem('dpmgo_admin_device', '1');
+    } catch {
+      return;
+    }
+    setAnalyticsExcluded(true);
+    setExcluded(true);
+  }, [signedIn]);
+
   // Poll for new paid purchases while signed in, so a confirmed payment shows
   // up for review without a manual reload.
   useEffect(() => {
