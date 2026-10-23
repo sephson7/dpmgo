@@ -9,6 +9,8 @@
 // JSON file and then to memory, so nothing breaks before the namespace is set
 // up.
 
+import type { CheckoutHold } from "@/lib/slotExclusivity";
+
 export type AnchorLeadStatus = 'pending' | 'approved' | 'rejected';
 
 export type AnchorLead = {
@@ -315,4 +317,29 @@ export async function setLeadStatus(
     await kv.put(`${LEAD_PREFIX}${id}`, JSON.stringify(lead));
   }
   return lead;
+}
+
+/* --------------------------------------------------------- checkout holds */
+
+const HOLD_PREFIX = 'anchor:hold:';
+const memoryHolds = new Map<string, CheckoutHold>();
+
+/** Every checkout hold, expired ones included (callers filter by time). */
+export async function listCheckoutHolds(context?: unknown): Promise<CheckoutHold[]> {
+  const kv = kvBinding(context);
+  if (!kv) return [...memoryHolds.values()];
+  const keys = await listKeys(kv, HOLD_PREFIX);
+  const values = await Promise.all(keys.map((key) => kv.get(key, 'text')));
+  return values.filter((v): v is string => Boolean(v)).map((v) => JSON.parse(v) as CheckoutHold);
+}
+
+/** Records a hold, one key per station and slot. */
+export async function putCheckoutHold(hold: CheckoutHold, context?: unknown): Promise<void> {
+  const id = `${hold.stationId}:${hold.slot}`;
+  const kv = kvBinding(context);
+  if (!kv) {
+    memoryHolds.set(id, hold);
+    return;
+  }
+  await kv.put(`${HOLD_PREFIX}${id}`, JSON.stringify(hold));
 }

@@ -62,3 +62,39 @@ export function formatTermEnd(end: Date): string {
     day: 'numeric',
   });
 }
+
+/** A started checkout that reserves a slot until it expires. */
+export type CheckoutHold = {
+  stationId: string;
+  slot: 1 | 2;
+  sessionId: string;
+  expiresAt: string;
+};
+
+/** A live checkout hold on this slot, if another buyer is mid-payment. */
+export function activeCheckoutHold(
+  holds: readonly CheckoutHold[],
+  stationId: string,
+  slot: 1 | 2,
+  now: Date = new Date(),
+): CheckoutHold | null {
+  return (
+    holds.find(
+      (h) =>
+        h.stationId === stationId &&
+        h.slot === slot &&
+        new Date(h.expiresAt).getTime() > now.getTime(),
+    ) ?? null
+  );
+}
+
+/** A paid purchase still awaiting admin review blocks a second sale of the slot. */
+export function pendingPurchase<
+  T extends { stationId: string; slot: 1 | 2; status: string; sessionId?: string },
+>(leads: readonly T[], stationId: string, slot: 1 | 2): T | null {
+  return (
+    leads.find(
+      (l) => l.stationId === stationId && l.slot === slot && l.status === 'pending' && l.sessionId,
+    ) ?? null
+  );
+}
