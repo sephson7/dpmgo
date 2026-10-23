@@ -1,3 +1,4 @@
+import { MERCHANT_AGREEMENT_VERSION } from '@/data/merchantAgreement';
 import { describe, expect, it } from 'vitest';
 import {
   PARTNER_PATH,
@@ -18,6 +19,8 @@ const validBody = {
   contactName: 'Sam Carter',
   email: 'sam@lafayette.example',
   deal: '10% off with People Mover ride proof',
+  agreementAccepted: true,
+  agreementVersion: MERCHANT_AGREEMENT_VERSION,
 };
 
 describe('the partner checkout request', () => {

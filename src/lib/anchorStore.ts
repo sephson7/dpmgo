@@ -35,6 +35,10 @@ export type AnchorLead = {
   receiptTransport?: string;
   /** What was actually charged, in cents. */
   paidAmountCents?: number;
+  /** The merchant agreement version accepted before payment. */
+  agreementVersion?: string;
+  /** When the merchant accepted it. */
+  agreementAcceptedAt?: string;
 };
 export type AnchorAssignment = {
   stationId: string;
@@ -47,6 +51,8 @@ export type AnchorAssignment = {
   rotation?: string;
   leadId: string;
   assignedAt: string;
+  /** When an annual exclusive term ends; the slot cannot be resold before. */
+  termEndsAt?: string;
 };
 
 export type AnchorStoreShape = {
