@@ -8,6 +8,13 @@
       "when": 1792771345943,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792777832533,
+      "tag": "0001_public_rider_report_summary",
+      "breakpoints": true
     }
   ]
 }
