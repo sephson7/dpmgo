@@ -7,6 +7,7 @@ import { parkedMoverTrains, simulatedMoverTrains, moverFleetElapsed } from '@/da
 import { parkedQlineTrain, scheduledQlineTrains } from '@/data/qlineSimulation';
 import { parkingGarages } from '@/data/parking';
 import { qlineNorthboundShape, qlineSouthboundShape } from '@/data/qlineShape';
+import { landmarkModels } from '@/data/landmarks3d';
 import {
   peopleMoverShape,
   peopleMoverStations,
@@ -156,6 +157,35 @@ export default function TransitMap({
         });
       } catch {
         /* Some satellite styles do not expose composite extrusions */
+      }
+
+      // Prototype landmark models (Renaissance Center, Huntington Place)
+      try {
+        map.addSource('dpm-landmarks', { type: 'geojson', data: landmarkModels });
+        map.addLayer({
+          id: 'dpm-landmarks-3d',
+          type: 'fill-extrusion',
+          source: 'dpm-landmarks',
+          minzoom: 13.5,
+          paint: {
+            'fill-extrusion-color': ['get', 'color'],
+            'fill-extrusion-height': ['get', 'height'],
+            'fill-extrusion-base': ['get', 'base'],
+            'fill-extrusion-opacity': 0.96,
+            'fill-extrusion-vertical-gradient': true,
+            'fill-extrusion-emissive-strength': [
+              'match',
+              ['get', 'part'],
+              'glow',
+              1,
+              'glass',
+              0.35,
+              0.1,
+            ],
+          },
+        });
+      } catch {
+        /* Landmark prototype is decorative; the map works without it */
       }
 
       // Transit Lines
