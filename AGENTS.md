@@ -43,3 +43,4 @@
 - Use a shared browser-safe walking URL helper with explicit walking mode and iOS detection; omit directions for sponsors without verified venue coordinates.
 - Keep the one-time local GPS frame separate from drawer selection and manual origins; yield to rider interaction so automatic framing never interrupts navigation.
 - Derive sitemap URLs from required route decisions; exclude checkout, redirects, admin and APIs, and omit invented lastmod dates.
+- Keep 3D landmark models as plain map geometry in `src/data/landmarks3d.ts` (no extra 3D library or model download), so the corridor stays light on phones.
