@@ -1,6 +1,7 @@
 # DPM - Go! roadmap
+- [x] Correct the partnership heading; browser verification and 10 relevant tests pass. Current Google inspection confirms submitted/indexed status, successful crawl and primary-domain canonical; the older discovery finding awaits scanner reconciliation, not another indexing request.
 - [x] Strengthen SEO metadata, canonical URLs, structured data and route-aware sitemap without changing the rider UI; 145 tests pass and preview sitemap verified; publishing requested.
-- [ ] Finish Google Search Console verification and sitemap submission: linked account works; Google tag added; waiting for requested deployment to serve the tag and sitemap at dpmgo.app before verifying and submitting.
+- [x] Finish Google Search Console verification and sitemap submission: current Search Console inspection reports the homepage submitted and indexed, with the primary domain canonical and sitemap recognized.
 - [x] Repair current GitHub lint/format checks and npm lock mismatch; lint, format, contrast, 142 tests and install dry-run pass locally; remote GitHub run awaits publishing.
 - [x] Add same-path stale-cache cleanup and preview guards; map, Quick Routes, station drawer and install guide checked on phone; existing-device cleanup awaits publishing.
 - [ ] Restore generated offline caching after the cache-cleanup release reaches returning devices (requires a later release).
