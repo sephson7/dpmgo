@@ -1,5 +1,5 @@
 # DPM - Go! roadmap
-- [ ] Correct the partnership heading and verify the checkout page; review the Google discovery finding using current Search Console evidence.
+- [x] Correct the partnership heading; browser verification and 10 relevant tests pass. Current Google inspection confirms submitted/indexed status, successful crawl and primary-domain canonical; the older discovery finding awaits scanner reconciliation, not another indexing request.
 - [x] Strengthen SEO metadata, canonical URLs, structured data and route-aware sitemap without changing the rider UI; 145 tests pass and preview sitemap verified; publishing requested.
 - [x] Finish Google Search Console verification and sitemap submission: current Search Console inspection reports the homepage submitted and indexed, with the primary domain canonical and sitemap recognized.
 - [x] Repair current GitHub lint/format checks and npm lock mismatch; lint, format, contrast, 142 tests and install dry-run pass locally; remote GitHub run awaits publishing.
