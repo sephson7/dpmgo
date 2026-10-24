@@ -271,7 +271,7 @@ function PartnerPage() {
             DPM
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-wider text-cyan-400">DPM - Go!</h1>
+            <p className="text-lg font-bold tracking-wider text-cyan-400">DPM - Go!</p>
             <p className="text-xs text-slate-400 tracking-wide">MOTORCITY AUTOMATED SYSTEMS</p>
           </div>
         </div>
@@ -304,9 +304,9 @@ function PartnerPage() {
             <span className="text-xs font-mono font-bold tracking-wider text-cyan-400 uppercase">
               Partner Order Received
             </span>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white mt-1 mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mt-1 mb-2">
               Station Anchor Secured
-            </h2>
+            </h1>
 
             {stationName && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950 border border-cyan-400/40 text-cyan-300 text-xs font-mono mb-4">
@@ -377,9 +377,9 @@ function PartnerPage() {
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[11px] font-mono tracking-wider text-cyan-300 uppercase mb-3">
                 <Sparkles size={12} /> Downtown Commercial Program
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-2">
-                Station Anchor Partnership
-              </h2>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-2">
+                Detroit Station Anchor Partnership
+              </h1>
               <p className="text-gray-400 text-sm">
                 Secure top-tier prominence on Detroit's dedicated 3D transit HUD.
               </p>
