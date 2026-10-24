@@ -1,23 +1,23 @@
-import * as React from 'react'
-import { createAuthEmailHandler } from '@lovable.dev/email-js'
-import { createFileRoute } from '@tanstack/react-router'
-import { SignupEmail } from '@/lib/email-templates/signup'
-import { InviteEmail } from '@/lib/email-templates/invite'
-import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
-import { RecoveryEmail } from '@/lib/email-templates/recovery'
-import { EmailChangeEmail } from '@/lib/email-templates/email-change'
-import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import * as React from 'react';
+import { createAuthEmailHandler } from '@lovable.dev/email-js';
+import { createFileRoute } from '@tanstack/react-router';
+import { SignupEmail } from '@/lib/email-templates/signup';
+import { InviteEmail } from '@/lib/email-templates/invite';
+import { MagicLinkEmail } from '@/lib/email-templates/magic-link';
+import { RecoveryEmail } from '@/lib/email-templates/recovery';
+import { EmailChangeEmail } from '@/lib/email-templates/email-change';
+import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication';
 
 // Configuration
-const SITE_NAME = "DPM - Go!"
-const SENDER_DOMAIN = "support.dpmgo.app"
-const ROOT_DOMAIN = "dpmgo.app"
-const FROM_DOMAIN = "dpmgo.app"
-const SITE_URL = `https://${ROOT_DOMAIN}`
+const SITE_NAME = 'DPM - Go!';
+const SENDER_DOMAIN = 'support.dpmgo.app';
+const ROOT_DOMAIN = 'dpmgo.app';
+const FROM_DOMAIN = 'dpmgo.app';
+const SITE_URL = `https://${ROOT_DOMAIN}`;
 
 // The SDK handler owns verification, dispatch, and retry semantics; this file
 // owns only the email decisions: subjects, templates, and per-type props.
-export const Route = createFileRoute("/lovable/email/auth/webhook")({
+export const Route = createFileRoute('/lovable/email/auth/webhook')({
   staticData: { sitemap: false },
   server: {
     handlers: {
@@ -80,9 +80,9 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
             },
           },
-        })
-        return handler(request)
+        });
+        return handler(request);
       },
     },
   },
-})
+});
