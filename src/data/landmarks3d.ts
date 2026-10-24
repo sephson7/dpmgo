@@ -8,7 +8,13 @@ import type { Coordinate } from './transit';
  */
 export type LandmarkPart = 'body' | 'glass' | 'glow';
 
-type PartProps = { landmark: string; part: LandmarkPart; height: number; base: number; color: string };
+type PartProps = {
+  landmark: string;
+  part: LandmarkPart;
+  height: number;
+  base: number;
+  color: string;
+};
 
 const M_PER_DEG_LAT = 111_320;
 const mPerDegLng = (lat: number) => M_PER_DEG_LAT * Math.cos((lat * Math.PI) / 180);
@@ -41,8 +47,16 @@ function rect(center: Coordinate, width: number, depth: number, angleDeg = 0): C
   return [...corners, corners[0] as Coordinate];
 }
 
-function part(ring: Coordinate[], props: PartProps, hole?: Coordinate[]): GeoJSON.Feature<GeoJSON.Polygon, PartProps> {
-  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: hole ? [ring, [...hole].reverse()] : [ring] }, properties: props };
+function part(
+  ring: Coordinate[],
+  props: PartProps,
+  hole?: Coordinate[],
+): GeoJSON.Feature<GeoJSON.Polygon, PartProps> {
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: hole ? [ring, [...hole].reverse()] : [ring] },
+    properties: props,
+  };
 }
 
 const BODY = '#1b2733';
@@ -81,7 +95,13 @@ function huntingtonPlace(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
   const id = 'huntington-place';
   const angle = 21; // aligned with the downtown street grid
   return [
-    part(rect(c, 230, 330, angle), { landmark: id, part: 'body', height: 26, base: 0, color: BODY }),
+    part(rect(c, 230, 330, angle), {
+      landmark: id,
+      part: 'body',
+      height: 26,
+      base: 0,
+      color: BODY,
+    }),
     part(rect(offset(c, 0, 10), 150, 240, angle), {
       landmark: id,
       part: 'body',
