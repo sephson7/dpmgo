@@ -41,8 +41,8 @@ function rect(center: Coordinate, width: number, depth: number, angleDeg = 0): C
   return [...corners, corners[0] as Coordinate];
 }
 
-function part(ring: Coordinate[], props: PartProps): GeoJSON.Feature<GeoJSON.Polygon, PartProps> {
-  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: props };
+function part(ring: Coordinate[], props: PartProps, hole?: Coordinate[]): GeoJSON.Feature<GeoJSON.Polygon, PartProps> {
+  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: hole ? [ring, [...hole].reverse()] : [ring] }, properties: props };
 }
 
 const BODY = '#1b2733';
@@ -77,7 +77,7 @@ function renaissanceCenter(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
 
 /** Huntington Place: long riverfront convention hall with a raised roof deck and glass atrium. */
 function huntingtonPlace(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
-  const c: Coordinate = [-83.05165, 42.32745];
+  const c: Coordinate = [-83.0476, 42.3267];
   const id = 'huntington-place';
   const angle = 21; // hall runs along the river, rotated off true east-west
   return [
@@ -96,13 +96,11 @@ function huntingtonPlace(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
       base: 0,
       color: GLASS,
     }),
-    part(rect(offset(c, 0, -2), 424, 194, angle), {
-      landmark: id,
-      part: 'glow',
-      height: 27.5,
-      base: 26,
-      color: GOLD,
-    }),
+    part(
+      rect(c, 424, 194, angle),
+      { landmark: id, part: 'glow', height: 27, base: 25, color: GOLD },
+      rect(c, 410, 180, angle),
+    ),
   ];
 }
 
