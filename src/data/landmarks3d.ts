@@ -77,7 +77,7 @@ function renaissanceCenter(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
 
 /** Huntington Place: long riverfront convention hall with a raised roof deck and glass atrium. */
 function huntingtonPlace(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
-  const c: Coordinate = [-83.0507, 42.3264];
+  const c: Coordinate = [-83.0501, 42.3265];
   const id = 'huntington-place';
   const angle = 21; // aligned with the downtown street grid
   return [
