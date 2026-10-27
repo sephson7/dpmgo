@@ -1,5 +1,5 @@
 import type * as GeoJSON from 'geojson';
-import { popularHotels, sportsVenues, type Coordinate } from './transit';
+import { popularHotels, destinationShortcuts, type Coordinate } from './transit';
 
 /**
  * Prototype landmark models, built from plain geometry so the map downloads
@@ -120,7 +120,7 @@ function huntingtonPlace(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
 
 /** Shared venue coordinates keep the architectural model and navigation pin together. */
 function venueCenter(id: string): Coordinate {
-  const venue = [...popularHotels, ...sportsVenues].find((candidate) => candidate.id === id);
+  const venue = [...popularHotels, ...destinationShortcuts].find((candidate) => candidate.id === id);
   if (!venue) throw new Error(`Missing landmark venue: ${id}`);
   return venue.coordinate;
 }

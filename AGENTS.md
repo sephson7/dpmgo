@@ -20,9 +20,7 @@
 - Keep People Mover drawer estimates in a browser-safe pure module: the first uses the shared fleet clock, while a clearly labeled follow-up planning window is distinct from vehicle predictions and omitted near service close, so presentation limits never falsify fleet positions or agency departures.
 - Gate the QLINE streetcar through the official published hours (Mon-Sat 8:00 AM to midnight, Sun 8:00 AM to 9:00 PM) in `src/data/qlineSchedule.ts`.
 - Measure the QLINE headway per direction, because Congress St is a terminus whose departure list holds both directions; a gap measured on the mixed list reports half the real headway.
-- Treat the QLINE GTFS feed as the source of trip geometry and run times only; its calendar expired on 2025-12-31, so the published operating hours and the per-direction headway are the authority for when the line runs and how often.
-- Drive QLINE times, run times and street geometry from the bundled agency GTFS feed (`npm run build:qline`), and fall back to the published hours whenever the feed has no service for the date instead of showing stale times.
-- Place the QLINE streetcar with the published timetable, not a free running cycle: reconstruct the trips from the feed's per-stop departure times, index them by the canonical station order because the feed lists a service's stops in that service's own order, and roll the published daily pattern forward once the feed calendar expires.
+- Use bundled QLINE GTFS (`npm run build:qline`) for geometry and per-stop trip times in canonical station order, never a free-running cycle; its calendar expired 2025-12-31, so roll the daily pattern forward under published hours and per-direction headways rather than showing stale service.
 - Compute vehicle bearings from the current simulation segment and use map-aligned symbols so train icons follow the track through camera rotation and pitch.
 - Keep station drawers to a strict two-slot architecture: slot 1 is an annual partner, slot 2 rotates. Slot holders are never repeated in the standard restaurant list.
 - Server-price checkout; slot 1 is annual-only, slot 2 allows either plan. Reject mismatches and never restore client pricing tables.
@@ -43,4 +41,4 @@
 - Use a shared browser-safe walking URL helper with explicit walking mode and iOS detection; omit directions for sponsors without verified venue coordinates.
 - Keep the one-time local GPS frame separate from drawer selection and manual origins; yield to rider interaction so automatic framing never interrupts navigation.
 - Derive sitemap URLs from required route decisions; exclude checkout, redirects, admin and APIs, and omit invented lastmod dates.
-- Keep 3D landmark models as plain map geometry in `src/data/landmarks3d.ts` (no extra 3D library or model download), so the corridor stays light on phones.
+- Keep 3D landmarks in `src/data/landmarks3d.ts` as approximate native map geometry without model downloads; reuse venue anchors, CSS material tokens, and narrowly exclude contained stock footprints to keep the corridor lean and avoid doubled buildings.
