@@ -7,7 +7,7 @@ import { parkedMoverTrains, simulatedMoverTrains, moverFleetElapsed } from '@/da
 import { parkedQlineTrain, scheduledQlineTrains } from '@/data/qlineSimulation';
 import { parkingGarages } from '@/data/parking';
 import { qlineNorthboundShape, qlineSouthboundShape } from '@/data/qlineShape';
-import { landmarkModels } from '@/data/landmarks3d';
+import { landmarkModels, landmarkFootprints } from '@/data/landmarks3d';
 import {
   peopleMoverShape,
   peopleMoverStations,
@@ -124,12 +124,30 @@ export default function TransitMap({
     };
 
     map.on('load', () => {
+      // Resolve CSS tokens to sRGB for Mapbox's paint expressions.
+      const tokenColor = (token: string) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const context = canvas.getContext('2d');
+        if (!context) return 'transparent';
+        context.fillStyle = getComputedStyle(document.documentElement)
+          .getPropertyValue(token)
+          .trim();
+        context.fillRect(0, 0, 1, 1);
+        const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+        return `rgb(${r}, ${g}, ${b})`;
+      };
       try {
         map.addLayer({
           id: 'dpm-3d-buildings',
           source: 'composite',
           'source-layer': 'building',
-          filter: ['==', 'extrude', 'true'],
+          filter: [
+            'all',
+            ['==', ['get', 'extrude'], 'true'],
+            ['!', ['within', landmarkFootprints]],
+          ],
           type: 'fill-extrusion',
           minzoom: 14,
           paint: {
@@ -159,7 +177,7 @@ export default function TransitMap({
         /* Some satellite styles do not expose composite extrusions */
       }
 
-      // Prototype landmark models (Renaissance Center, Huntington Place)
+      // Lightweight landmark silhouettes; no textures or additional model downloads.
       try {
         map.addSource('dpm-landmarks', { type: 'geojson', data: landmarkModels });
         map.addLayer({
@@ -168,7 +186,21 @@ export default function TransitMap({
           source: 'dpm-landmarks',
           minzoom: 13.5,
           paint: {
-            'fill-extrusion-color': ['get', 'color'],
+            'fill-extrusion-color': [
+              'match',
+              ['get', 'part'],
+              'glass',
+              tokenColor('--map-landmark-glass'),
+              'stone',
+              tokenColor('--map-landmark-stone'),
+              'roof',
+              tokenColor('--map-landmark-roof'),
+              'glow',
+              tokenColor('--primary'),
+              'warm',
+              tokenColor('--warm'),
+              tokenColor('--map-landmark-body'),
+            ],
             'fill-extrusion-height': ['get', 'height'],
             'fill-extrusion-base': ['get', 'base'],
             'fill-extrusion-opacity': 0.96,
@@ -178,6 +210,8 @@ export default function TransitMap({
               ['get', 'part'],
               'glow',
               1,
+              'warm',
+              0.65,
               'glass',
               0.35,
               0.1,
@@ -326,20 +360,6 @@ export default function TransitMap({
         }
       }
       map.addImage('train-rectangle', { width: 20, height: 10, data: pixels }, { sdf: true });
-
-      const tokenColor = (token: string) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        const context = canvas.getContext('2d');
-        if (!context) return 'transparent';
-        context.fillStyle = getComputedStyle(document.documentElement)
-          .getPropertyValue(token)
-          .trim();
-        context.fillRect(0, 0, 1, 1);
-        const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
-        return `rgb(${r}, ${g}, ${b})`;
-      };
 
       map.addSource('qline-vehicle', { type: 'geojson', data: qlineData(new Date()) });
       for (const [id, color] of [

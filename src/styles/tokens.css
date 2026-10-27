@@ -27,4 +27,8 @@
   --destructive: oklch(0.64 0.19 25); --border: oklch(0.88 0.15 195 / 22%);
   --input: oklch(0.88 0.15 195 / 22%); --panel: oklch(0.16 0.022 257 / 88%);
   --warm: oklch(0.83 0.12 67);
+  --map-landmark-body: #1b2733;
+  --map-landmark-glass: #426779;
+  --map-landmark-stone: #887d70;
+  --map-landmark-roof: #687b83;
 }
