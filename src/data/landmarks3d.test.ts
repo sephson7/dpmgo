@@ -5,8 +5,12 @@ import { landmarkModels, landmarkFootprints } from './landmarks3d';
 describe('lightweight landmark geometry', () => {
   it('includes the original prototypes and four additional venue silhouettes', () => {
     expect([...new Set(landmarkModels.features.map((f) => f.properties.landmark))]).toEqual([
-      'renaissance-center', 'huntington-place', 'little-caesars-arena',
-      'ford-field', 'book-cadillac', 'david-whitney',
+      'renaissance-center',
+      'huntington-place',
+      'little-caesars-arena',
+      'ford-field',
+      'book-cadillac',
+      'david-whitney',
     ]);
     expect(landmarkFootprints.coordinates).toHaveLength(6);
   });

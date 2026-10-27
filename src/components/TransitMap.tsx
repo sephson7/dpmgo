@@ -131,7 +131,9 @@ export default function TransitMap({
         canvas.height = 1;
         const context = canvas.getContext('2d');
         if (!context) return 'transparent';
-        context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+        context.fillStyle = getComputedStyle(document.documentElement)
+          .getPropertyValue(token)
+          .trim();
         context.fillRect(0, 0, 1, 1);
         const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
         return `rgb(${r}, ${g}, ${b})`;
@@ -141,7 +143,11 @@ export default function TransitMap({
           id: 'dpm-3d-buildings',
           source: 'composite',
           'source-layer': 'building',
-          filter: ['all', ['==', ['get', 'extrude'], 'true'], ['!', ['within', landmarkFootprints]]],
+          filter: [
+            'all',
+            ['==', ['get', 'extrude'], 'true'],
+            ['!', ['within', landmarkFootprints]],
+          ],
           type: 'fill-extrusion',
           minzoom: 14,
           paint: {
@@ -181,12 +187,18 @@ export default function TransitMap({
           minzoom: 13.5,
           paint: {
             'fill-extrusion-color': [
-              'match', ['get', 'part'],
-              'glass', tokenColor('--map-landmark-glass'),
-              'stone', tokenColor('--map-landmark-stone'),
-              'roof', tokenColor('--map-landmark-roof'),
-              'glow', tokenColor('--primary'),
-              'warm', tokenColor('--warm'),
+              'match',
+              ['get', 'part'],
+              'glass',
+              tokenColor('--map-landmark-glass'),
+              'stone',
+              tokenColor('--map-landmark-stone'),
+              'roof',
+              tokenColor('--map-landmark-roof'),
+              'glow',
+              tokenColor('--primary'),
+              'warm',
+              tokenColor('--warm'),
               tokenColor('--map-landmark-body'),
             ],
             'fill-extrusion-height': ['get', 'height'],

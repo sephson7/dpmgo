@@ -120,7 +120,9 @@ function huntingtonPlace(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
 
 /** Shared venue coordinates keep the architectural model and navigation pin together. */
 function venueCenter(id: string): Coordinate {
-  const venue = [...popularHotels, ...destinationShortcuts].find((candidate) => candidate.id === id);
+  const venue = [...popularHotels, ...destinationShortcuts].find(
+    (candidate) => candidate.id === id,
+  );
   if (!venue) throw new Error(`Missing landmark venue: ${id}`);
   return venue.coordinate;
 }
@@ -134,10 +136,16 @@ function littleCaesarsArena(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
     part(rect(c, 151, 173, 21), { landmark, part: 'roof', height: 32, base: 19 }),
     part(rect(c, 125, 147, 21), { landmark, part: 'roof', height: 39, base: 32 }),
     part(rect(offset(c, 76, 12), 18, 147, 21), {
-      landmark, part: 'glass', height: 18, base: 0,
+      landmark,
+      part: 'glass',
+      height: 18,
+      base: 0,
     }),
-    part(rect(c, 189, 209, 21), { landmark, part: 'warm', height: 20, base: 19 },
-      rect(c, 177, 197, 21)),
+    part(
+      rect(c, 189, 209, 21),
+      { landmark, part: 'warm', height: 20, base: 19 },
+      rect(c, 177, 197, 21),
+    ),
   ];
 }
 
@@ -150,7 +158,10 @@ function fordField(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
     part(rect(c, 192, 163, 21), { landmark, part: 'roof', height: 35, base: 23 }),
     part(rect(c, 161, 128, 21), { landmark, part: 'roof', height: 43, base: 35 }),
     part(rect(offset(c, 0, -83), 166, 20, 21), {
-      landmark, part: 'glass', height: 22, base: 0,
+      landmark,
+      part: 'glass',
+      height: 22,
+      base: 0,
     }),
   ];
 }
@@ -181,20 +192,33 @@ function davidWhitney(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
   const landmark = 'david-whitney';
   return [
     part(rect(c, 43, 37, 21), { landmark, part: 'stone', height: 15, base: 0 }),
-    part(rect(c, 41, 35, 21), { landmark, part: 'stone', height: 75, base: 15 },
-      rect(c, 16, 14, 21)),
-    part(rect(c, 43, 37, 21), { landmark, part: 'warm', height: 77, base: 75 },
-      rect(c, 16, 14, 21)),
-    part(rect(c, 39, 33, 21), { landmark, part: 'roof', height: 83, base: 77 },
-      rect(c, 16, 14, 21)),
+    part(
+      rect(c, 41, 35, 21),
+      { landmark, part: 'stone', height: 75, base: 15 },
+      rect(c, 16, 14, 21),
+    ),
+    part(
+      rect(c, 43, 37, 21),
+      { landmark, part: 'warm', height: 77, base: 75 },
+      rect(c, 16, 14, 21),
+    ),
+    part(
+      rect(c, 39, 33, 21),
+      { landmark, part: 'roof', height: 83, base: 77 },
+      rect(c, 16, 14, 21),
+    ),
   ];
 }
 
 export const landmarkModels: GeoJSON.FeatureCollection<GeoJSON.Polygon, PartProps> = {
   type: 'FeatureCollection',
   features: [
-    ...renaissanceCenter(), ...huntingtonPlace(), ...littleCaesarsArena(),
-    ...fordField(), ...bookCadillac(), ...davidWhitney(),
+    ...renaissanceCenter(),
+    ...huntingtonPlace(),
+    ...littleCaesarsArena(),
+    ...fordField(),
+    ...bookCadillac(),
+    ...davidWhitney(),
   ],
 };
 
@@ -202,7 +226,10 @@ export const landmarkModels: GeoJSON.FeatureCollection<GeoJSON.Polygon, PartProp
 export const landmarkFootprints: GeoJSON.MultiPolygon = {
   type: 'MultiPolygon',
   coordinates: landmarkModels.features
-    .filter((feature, index, features) =>
-      features.findIndex((other) => other.properties.landmark === feature.properties.landmark) === index)
+    .filter(
+      (feature, index, features) =>
+        features.findIndex((other) => other.properties.landmark === feature.properties.landmark) ===
+        index,
+    )
     .map((feature) => feature.geometry.coordinates),
 };
