@@ -1,5 +1,5 @@
 import type * as GeoJSON from 'geojson';
-import type { Coordinate } from './transit';
+import { popularHotels, sportsVenues, type Coordinate } from './transit';
 
 /**
  * Prototype landmark models, built from plain geometry so the map downloads
@@ -13,7 +13,6 @@ type PartProps = {
   part: LandmarkPart;
   height: number;
   base: number;
-  color: string;
 };
 
 const M_PER_DEG_LAT = 111_320;
@@ -30,21 +29,24 @@ export function circle(center: Coordinate, radius: number, sides = 28): Coordina
     const a = (i / sides) * Math.PI * 2;
     ring.push(offset(center, Math.cos(a) * radius, Math.sin(a) * radius));
   }
-  ring.push(ring[0] as Coordinate);
+  const first = ring[0];
+  if (first) ring.push(first);
   return ring;
 }
 
 function rect(center: Coordinate, width: number, depth: number, angleDeg = 0): Coordinate[] {
   const a = (angleDeg * Math.PI) / 180;
-  const corners = [
+  const vertices: Coordinate[] = [
     [-width / 2, -depth / 2],
     [width / 2, -depth / 2],
     [width / 2, depth / 2],
     [-width / 2, depth / 2],
-  ].map(([x, y]) =>
-    offset(center, x! * Math.cos(a) - y! * Math.sin(a), x! * Math.sin(a) + y! * Math.cos(a)),
+  ];
+  const corners = vertices.map(([x, y]) =>
+    offset(center, x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)),
   );
-  return [...corners, corners[0] as Coordinate];
+  const first = corners[0];
+  return first ? [...corners, first] : corners;
 }
 
 function part(
@@ -58,11 +60,6 @@ function part(
     properties: props,
   };
 }
-
-const BODY = '#1b2733';
-const GLASS = '#2f4a5c';
-const CYAN = '#00f0ff';
-const GOLD = '#ffbb70';
 
 /** GM Renaissance Center: 222 m central cylinder ringed by four 158 m towers on a podium. */
 function renaissanceCenter(): GeoJSON.Feature<GeoJSON.Polygon, PartProps>[] {
