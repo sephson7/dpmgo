@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import FloatingArrivalPills from '@/components/hud/FloatingArrivalPills';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type * as GeoJSON from 'geojson';
@@ -8,7 +7,6 @@ import { parkedMoverTrains, simulatedMoverTrains, moverFleetElapsed } from '@/da
 import { parkedQlineTrain, scheduledQlineTrains } from '@/data/qlineSimulation';
 import { parkingGarages } from '@/data/parking';
 import { qlineNorthboundShape, qlineSouthboundShape } from '@/data/qlineShape';
-import { landmarkModels, landmarkFootprints } from '@/data/landmarks3d';
 import {
   peopleMoverShape,
   peopleMoverStations,
@@ -70,7 +68,6 @@ export default function TransitMap({
 }: TransitMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const [loadedMap, setLoadedMap] = useState<mapboxgl.Map | null>(null);
   const onSelectRef = useRef(onSelect);
   const onReadyRef = useRef(onReady);
   const enabledRef = useRef({ peopleMover, qline, parking });
@@ -109,68 +106,29 @@ export default function TransitMap({
     );
 
     let frame = 0;
-    const addLine = (
-      id: string,
-      data: GeoJSON.FeatureCollection,
-      color: string,
-      core: string,
-      width: number,
-    ) => {
+    const addLine = (id: string, data: GeoJSON.FeatureCollection, color: string, width: number) => {
       map.addSource(id, { type: 'geojson', data });
-      for (const [suffix, scale, opacity, blur] of [
-        ['-halo', 5, 0.2, 7],
-        ['-glow', 2.5, 0.45, 2.5],
-        ['', 1, 1, 0],
-        ['-core', 0.3, 0.95, 0],
-      ] as const) {
-        map.addLayer({
-          id: `${id}${suffix}`,
-          type: 'line',
-          source: id,
-          layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: {
-            'line-color': suffix === '-core' ? core : color,
-            'line-width': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              12,
-              width * scale * 0.5,
-              17,
-              width * scale,
-            ],
-            'line-opacity': opacity,
-            'line-blur': blur,
-          },
-        });
-      }
+      map.addLayer({
+        id,
+        type: 'line',
+        source: id,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': color,
+          'line-width': width,
+          'line-opacity': 0.95,
+          'line-blur': 0.35,
+        },
+      });
     };
 
     map.on('load', () => {
-      // Resolve CSS tokens to sRGB for Mapbox's paint expressions.
-      const tokenColor = (token: string) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        const context = canvas.getContext('2d');
-        if (!context) return 'transparent';
-        context.fillStyle = getComputedStyle(document.documentElement)
-          .getPropertyValue(token)
-          .trim();
-        context.fillRect(0, 0, 1, 1);
-        const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
-        return `rgb(${r}, ${g}, ${b})`;
-      };
       try {
         map.addLayer({
           id: 'dpm-3d-buildings',
           source: 'composite',
           'source-layer': 'building',
-          filter: [
-            'all',
-            ['==', ['get', 'extrude'], 'true'],
-            ['!', ['within', landmarkFootprints]],
-          ],
+          filter: ['==', 'extrude', 'true'],
           type: 'fill-extrusion',
           minzoom: 14,
           paint: {
@@ -200,66 +158,9 @@ export default function TransitMap({
         /* Some satellite styles do not expose composite extrusions */
       }
 
-      // Lightweight landmark silhouettes; no textures or additional model downloads.
-      try {
-        map.addSource('dpm-landmarks', { type: 'geojson', data: landmarkModels });
-        map.addLayer({
-          id: 'dpm-landmarks-3d',
-          type: 'fill-extrusion',
-          source: 'dpm-landmarks',
-          minzoom: 13.5,
-          paint: {
-            'fill-extrusion-color': [
-              'match',
-              ['get', 'part'],
-              'glass',
-              tokenColor('--map-landmark-glass'),
-              'stone',
-              tokenColor('--map-landmark-stone'),
-              'roof',
-              tokenColor('--map-landmark-roof'),
-              'glow',
-              tokenColor('--primary'),
-              'warm',
-              tokenColor('--warm'),
-              tokenColor('--map-landmark-body'),
-            ],
-            'fill-extrusion-height': ['get', 'height'],
-            'fill-extrusion-base': ['get', 'base'],
-            'fill-extrusion-opacity': 0.96,
-            'fill-extrusion-vertical-gradient': true,
-            'fill-extrusion-emissive-strength': [
-              'match',
-              ['get', 'part'],
-              'glow',
-              1,
-              'warm',
-              0.65,
-              'glass',
-              0.35,
-              0.1,
-            ],
-          },
-        });
-      } catch {
-        /* Landmark prototype is decorative; the map works without it */
-      }
-
       // Transit Lines
-      addLine(
-        'mover-line',
-        routeData(peopleMoverShape),
-        tokenColor('--track-mover'),
-        tokenColor('--track-core'),
-        4,
-      );
-      addLine(
-        'qline-line',
-        qlineRouteData,
-        tokenColor('--track-qline'),
-        tokenColor('--track-core'),
-        3.5,
-      );
+      addLine('mover-line', routeData(peopleMoverShape), '#00f0ff', 4);
+      addLine('qline-line', qlineRouteData, '#ffbb70', 3.5);
 
       // People Mover Station Markers
       map.addSource('stations', {
@@ -395,6 +296,20 @@ export default function TransitMap({
         }
       }
       map.addImage('train-rectangle', { width: 20, height: 10, data: pixels }, { sdf: true });
+
+      const tokenColor = (token: string) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const context = canvas.getContext('2d');
+        if (!context) return 'transparent';
+        context.fillStyle = getComputedStyle(document.documentElement)
+          .getPropertyValue(token)
+          .trim();
+        context.fillRect(0, 0, 1, 1);
+        const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+        return `rgb(${r}, ${g}, ${b})`;
+      };
 
       map.addSource('qline-vehicle', { type: 'geojson', data: qlineData(new Date()) });
       for (const [id, color] of [
@@ -605,7 +520,6 @@ export default function TransitMap({
       }
 
       onReadyRef.current?.(true);
-      setLoadedMap(map);
 
       let lastUpdate = 0;
       let moverRunning = peopleMoverServiceRunning();
@@ -642,9 +556,6 @@ export default function TransitMap({
       // Initial Visibility
       for (const id of [
         'mover-line',
-        'mover-line-halo',
-        'mover-line-glow',
-        'mover-line-core',
         'station-halo',
         'station-pins',
         'station-labels',
@@ -660,9 +571,6 @@ export default function TransitMap({
       }
       for (const id of [
         'qline-line',
-        'qline-line-halo',
-        'qline-line-glow',
-        'qline-line-core',
         'qline-stops-halo',
         'qline-stops',
         'qline-labels',
@@ -750,9 +658,6 @@ export default function TransitMap({
     if (!map?.getLayer('mover-line')) return;
     for (const id of [
       'mover-line',
-      'mover-line-halo',
-      'mover-line-glow',
-      'mover-line-core',
       'station-halo',
       'station-pins',
       'station-labels',
@@ -764,9 +669,6 @@ export default function TransitMap({
     }
     for (const id of [
       'qline-line',
-      'qline-line-halo',
-      'qline-line-glow',
-      'qline-line-core',
       'qline-stops-halo',
       'qline-stops',
       'qline-labels',
@@ -868,16 +770,6 @@ export default function TransitMap({
   }, [userPosition, followUser]);
 
   return (
-    <>
-      <div ref={container} className="h-full w-full" aria-label="Map of Detroit transit stops" />
-      {loadedMap && (
-        <FloatingArrivalPills
-          map={loadedMap}
-          peopleMover={peopleMover}
-          qline={qline}
-          onSelect={onSelect}
-        />
-      )}
-    </>
+    <div ref={container} className="h-full w-full" aria-label="Map of Detroit transit stops" />
   );
 }

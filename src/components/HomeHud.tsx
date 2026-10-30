@@ -37,7 +37,6 @@ import QuickRoutesMenu from '@/components/hud/QuickRoutesMenu';
 import StationDirectoryPanel from '@/components/hud/StationDirectoryPanel';
 import StationLauncher from '@/components/hud/StationLauncher';
 import StatusStrip from '@/components/hud/StatusStrip';
-import TacticalPanel from '@/components/hud/TacticalPanel';
 import TopBar from '@/components/hud/TopBar';
 import WakeScreen from '@/components/hud/WakeScreen';
 import InfoPanel from '@/components/drawers/InfoPanel';
@@ -508,11 +507,6 @@ export default function HomeHud() {
             compliance footer. The installed app turns it into one glass
             panel and floats the launcher over the map. */}
         <div className="bottom-dock">
-          <TacticalPanel
-            now={now}
-            onStation={openStation}
-            onDestination={openDestinationShortcut}
-          />
           {isPhone && <StationLauncher onOpen={() => setStationListOpen(true)} />}
 
           <StatusStrip mapReady={mapReady} />
