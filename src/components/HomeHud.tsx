@@ -508,7 +508,11 @@ export default function HomeHud() {
             compliance footer. The installed app turns it into one glass
             panel and floats the launcher over the map. */}
         <div className="bottom-dock">
-          <TacticalPanel now={now} onStation={openStation} onDestination={openDestinationShortcut} />
+          <TacticalPanel
+            now={now}
+            onStation={openStation}
+            onDestination={openDestinationShortcut}
+          />
           {isPhone && <StationLauncher onOpen={() => setStationListOpen(true)} />}
 
           <StatusStrip mapReady={mapReady} />

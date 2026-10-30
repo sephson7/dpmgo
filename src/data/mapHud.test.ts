@@ -9,7 +9,9 @@ describe('map HUD arrival honesty', () => {
     expect(allTransitStations.find((item) => item.id === stop?.stationId)?.line).toBe('qline');
   });
   it('anchors Woodward & Fort to Congress Street boarding', () => {
-    expect(mapHudStops.find((item) => item.label === 'Woodward & Fort')?.stationId).toBe('ql-congress');
+    expect(mapHudStops.find((item) => item.label === 'Woodward & Fort')?.stationId).toBe(
+      'ql-congress',
+    );
   });
   it('does not present overnight scheduled departures as current arrivals', () => {
     const closed = new Date('2026-10-30T09:00:00Z');
