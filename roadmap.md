@@ -1,4 +1,5 @@
 # DPM - Go! roadmap
+- [ ] Match the supplied track glow, floating estimated arrivals and frosted destination/status panel; preserve station controls and legal links and verify phone/desktop flows.
 - [x] Add approximate Little Caesars Arena, Ford Field, Book Cadillac, and David Whitney silhouettes with native map geometry; 10 tests and lint pass, desktop/phone map and station drawer checked, compressed geometry 5.8 KB. Full-corridor detailing and physical-device performance remain future work; not published.
 - [x] Correct the partnership heading; browser verification and 10 relevant tests pass. Current Google inspection confirms submitted/indexed status, successful crawl and primary-domain canonical; the older discovery finding awaits scanner reconciliation, not another indexing request.
 - [x] Strengthen SEO metadata, canonical URLs, structured data and route-aware sitemap without changing the rider UI; 145 tests pass and preview sitemap verified; publishing requested.
