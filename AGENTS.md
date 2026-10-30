@@ -42,3 +42,4 @@
 - Keep the one-time local GPS frame separate from drawer selection and manual origins; yield to rider interaction so automatic framing never interrupts navigation.
 - Derive sitemap URLs from required route decisions; exclude checkout, redirects, admin and APIs, and omit invented lastmod dates.
 - Keep 3D landmarks in `src/data/landmarks3d.ts` as approximate native map geometry without model downloads; reuse venue anchors, CSS material tokens, and narrowly exclude contained stock footprints to keep the corridor lean and avoid doubled buildings.
+- Keep floating map arrivals in the shared browser-safe map HUD module and anchor them to real transit stations; use the same service gates as drawers and hide colliding pills so decorative labels never invent platforms or block the HUD.

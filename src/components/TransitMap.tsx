@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import FloatingArrivalPills from '@/components/hud/FloatingArrivalPills';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type * as GeoJSON from 'geojson';
@@ -69,6 +70,7 @@ export default function TransitMap({
 }: TransitMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [loadedMap, setLoadedMap] = useState<mapboxgl.Map | null>(null);
   const onSelectRef = useRef(onSelect);
   const onReadyRef = useRef(onReady);
   const enabledRef = useRef({ peopleMover, qline, parking });
@@ -109,18 +111,19 @@ export default function TransitMap({
     let frame = 0;
     const addLine = (id: string, data: GeoJSON.FeatureCollection, color: string, width: number) => {
       map.addSource(id, { type: 'geojson', data });
-      map.addLayer({
-        id,
-        type: 'line',
-        source: id,
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': color,
-          'line-width': width,
-          'line-opacity': 0.95,
-          'line-blur': 0.35,
-        },
-      });
+      for (const [suffix, scale, opacity, blur] of [
+        ['-halo', 5, 0.2, 7], ['-glow', 2.5, 0.45, 2.5], ['', 1, 1, 0], ['-core', 0.3, 0.95, 0],
+      ] as const) {
+        map.addLayer({
+          id: `${id}${suffix}`, type: 'line', source: id,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': suffix === '-core' ? getComputedStyle(document.documentElement).getPropertyValue('--track-core').trim() : color,
+            'line-width': ['interpolate', ['linear'], ['zoom'], 12, width * scale * 0.5, 17, width * scale],
+            'line-opacity': opacity, 'line-blur': blur,
+          },
+        });
+      }
     };
 
     map.on('load', () => {
@@ -223,8 +226,8 @@ export default function TransitMap({
       }
 
       // Transit Lines
-      addLine('mover-line', routeData(peopleMoverShape), '#00f0ff', 4);
-      addLine('qline-line', qlineRouteData, '#ffbb70', 3.5);
+      addLine('mover-line', routeData(peopleMoverShape), tokenColor('--track-mover'), 4);
+      addLine('qline-line', qlineRouteData, tokenColor('--track-qline'), 3.5);
 
       // People Mover Station Markers
       map.addSource('stations', {
@@ -570,6 +573,7 @@ export default function TransitMap({
       }
 
       onReadyRef.current?.(true);
+      setLoadedMap(map);
 
       let lastUpdate = 0;
       let moverRunning = peopleMoverServiceRunning();
@@ -606,6 +610,7 @@ export default function TransitMap({
       // Initial Visibility
       for (const id of [
         'mover-line',
+        'mover-line-halo', 'mover-line-glow', 'mover-line-core',
         'station-halo',
         'station-pins',
         'station-labels',
@@ -621,6 +626,7 @@ export default function TransitMap({
       }
       for (const id of [
         'qline-line',
+        'qline-line-halo', 'qline-line-glow', 'qline-line-core',
         'qline-stops-halo',
         'qline-stops',
         'qline-labels',
@@ -708,6 +714,7 @@ export default function TransitMap({
     if (!map?.getLayer('mover-line')) return;
     for (const id of [
       'mover-line',
+      'mover-line-halo', 'mover-line-glow', 'mover-line-core',
       'station-halo',
       'station-pins',
       'station-labels',
@@ -719,6 +726,7 @@ export default function TransitMap({
     }
     for (const id of [
       'qline-line',
+      'qline-line-halo', 'qline-line-glow', 'qline-line-core',
       'qline-stops-halo',
       'qline-stops',
       'qline-labels',
@@ -820,6 +828,9 @@ export default function TransitMap({
   }, [userPosition, followUser]);
 
   return (
-    <div ref={container} className="h-full w-full" aria-label="Map of Detroit transit stops" />
+    <>
+      <div ref={container} className="h-full w-full" aria-label="Map of Detroit transit stops" />
+      {loadedMap && <FloatingArrivalPills map={loadedMap} peopleMover={peopleMover} qline={qline} onSelect={onSelect} />}
+    </>
   );
 }
