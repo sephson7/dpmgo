@@ -471,6 +471,15 @@
   .overline { font-size: 7px; }
 }
 
+@media (max-width: 768px) {
+  .tactical-panel { margin: 0 14px 8px; }
+  .tactical-panel__status { padding: 10px 12px 8px; }
+  .tactical-panel h2 { font-size: 10px; }
+  .tactical-panel h2 span { font-size: 9px; }
+  .tactical-panel__status p { font-size: 11px; }
+  .tactical-destination { padding: 8px 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
   .wake-screen { display: none; }

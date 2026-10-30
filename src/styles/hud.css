@@ -435,3 +435,29 @@
   letter-spacing: 0.08em !important;
   white-space: nowrap;
 }
+
+/* Tactical glass surfaces use shared tokens; map geometry remains untouched. */
+.arrival-marker { pointer-events: auto; z-index: 2; }
+.arrival-pill { height: auto; min-height: 48px; max-width: 220px; display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding: 8px 12px; border-radius: 16px; background: var(--hud-glass); border: 1px solid var(--hud-glass-border); backdrop-filter: blur(24px); box-shadow: var(--hud-glass-shadow); color: var(--foreground); text-align: left; white-space: normal; }
+.arrival-pill:hover { background: var(--hud-glass); border-color: var(--primary); }
+.arrival-pill__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11px; }
+.arrival-pill__row strong { font-weight: 600; }
+.arrival-pill__eta { color: var(--track-mover); flex: none; font-weight: 700; }
+.arrival-marker--qline .arrival-pill__eta { color: var(--track-qline); }
+.arrival-pill__meta { display: flex; align-items: center; gap: 5px; font-size: 8px; color: var(--muted-foreground); }
+.arrival-pill__badge { color: var(--foreground); font: 600 8px var(--font-mono); }
+.tactical-panel { order: 0; width: min(420px, calc(100% - 28px)); margin: 12px 38px 14px auto; flex: none; pointer-events: auto; background: var(--hud-glass); border: 1px solid var(--hud-glass-border); border-radius: 16px; backdrop-filter: blur(24px) saturate(140%); box-shadow: var(--hud-glass-shadow); overflow: hidden; }
+.tactical-panel__status { padding: 14px 14px 10px; }
+.tactical-panel h2 { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0; }
+.tactical-panel h2 span { color: var(--muted-foreground); font-size: 10px; margin-left: 6px; font-weight: 500; }
+.tactical-panel__status p { margin: 4px 0; display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.tactical-panel__status p > span { width: 72px; flex: none; }
+.fleet-dot { width: 9px; height: 9px; flex: none; border-radius: 50%; background: var(--warm); }
+.fleet-dot.is-operating { background: var(--go); }
+.tactical-panel__disclosure { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 8px; font-size: 9px; color: var(--muted-foreground); }
+.tactical-destination { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--hud-glass-border); }
+.tactical-destination label { display: flex; flex-direction: column; min-width: 0; flex: 1; color: var(--muted-foreground); font-size: 11px; }
+.tactical-destination input { min-width: 0; width: 100%; border: 0; background: transparent; color: var(--foreground); font-size: 13px; font-weight: 600; outline: none; }
+.tactical-go { height: 40px; width: 46px; flex: none; border-radius: 8px; font-size: 14px; font-weight: 700; }
+.tactical-direction { height: 40px; width: 40px; flex: none; border-radius: 8px; }
+.tactical-error { padding: 0 14px 10px; margin: 0; color: var(--warm); font-size: 11px; }
