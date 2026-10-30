@@ -109,7 +109,7 @@ export default function TransitMap({
     );
 
     let frame = 0;
-    const addLine = (id: string, data: GeoJSON.FeatureCollection, color: string, width: number) => {
+    const addLine = (id: string, data: GeoJSON.FeatureCollection, color: string, core: string, width: number) => {
       map.addSource(id, { type: 'geojson', data });
       for (const [suffix, scale, opacity, blur] of [
         ['-halo', 5, 0.2, 7], ['-glow', 2.5, 0.45, 2.5], ['', 1, 1, 0], ['-core', 0.3, 0.95, 0],
@@ -118,7 +118,7 @@ export default function TransitMap({
           id: `${id}${suffix}`, type: 'line', source: id,
           layout: { 'line-join': 'round', 'line-cap': 'round' },
           paint: {
-            'line-color': suffix === '-core' ? getComputedStyle(document.documentElement).getPropertyValue('--track-core').trim() : color,
+            'line-color': suffix === '-core' ? core : color,
             'line-width': ['interpolate', ['linear'], ['zoom'], 12, width * scale * 0.5, 17, width * scale],
             'line-opacity': opacity, 'line-blur': blur,
           },
@@ -226,8 +226,8 @@ export default function TransitMap({
       }
 
       // Transit Lines
-      addLine('mover-line', routeData(peopleMoverShape), tokenColor('--track-mover'), 4);
-      addLine('qline-line', qlineRouteData, tokenColor('--track-qline'), 3.5);
+      addLine('mover-line', routeData(peopleMoverShape), tokenColor('--track-mover'), tokenColor('--track-core'), 4);
+      addLine('qline-line', qlineRouteData, tokenColor('--track-qline'), tokenColor('--track-core'), 3.5);
 
       // People Mover Station Markers
       map.addSource('stations', {
