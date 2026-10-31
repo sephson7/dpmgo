@@ -1,7 +1,7 @@
 // Sponsor slot reach: how many riders saw a partner card, tapped it on the
 // map, or opened the partner's website. One counter record per station, slot
-// and month, kept in the same KV namespace as the portal records (with the
-// same local fallback), so a partner can be shown a monthly report.
+// and month, stored as event rows in the Lovable Cloud database (with
+// an in-memory fallback), so a partner can be shown a monthly report.
 //
 // KV has no atomic increment, so two simultaneous events in different
 // isolates can occasionally collapse into one. The numbers are a floor, and
@@ -25,26 +25,6 @@ const FIELD: Record<SlotEvent, 'views' | 'mapTaps' | 'visits'> = {
   map: 'mapTaps',
   visit: 'visits',
 };
-
-type KV = {
-  get(key: string, type: 'text'): Promise<string | null>;
-  put(key: string, value: string): Promise<void>;
-  list(options?: { prefix?: string; cursor?: string | undefined }): Promise<{
-    keys: { name: string }[];
-    list_complete: boolean;
-    cursor?: string;
-  }>;
-};
-
-function kv(context?: unknown): KV | null {
-  const env = (context as { cloudflare?: { env?: Record<string, unknown> } } | undefined)
-    ?.cloudflare?.env;
-  const binding = env?.['ANCHOR_STORE'] as Partial<KV> | undefined;
-  if (!binding || typeof binding.get !== 'function' || typeof binding.put !== 'function')
-    return null;
-  if (typeof binding.list !== 'function') return null;
-  return binding as KV;
-}
 
 /** The current month in Detroit time, YYYY-MM. */
 export function statsMonth(now: Date = new Date()): string {
@@ -70,40 +50,38 @@ export function applySlotEvent(stats: SlotStats, event: SlotEvent): SlotStats {
 
 const memory = new Map<string, SlotStats>();
 
+const KIND = { view: 'slot_view', map: 'slot_map', visit: 'slot_visit' } as const;
+
 export async function recordSlotEvent(
   stationId: string,
   slot: 1 | 2,
   event: SlotEvent,
-  context?: unknown,
+  _context?: unknown,
 ): Promise<void> {
   const month = statsMonth();
+  const { insertEvent } = await import('./analyticsDb');
+  if (await insertEvent(KIND[event], stationId, slot, month)) return;
   const id = `${stationId}:${slot}:${month}`;
-  const store = kv(context);
-  if (!store) {
-    memory.set(id, applySlotEvent(memory.get(id) ?? empty(stationId, slot, month), event));
-    return;
-  }
-  const raw = await store.get(`${PREFIX}${id}`, 'text');
-  const current = raw ? (JSON.parse(raw) as SlotStats) : empty(stationId, slot, month);
-  await store.put(`${PREFIX}${id}`, JSON.stringify(applySlotEvent(current, event)));
+  memory.set(id, applySlotEvent(memory.get(id) ?? empty(stationId, slot, month), event));
 }
 
 /** Every counter record, newest month first. */
-export async function listSlotStats(context?: unknown): Promise<SlotStats[]> {
-  const store = kv(context);
+export async function listSlotStats(_context?: unknown): Promise<SlotStats[]> {
+  const { monthlyTotals } = await import('./analyticsDb');
+  const rows = await monthlyTotals();
   let records: SlotStats[];
-  if (!store) {
+  if (!rows) {
     records = [...memory.values()];
   } else {
-    const names: string[] = [];
-    let cursor: string | undefined;
-    do {
-      const page = await store.list({ prefix: PREFIX, cursor });
-      for (const key of page.keys) names.push(key.name);
-      cursor = page.list_complete ? undefined : page.cursor;
-    } while (cursor);
-    const values = await Promise.all(names.map((name) => store.get(name, 'text')));
-    records = values.filter((v): v is string => Boolean(v)).map((v) => JSON.parse(v));
+    const byId = new Map<string, SlotStats>();
+    for (const r of rows) {
+      if (r.kind === 'drawer_open' || (r.slot !== 1 && r.slot !== 2)) continue;
+      const id = `${r.station_id}:${r.slot}:${r.month}`;
+      const cur = byId.get(id) ?? empty(r.station_id, r.slot, r.month);
+      const field = r.kind === 'slot_view' ? 'views' : r.kind === 'slot_map' ? 'mapTaps' : 'visits';
+      byId.set(id, { ...cur, [field]: cur[field] + r.total });
+    }
+    records = [...byId.values()];
   }
   return records.sort((a, b) => b.month.localeCompare(a.month));
 }
