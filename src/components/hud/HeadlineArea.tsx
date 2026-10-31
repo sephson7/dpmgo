@@ -38,14 +38,14 @@ export default function HeadlineArea({
     <section className="headline-area" aria-label="Transit overview">
       <div className="overline">
         <span className="overline-bar" /> DOWNTOWN DETROIT <span className="overline-slash">/</span>{' '}
-        SYSTEM OVERVIEW
+        DPM &amp; QLINE
       </div>
       <h1>
-        Move through
+        Detroit People Mover
         <br />
-        <em>the Motor City.</em>
+        <em>&amp; QLINE Station Guide</em>
       </h1>
-      <p>Two lines. One city. Find your next stop.</p>
+      <p>Estimated arrivals, walking directions, dining, and downtown connections.</p>
 
       {strip}
 
