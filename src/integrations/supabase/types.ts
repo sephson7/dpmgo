@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          month: string
+          slot: number | null
+          station_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          month: string
+          slot?: number | null
+          station_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          month?: string
+          slot?: number | null
+          station_id?: string
+        }
+        Relationships: []
+      }
       rider_feedback: {
         Row: {
           answer: string
@@ -46,6 +73,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      analytics_monthly: {
+        Args: never
+        Returns: {
+          kind: string
+          month: string
+          slot: number
+          station_id: string
+          total: number
+        }[]
+      }
       rider_report_summary: {
         Args: { p_station_id: string }
         Returns: {
