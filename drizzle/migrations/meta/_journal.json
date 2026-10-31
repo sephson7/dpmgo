@@ -15,6 +15,13 @@
       "when": 1792777832533,
       "tag": "0001_public_rider_report_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793405527196,
+      "tag": "0002_create_analytics_events",
+      "breakpoints": true
     }
   ]
 }

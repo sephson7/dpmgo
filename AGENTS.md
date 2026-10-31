@@ -31,7 +31,7 @@
 - Send the partner confirmation from the server exactly once per Stripe session, and keep the webhook and the redirect on the same idempotent path, because a buyer can close the tab before the redirect finishes and must never be emailed twice.
 - Verify the Stripe webhook signature over the raw body and read the session back from Stripe, so a forged call cannot invent a purchase.
 - Collect the merchant email before the payment, because the confirmation goes out the moment the payment is confirmed and it needs a recipient.
-- Keep the partner portal records in the Cloudflare KV namespace, one key per lead and one key per slot, so two approvals never overwrite each other; keep the local file fallback for the runtimes without the binding.
+- Keep partner leads/slots in Cloudflare KV, one key each, so approvals never overwrite each other (local file fallback); keep drawer/sponsor counters as append-only database rows so counts survive restarts.
 - Find Worker configs through `scripts/lib/worker-config.mjs`, covering both `.output/server` and `dist/server`, so environment-specific paths never break publishing.
 - Keep secrets in `.env.local` (gitignored) or the deployment environment; never in `import.meta.env` or a tracked file.
 - Share partner email props across components, previews and sends to avoid unchecked `any` data.
